@@ -124,18 +124,18 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
         <a href="/archives/">
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
           <a href="/categories/">
-        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
           <a href="/tags/">
-        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-count">8</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -152,6 +152,117 @@
     </div>
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
+    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/01/14/GAN/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="undefined | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2023/01/14/GAN/" class="post-title-link" itemprop="url">GAN原理</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-01-14 16:06:34" itemprop="dateCreated datePublished" datetime="2023-01-14T16:06:34+08:00">2023-01-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-01-17 20:33:44" itemprop="dateModified" datetime="2023-01-17T20:33:44+08:00">2023-01-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/AI/" itemprop="url" rel="index"><span itemprop="name">AI</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>GAN：隐式的生成模型</p>
+<h2 id="生成对抗原理">生成对抗原理</h2>
+<p><img src="/2023/01/14/GAN/image-20230114161027777.png"></p>
+<p>生成器与判别器损失总体优化目标：</p>
+<p><span class="math inline">\(\min \max V(D, G)=E_{x \sim p_{\text
+{data }}(x)}[\log \mathrm{D}(\mathrm{x})]+E_{z \sim p_z(z)}[\log
+(1-\mathrm{D}(\mathrm{G}(\mathrm{z})))]\)</span></p>
+<p><span class="math inline">\(E_{x \sim p_{\text {data }}(x)}[\log
+\mathrm{D}(\mathrm{x})]\)</span> :真实样本输入到判别器的输出 --&gt;
+期望这一项越大越好</p>
+<p><span class="math inline">\(E_{z \sim p_z(z)}[\log
+(1-\mathrm{D}(\mathrm{G}(\mathrm{z})))]\)</span>
+:噪声样本输入生成器，再输入判别器以后的样本，应该越小越好，因为用<span class="math inline">\(1-\mathrm{D}(\mathrm{G}(\mathrm{z}))\)</span>
+所以是越大越好。</p>
+<p>D的学习目标：D(X)大，D(G(Z))小：</p>
+<p><span class="math inline">\(\max _\theta \mathbb{E}_{x \sim p_{\text
+{data }}}[\log D(x)]+\mathbb{E}_{z \sim p_z}[\log
+(1-D(G(z)))]\)</span></p>
+<p>G的学习目标： D(G(Z))大 <span class="math inline">\(\min
+_\theta\mathbb{E}_{z \sim p_z}[\log (1-D(G(z)))]\)</span></p>
+          <!--noindex-->
+            <div class="post-button">
+              <a class="btn" href="/2023/01/14/GAN/#more" rel="contents">
+                阅读全文 &raquo;
+              </a>
+            </div>
+          <!--/noindex-->
+        
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -191,7 +302,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2023-01-08 11:56:32 / 修改时间：12:10:05" itemprop="dateCreated datePublished" datetime="2023-01-08T11:56:32+08:00">2023-01-08</time>
+      <time title="创建时间：2023-01-08 11:56:32 / 修改时间：13:00:12" itemprop="dateCreated datePublished" datetime="2023-01-08T11:56:32+08:00">2023-01-08</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -489,110 +600,6 @@ segmentation）每个像素点分配一个语义类别和一个<strong>唯一</s
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/01/06/CPP%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
-      <meta itemprop="name" content="sherecho">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="sherecho的个人博客">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | sherecho的个人博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/01/06/CPP%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/" class="post-title-link" itemprop="url">CPP基础笔记</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-01-06 15:59:16" itemprop="dateCreated datePublished" datetime="2023-01-06T15:59:16+08:00">2023-01-06</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-01-07 10:15:42" itemprop="dateModified" datetime="2023-01-07T10:15:42+08:00">2023-01-07</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C++</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>写在前面：此篇文章为我在学习侯捷老师C++课程的学习笔记。</p>
-<p>C++的类的经典分类：含指针的类和不含指针的类(多半不用写析构)</p>
-<figure>
-<img src="/2023/01/06/CPP%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/image-20230106160717228.png" alt="image-20230106160717228">
-<figcaption aria-hidden="true">image-20230106160717228</figcaption>
-</figure>
-<h2 id="自己编写complex类">自己编写complex类</h2>
-<p>数据尽可能在private</p>
-<p>传入传出参数尽可能用reference来传</p>
-<p>能用const就用const</p>
-<p>构造函数要用initialize list</p>
-<h3 id="头文件标准格式">头文件标准格式</h3>
-<p>条件指示符#ifndef 的最主要目的是防止头文件的重复包含和编译。</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/01/06/CPP%E5%9F%BA%E7%A1%80%E7%AC%94%E8%AE%B0/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
     <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/01/06/%E7%94%9F%E4%BA%A7%E5%AE%9E%E4%B9%A0%E4%BA%8C/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -795,226 +802,6 @@ themes/next 目录下的 _config.yml 文件，找到这段代码：</h3>
           <!--noindex-->
             <div class="post-button">
               <a class="btn" href="/2023/01/06/hexonote/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
-      <meta itemprop="name" content="sherecho">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="sherecho的个人博客">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | sherecho的个人博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-01-03 10:09:03" itemprop="dateCreated datePublished" datetime="2023-01-03T10:09:03+08:00">2023-01-03</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-01-04 16:13:52" itemprop="dateModified" datetime="2023-01-04T16:13:52+08:00">2023-01-04</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h2 id="pytorch-框架">pytorch 框架</h2>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103100904768.png" alt="image-20230103100904768">
-<figcaption aria-hidden="true">image-20230103100904768</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103100929093.png" alt="image-20230103100929093">
-<figcaption aria-hidden="true">image-20230103100929093</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103101024895.png" alt="image-20230103101024895">
-<figcaption aria-hidden="true">image-20230103101024895</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103101150812.png" alt="image-20230103101150812">
-<figcaption aria-hidden="true">image-20230103101150812</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103101400968.png" alt="image-20230103101400968">
-<figcaption aria-hidden="true">image-20230103101400968</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103101523499.png" alt="image-20230103101523499">
-<figcaption aria-hidden="true">image-20230103101523499</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103101635626.png" alt="image-20230103101635626">
-<figcaption aria-hidden="true">image-20230103101635626</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103101842836.png" alt="image-20230103101842836">
-<figcaption aria-hidden="true">image-20230103101842836</figcaption>
-</figure>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/image-20230103102129301.png" alt="image-20230103102129301">
-<figcaption aria-hidden="true">image-20230103102129301</figcaption>
-</figure>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/01/03/pytorch%20%E6%A1%86%E6%9E%B6/#more" rel="contents">
-                阅读全文 &raquo;
-              </a>
-            </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/01/03/pytorch%20%E6%90%AD%E5%BB%BALLR-Learning%20%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
-      <meta itemprop="name" content="sherecho">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="sherecho的个人博客">
-      <meta itemprop="description" content="">
-    </span>
-
-    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
-      <meta itemprop="name" content="undefined | sherecho的个人博客">
-      <meta itemprop="description" content="">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2023/01/03/pytorch%20%E6%90%AD%E5%BB%BALLR-Learning%20%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/" class="post-title-link" itemprop="url">未命名</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2023-01-03 08:40:11" itemprop="dateCreated datePublished" datetime="2023-01-03T08:40:11+08:00">2023-01-03</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar-check"></i>
-      </span>
-      <span class="post-meta-item-text">更新于</span>
-      <time title="修改时间：2023-01-04 16:13:55" itemprop="dateModified" datetime="2023-01-04T16:13:55+08:00">2023-01-04</time>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <h1 id="pytorch-搭建llr-learning-神经网络">pytorch 搭建LLR-Learning
-神经网络</h1>
-<h2 id="神经网络结构">神经网络结构</h2>
-<figure>
-<img src="/2023/01/03/pytorch%20%E6%90%AD%E5%BB%BALLR-Learning%20%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/image-20230103084412173.png" alt="image-20230103084412173">
-<figcaption aria-hidden="true">image-20230103084412173</figcaption>
-</figure>
-<h2 id="pytorch-全连接层">pytorch 全连接层</h2>
-<p>在pytorch中的nn.Linear表示线性变换，官方文档给出的数学计算公式是
-<span class="math inline">\(y=x A^T+b\)</span></p>
-<p><strong>卷积神经网络中的全连接层需要调用nn.Linear就可以实现</strong>，其源代码为：</p>
-<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Linear</span>(<span class="title class_ inherited__">Module</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, in_features: <span class="built_in">int</span>, out_features: <span class="built_in">int</span>, bias: <span class="built_in">bool</span> = <span class="literal">True</span></span>) -&gt; <span class="literal">None</span>:</span><br></pre></td></tr></table></figure>
-<p>参数：</p>
-<p>in_features: size of each input
-sample，每个输入样本的大小，输入x的列数，输入数据[batchsize,
-in_features]</p>
-<p>out_features: size of each output sample
-，每个输出样本的大小，线性变换后输出y的列数，输出数据大小是：
-[batchsize, out_features]</p>
-          <!--noindex-->
-            <div class="post-button">
-              <a class="btn" href="/2023/01/03/pytorch%20%E6%90%AD%E5%BB%BALLR-Learning%20%E7%A5%9E%E7%BB%8F%E7%BD%91%E7%BB%9C/#more" rel="contents">
                 阅读全文 &raquo;
               </a>
             </div>
