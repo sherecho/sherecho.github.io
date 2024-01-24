@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,50 +19,50 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="linux 0.11内存管理 线性地址空间的格局 每个线程的虚拟地址空间并不重叠，每个进程不跨越自己的空间。如何防止进程跨越64M的空间进行非法访问？ 非法跨越进程边界有两种情况：  一个进程非法跨越到内核 一个进程非法跨越到另一个进程    示意图  非法跨越问题 如何防止进程跨越到内核的非法访问 通过cpu硬件禁止从3特权级跳转到0特权级。通过设置LDT,GDT设定">
 <meta property="og:type" content="article">
 <meta property="og:title" content="linux 0.11内存管理">
-<meta property="og:url" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:url" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="linux 0.11内存管理 线性地址空间的格局 每个线程的虚拟地址空间并不重叠，每个进程不跨越自己的空间。如何防止进程跨越64M的空间进行非法访问？ 非法跨越进程边界有两种情况：  一个进程非法跨越到内核 一个进程非法跨越到另一个进程    示意图  非法跨越问题 如何防止进程跨越到内核的非法访问 通过cpu硬件禁止从3特权级跳转到0特权级。通过设置LDT,GDT设定">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217152531971.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217153206961.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217170102227.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217185638982.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/copypagetable.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217194700032.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006095735771.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006181323379.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217105146944.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006101019220.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092145578.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092929709.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217201708437.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217131946111.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217133450858.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217134055231.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217135134825.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217151900014.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/gdt的变迁.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006182614416.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006185241375.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217152531971.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217153206961.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217170102227.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217185638982.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/copypagetable.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217194700032.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006095735771.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006181323379.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217105146944.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006101019220.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092145578.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092929709.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217201708437.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217131946111.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217133450858.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217134055231.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217135134825.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217151900014.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/gdt的变迁.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006182614416.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006185241375.png">
 <meta property="article:published_time" content="2023-12-27T16:28:24.000Z">
 <meta property="article:modified_time" content="2024-01-23T15:27:30.196Z">
 <meta property="article:author" content="sherecho">
 <meta property="article:tag" content="Linux">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png">
+<meta name="twitter:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+<link rel="canonical" href="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/","path":"2023/12/28/Linux011内核学习笔记/linux 0.11内存管理/","title":"linux 0.11内存管理"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/","path":"2023/12/28/Linux011内核学习笔记/linux 0.11内存管理/","title":"linux 0.11内存管理"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>linux 0.11内存管理 | sherecho的个人博客</title>
@@ -231,7 +233,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">

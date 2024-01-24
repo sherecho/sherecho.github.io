@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,12 +19,12 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="emplace_pack和push_back emplace_back 和 push_back 都是用于将元素添加到容器尾部的 C++ 函数，但它们有一些关键的区别，使得 emplace_back 在某些情况下比 push_back 更高效。  构造对象的方式：  push_back 接受一个已经构造好的对象，并将其拷贝（或移动）到容器中。 emplace_back 则允许你">
 <meta property="og:type" content="article">
 <meta property="og:title" content="emplace_pack和push_back">
-<meta property="og:url" content="http://sherecho.github.io/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/index.html">
+<meta property="og:url" content="https://sherecho.cn/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="emplace_pack和push_back emplace_back 和 push_back 都是用于将元素添加到容器尾部的 C++ 函数，但它们有一些关键的区别，使得 emplace_back 在某些情况下比 push_back 更高效。  构造对象的方式：  push_back 接受一个已经构造好的对象，并将其拷贝（或移动）到容器中。 emplace_back 则允许你">
 <meta property="og:locale" content="zh_CN">
@@ -33,11 +35,11 @@
 <meta name="twitter:card" content="summary">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/">
+<link rel="canonical" href="https://sherecho.cn/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/","path":"2023/11/26/C++笔记/emplaceback和pushback/","title":"emplace_pack和push_back"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/","path":"2023/11/26/C++笔记/emplaceback和pushback/","title":"emplace_pack和push_back"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>emplace_pack和push_back | sherecho的个人博客</title>
@@ -208,7 +210,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/11/26/C++%E7%AC%94%E8%AE%B0/emplaceback%E5%92%8Cpushback/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">
@@ -339,8 +341,8 @@
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2023/11/26/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" rel="next" title="lambda表达式解析">
-                  lambda表达式解析 <i class="fa fa-chevron-right"></i>
+                <a href="/2023/11/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E5%9B%9B%E7%AB%A0%E7%AC%94%E8%AE%B0/" rel="next" title="do_execve与进程34的生前死后">
+                  do_execve与进程34的生前死后 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>

@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,48 +19,48 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="静态流水线 标准五级静态流水线   五级静态流水线  按照上面的设计，指令流水线是五级流水线如下图所示。   标准指令流水线  IF 取指 IF阶段pc取指，从上图中可以看出，pc取值有俩个来源：pc+4即顺序取值。和来自转移指令计算得到的地址。从下图中可以看出，当为转移指令时，地址是立即数的有符号扩展（有符号表明PC指针可以往前跳也可以往后跳）。这个MUX2的控制逻辑由两">
 <meta property="og:type" content="article">
 <meta property="og:title" content="静态流水线">
-<meta property="og:url" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/index.html">
+<meta property="og:url" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="静态流水线 标准五级静态流水线   五级静态流水线  按照上面的设计，指令流水线是五级流水线如下图所示。   标准指令流水线  IF 取指 IF阶段pc取指，从上图中可以看出，pc取值有俩个来源：pc+4即顺序取值。和来自转移指令计算得到的地址。从下图中可以看出，当为转移指令时，地址是立即数的有符号扩展（有符号表明PC指针可以往前跳也可以往后跳）。这个MUX2的控制逻辑由两">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110141429147.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110141557595.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110142341788.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110143242112.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110154829572.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110154732175.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110143755060.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110144430333.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110144504481.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110144522280.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110152327011.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110153448016.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110153856677.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110145145900.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110151511119.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110181540330.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110185806306.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110185827228.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110190324885.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110191359992.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110141429147.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110141557595.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110142341788.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110143242112.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110154829572.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110154732175.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110143755060.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110144430333.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110144504481.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110144522280.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110152327011.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110153448016.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110153856677.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110145145900.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110151511119.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110181540330.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110185806306.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110185827228.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110190324885.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110191359992.png">
 <meta property="article:published_time" content="2024-01-01T11:28:24.000Z">
 <meta property="article:modified_time" content="2024-01-10T11:15:35.985Z">
 <meta property="article:author" content="sherecho">
 <meta property="article:tag" content="期末复习">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110141429147.png">
+<meta name="twitter:image" content="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/image-20240110141429147.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/">
+<link rel="canonical" href="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/","path":"2024/01/01/计算机体系结构笔记/静态流水线/","title":"静态流水线"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/","path":"2024/01/01/计算机体系结构笔记/静态流水线/","title":"静态流水线"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>静态流水线 | sherecho的个人博客</title>
@@ -229,7 +231,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/01/01/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E9%9D%99%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">
@@ -472,8 +474,8 @@ load 指令的访存地址进行比较，如果访存地址有交叉，则需要
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2024/01/02/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E5%8A%A8%E6%80%81%E6%B5%81%E6%B0%B4%E7%BA%BF/" rel="next" title="动态流水线">
-                  动态流水线 <i class="fa fa-chevron-right"></i>
+                <a href="/2024/01/02/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E5%A4%9A%E5%8F%91%E5%B0%84%E6%95%B0%E6%8D%AE%E9%80%9A%E8%B7%AF/" rel="next" title="多发射数据通路">
+                  多发射数据通路 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>

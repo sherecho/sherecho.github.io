@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,63 +19,63 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="图像分割分类   image-20230107225200305  语义分割：每一个像素必须且只能属于一类，预测结果为掩膜 实例分割：只预测前景目标的类别属性以及边框，个体ID，每一个像素可以属于多个ID   image-20230107225809249  比如上面所示因为有遮挡所以每一个像素可以属于多个ID 全景分割（panoptic segmentation）每个像">
 <meta property="og:type" content="article">
 <meta property="og:title" content="图像分割">
-<meta property="og:url" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/index.html">
+<meta property="og:url" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="图像分割分类   image-20230107225200305  语义分割：每一个像素必须且只能属于一类，预测结果为掩膜 实例分割：只预测前景目标的类别属性以及边框，个体ID，每一个像素可以属于多个ID   image-20230107225809249  比如上面所示因为有遮挡所以每一个像素可以属于多个ID 全景分割（panoptic segmentation）每个像">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225809249.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230213794.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230323009.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230434354.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230635130.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234531078.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107231727165.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232016372.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232104818.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234628180.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235043023.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235716530.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235903668.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000042897.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000312306.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000539139.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000906883.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108001411621.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093010812.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093215937.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108094522966.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108095705398.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100135509.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100537739.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108101943717.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102332153.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102446730.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102517972.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103114866.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103236667.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103655080.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103953333.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108112014166.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108111922640.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225809249.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230213794.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230323009.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230434354.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230635130.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234531078.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107231727165.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232016372.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232104818.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234628180.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235043023.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235716530.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235903668.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000042897.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000312306.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000539139.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000906883.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108001411621.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093010812.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093215937.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108094522966.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108095705398.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100135509.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100537739.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108101943717.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102332153.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102446730.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102517972.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103114866.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103236667.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103655080.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103953333.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108112014166.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108111922640.png">
 <meta property="article:published_time" content="2023-01-07T14:46:56.000Z">
 <meta property="article:modified_time" content="2023-01-08T03:54:25.795Z">
 <meta property="article:author" content="sherecho">
 <meta property="article:tag" content="图像分割">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png">
+<meta name="twitter:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/">
+<link rel="canonical" href="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/","path":"2023/01/07/AI/图像分割/","title":"图像分割"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/","path":"2023/01/07/AI/图像分割/","title":"图像分割"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>图像分割 | sherecho的个人博客</title>
@@ -245,7 +247,7 @@ network)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" hre
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">

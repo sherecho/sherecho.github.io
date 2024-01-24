@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,69 +19,69 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="16位实模式 -&gt; 32位保护模式 EP&#x2F;EIP 相当于pc指针，从实模式16位-&gt;保护模式32位 BIOS 加电后进入实模式运行，16位。 上电后CS（代码段寄存器）设置为0XF000（纯硬件完成）,因此第一条程序跳到0XF000执行。0XF000是BIOS的程序入口地址,因此此时主动权交到了BIOS手上   image-20230926154112305  如图可">
 <meta property="og:type" content="article">
 <meta property="og:title" content="从开机加电到main函数之前过程">
-<meta property="og:url" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:url" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="16位实模式 -&gt; 32位保护模式 EP&#x2F;EIP 相当于pc指针，从实模式16位-&gt;保护模式32位 BIOS 加电后进入实模式运行，16位。 上电后CS（代码段寄存器）设置为0XF000（纯硬件完成）,因此第一条程序跳到0XF000执行。0XF000是BIOS的程序入口地址,因此此时主动权交到了BIOS手上   image-20230926154112305  如图可">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927080114009.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927090739464.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927094109074.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927134028219.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003092439766.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003100723241.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003101530040.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003102018552.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003105617140.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145416320.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111046230.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111819195.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160110786.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003114017638.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145504688.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160040393.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003162657094.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003163507170.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165058386.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165553164.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003171101035.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003192816784.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201544973.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003193634497.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003194434372.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003195656562.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092145578.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092929709.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003225759273.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003232851762.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235254879.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092016126.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005095121645.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235415139.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150359552.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111510079.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150641596.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201644907.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201757163.png">
-<meta property="og:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005100625737.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927080114009.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927090739464.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927094109074.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927134028219.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003092439766.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003100723241.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003101530040.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003102018552.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003105617140.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145416320.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111046230.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111819195.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160110786.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003114017638.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145504688.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160040393.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003162657094.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003163507170.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165058386.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165553164.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003171101035.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003192816784.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201544973.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003193634497.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003194434372.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003195656562.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092145578.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092929709.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003225759273.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003232851762.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235254879.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092016126.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005095121645.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235415139.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150359552.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111510079.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150641596.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201644907.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201757163.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005100625737.png">
 <meta property="article:published_time" content="2023-10-08T16:28:24.000Z">
 <meta property="article:modified_time" content="2024-01-22T08:18:07.505Z">
 <meta property="article:author" content="sherecho">
 <meta property="article:tag" content="Linux">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png">
+<meta name="twitter:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/">
+<link rel="canonical" href="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/","path":"2023/10/09/Linux011内核学习笔记/第一章节笔记/","title":"从开机加电到main函数之前过程"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/","path":"2023/10/09/Linux011内核学习笔记/第一章节笔记/","title":"从开机加电到main函数之前过程"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>从开机加电到main函数之前过程 | sherecho的个人博客</title>
@@ -252,7 +254,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">

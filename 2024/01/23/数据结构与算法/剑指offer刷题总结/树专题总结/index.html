@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,30 +19,30 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="二叉搜索树 二叉搜索树的中序遍历是有序的。 中序遍历的利用 JZ36 二叉搜索树与双向链表 充分利用中序遍历的有序性构造有序的双向链表。  改造原始的中序遍历，避免构造额外的空间。核心的逻辑是：左中右中，中的前驱是左，后继是右子树。所以可以使用一共pre指针指向左节点，然后root的left指向pre，pre的right指向root。pre更新到root，pre设置为全局的变量。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="树专题总结">
-<meta property="og:url" content="http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/index.html">
+<meta property="og:url" content="https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="二叉搜索树 二叉搜索树的中序遍历是有序的。 中序遍历的利用 JZ36 二叉搜索树与双向链表 充分利用中序遍历的有序性构造有序的双向链表。  改造原始的中序遍历，避免构造额外的空间。核心的逻辑是：左中右中，中的前驱是左，后继是右子树。所以可以使用一共pre指针指向左节点，然后root的left指向pre，pre的right指向root。pre更新到root，pre设置为全局的变量。">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/image-20240123164130362.png">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/image-20240123184817662.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/image-20240123164130362.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/image-20240123184817662.png">
 <meta property="article:published_time" content="2024-01-23T11:28:24.000Z">
 <meta property="article:modified_time" content="2024-01-23T12:34:59.639Z">
 <meta property="article:author" content="sherecho">
 <meta property="article:tag" content="算法">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/image-20240123164130362.png">
+<meta name="twitter:image" content="https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/image-20240123164130362.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/">
+<link rel="canonical" href="https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/","path":"2024/01/23/数据结构与算法/剑指offer刷题总结/树专题总结/","title":"树专题总结"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/","path":"2024/01/23/数据结构与算法/剑指offer刷题总结/树专题总结/","title":"树专题总结"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>树专题总结 | sherecho的个人博客</title>
@@ -214,7 +216,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">
@@ -332,8 +334,8 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/DFS%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2/" rel="prev" title="DFS深度优先搜索">
-                  <i class="fa fa-chevron-left"></i> DFS深度优先搜索
+                <a href="/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/" rel="prev" title="分治法总结">
+                  <i class="fa fa-chevron-left"></i> 分治法总结
                 </a>
             </div>
             <div class="post-nav-item">

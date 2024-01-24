@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,29 +19,29 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="分治法总结 什么是分治算法 分治算法（divide and conquer）的核心思想其实就是四个字，分而治之 ，也就是将原问题划分成 k 个规模较小，并且结构与原问题相似的子问题，递归 地解决这些子问题，然后再合并其结果，就得到原问题的解。 关于分治和递归的区别：  分治算法是一种处理问题的思想; 递归是一种编程技巧。  比较经典的应用就是归并排序（Merge Sort)以">
 <meta property="og:type" content="article">
 <meta property="og:title" content="分治法总结">
-<meta property="og:url" content="http://sherecho.github.io/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/index.html">
+<meta property="og:url" content="https://sherecho.cn/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="分治法总结 什么是分治算法 分治算法（divide and conquer）的核心思想其实就是四个字，分而治之 ，也就是将原问题划分成 k 个规模较小，并且结构与原问题相似的子问题，递归 地解决这些子问题，然后再合并其结果，就得到原问题的解。 关于分治和递归的区别：  分治算法是一种处理问题的思想; 递归是一种编程技巧。  比较经典的应用就是归并排序（Merge Sort)以">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/image-20240121224234784.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/image-20240121224234784.png">
 <meta property="article:published_time" content="2024-01-21T11:28:24.000Z">
 <meta property="article:modified_time" content="2024-01-21T15:15:34.422Z">
 <meta property="article:author" content="sherecho">
 <meta property="article:tag" content="算法">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/image-20240121224234784.png">
+<meta name="twitter:image" content="https://sherecho.cn/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/image-20240121224234784.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/">
+<link rel="canonical" href="https://sherecho.cn/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/","path":"2024/01/21/数据结构与算法/剑指offer刷题总结/分治法解决问题思路汇总/","title":"分治法总结"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/","path":"2024/01/21/数据结构与算法/剑指offer刷题总结/分治法解决问题思路汇总/","title":"分治法总结"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>分治法总结 | sherecho的个人博客</title>
@@ -212,7 +214,7 @@ JZ33 二叉搜索树的后序遍历序列
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E5%88%86%E6%B2%BB%E6%B3%95%E8%A7%A3%E5%86%B3%E9%97%AE%E9%A2%98%E6%80%9D%E8%B7%AF%E6%B1%87%E6%80%BB/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">
@@ -357,13 +359,13 @@ Merge</strong>：将各个子问题的解合并，形成原问题的解。</li>
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2024/01/18/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E6%9C%80%E7%9F%AD%E8%B7%AF%E5%BE%84%E7%AE%97%E6%B3%95%E5%AF%B9%E6%AF%94-Dijkstra-bellman-floyd/" rel="prev" title="最短路径算法对比-Dijkstra-bellman-floyd">
-                  <i class="fa fa-chevron-left"></i> 最短路径算法对比-Dijkstra-bellman-floyd
+                <a href="/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/DFS%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2/" rel="prev" title="DFS深度优先搜索">
+                  <i class="fa fa-chevron-left"></i> DFS深度优先搜索
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2024/01/21/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/DFS%E6%B7%B1%E5%BA%A6%E4%BC%98%E5%85%88%E6%90%9C%E7%B4%A2/" rel="next" title="DFS深度优先搜索">
-                  DFS深度优先搜索 <i class="fa fa-chevron-right"></i>
+                <a href="/2024/01/23/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E6%A0%91%E4%B8%93%E9%A2%98%E6%80%BB%E7%BB%93/" rel="next" title="树专题总结">
+                  树专题总结 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>

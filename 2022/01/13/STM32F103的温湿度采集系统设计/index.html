@@ -2,6 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
+
+
 <meta name="viewport" content="width=device-width">
 <meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
 
@@ -17,24 +19,24 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
 
-<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.github.io","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
 
     <meta name="description" content="写在前面： 入门RT-Thread的课设作业，自娱自乐，hhh ## RT-Thread内核移植 详细的工程模板建立步骤参见野火的说明文档： https:&#x2F;&#x2F;doc.embedfire.com&#x2F;rtos&#x2F;rtthread&#x2F;zh&#x2F;latest&#x2F;application&#x2F;porting_to_stm32.html 这里只是用了裁剪后的RT-Thread内核，我们可以rtconfig.h文件里面配置">
 <meta property="og:type" content="article">
 <meta property="og:title" content="基于Rt-Thread 和STM32F103的温湿度采集系统设计">
-<meta property="og:url" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/index.html">
+<meta property="og:url" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/index.html">
 <meta property="og:site_name" content="sherecho的个人博客">
 <meta property="og:description" content="写在前面： 入门RT-Thread的课设作业，自娱自乐，hhh ## RT-Thread内核移植 详细的工程模板建立步骤参见野火的说明文档： https:&#x2F;&#x2F;doc.embedfire.com&#x2F;rtos&#x2F;rtthread&#x2F;zh&#x2F;latest&#x2F;application&#x2F;porting_to_stm32.html 这里只是用了裁剪后的RT-Thread内核，我们可以rtconfig.h文件里面配置">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/1.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/2.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/3.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/4.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/5.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/6.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/7.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/8ec580d03f214153b2118b8392a57c0b.png">
-<meta property="og:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/8.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/1.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/2.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/3.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/4.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/5.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/6.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/7.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/8ec580d03f214153b2118b8392a57c0b.png">
+<meta property="og:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/8.png">
 <meta property="article:published_time" content="2022-01-13T03:20:59.000Z">
 <meta property="article:modified_time" content="2023-01-06T01:29:48.582Z">
 <meta property="article:author" content="sherecho">
@@ -42,14 +44,14 @@
 <meta property="article:tag" content="单片机">
 <meta property="article:tag" content="RTOS">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/1.png">
+<meta name="twitter:image" content="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/1.png">
 
 
-<link rel="canonical" href="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">
+<link rel="canonical" href="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">
 
 
 
-<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/","path":"2022/01/13/STM32F103的温湿度采集系统设计/","title":"基于Rt-Thread 和STM32F103的温湿度采集系统设计"}</script>
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/","path":"2022/01/13/STM32F103的温湿度采集系统设计/","title":"基于Rt-Thread 和STM32F103的温湿度采集系统设计"}</script>
 
 <script class="next-config" data-name="calendar" type="application/json">""</script>
 <title>基于Rt-Thread 和STM32F103的温湿度采集系统设计 | sherecho的个人博客</title>
@@ -220,7 +222,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://sherecho.github.io/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2022/01/13/STM32F103%E7%9A%84%E6%B8%A9%E6%B9%BF%E5%BA%A6%E9%87%87%E9%9B%86%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/medias/avatars/baojie.jpg">
