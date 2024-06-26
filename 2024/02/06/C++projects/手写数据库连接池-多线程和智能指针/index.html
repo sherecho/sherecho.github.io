@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="项目背景 为了提高MySQL数据库（基于客户端服务端模型）的访问瓶颈 策略一：减小磁盘的IO。  在服务器端增加缓存服务器缓存常用的数据（例如redis） 可以增加连接池，来提高MySQL Server的访问效率。 在高并发情况下，大量的TCP三次握手、MySQL Server连接认证、MySQL Server关闭连接回收资源和TCP四次挥手所耗费的性能时间也是很明显的，增加连接池就">
+<meta property="og:type" content="article">
+<meta property="og:title" content="利用多线程和智能指针手写数据库连接池">
+<meta property="og:url" content="https://sherecho.cn/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="项目背景 为了提高MySQL数据库（基于客户端服务端模型）的访问瓶颈 策略一：减小磁盘的IO。  在服务器端增加缓存服务器缓存常用的数据（例如redis） 可以增加连接池，来提高MySQL Server的访问效率。 在高并发情况下，大量的TCP三次握手、MySQL Server连接认证、MySQL Server关闭连接回收资源和TCP四次挥手所耗费的性能时间也是很明显的，增加连接池就">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/image-20240206174324136.png">
+<meta property="article:published_time" content="2024-02-06T01:28:24.000Z">
+<meta property="article:modified_time" content="2024-02-07T07:44:30.447Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="多线程">
+<meta property="article:tag" content="智能指针，c++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/image-20240206174324136.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/","path":"2024/02/06/C++projects/手写数据库连接池-多线程和智能指针/","title":"利用多线程和智能指针手写数据库连接池"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>利用多线程和智能指针手写数据库连接池 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E8%83%8C%E6%99%AF"><span class="nav-number">1.</span> <span class="nav-text">项目背景</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%BF%9E%E6%8E%A5%E6%B1%A0"><span class="nav-number">2.</span> <span class="nav-text">什么是连接池</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#mysql%E9%83%A8%E5%88%86%E7%9A%84%E8%BF%9E%E6%8E%A5%E5%AE%9E%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">MYSQL部分的连接实现</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E6%B1%A0%E5%AE%9E%E7%8E%B0"><span class="nav-number">4.</span> <span class="nav-text">连接池实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84%E5%8D%95%E4%BE%8B"><span class="nav-number">4.1.</span> <span class="nav-text">线程安全的单例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B9%E6%8D%AE%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E5%8F%82%E6%95%B0"><span class="nav-number">4.2.</span> <span class="nav-text">根据配置文件配置参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="nav-number">4.3.</span> <span class="nav-text">构造函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E7%BA%BF%E7%A8%8B%E8%BF%9E%E6%8E%A5%E7%94%9F%E4%BA%A7%E8%80%85"><span class="nav-number">4.4.</span> <span class="nav-text">生产者线程：连接生产者</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E9%98%9F%E5%88%97"><span class="nav-number">4.4.1.</span> <span class="nav-text">线程安全队列</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.5.</span> <span class="nav-text">消费者线程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%A9%E7%94%A8%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E5%AE%9E%E7%8E%B0%E7%BB%99%E5%A4%96%E9%83%A8%E6%8F%90%E4%BE%9B%E6%8E%A5%E5%8F%A3"><span class="nav-number">4.6.</span> <span class="nav-text">利用智能指针实现给外部提供接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%A4%A7%E7%A9%BA%E9%97%B2%E6%97%B6%E9%97%B4%E5%9B%9E%E6%94%B6%E8%BF%9E%E6%8E%A5%E6%89%AB%E6%8F%8F%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.7.</span> <span class="nav-text">最大空闲时间回收连接扫描线程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E7%9A%84%E8%AE%B0%E5%BD%95"><span class="nav-number">4.7.1.</span> <span class="nav-text">时间的记录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E6%97%B6%E7%BA%BF%E7%A8%8B"><span class="nav-number">4.7.2.</span> <span class="nav-text">定时线程</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="利用多线程和智能指针手写数据库连接池 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          利用多线程和智能指针手写数据库连接池
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-02-06 09:28:24" itemprop="dateCreated datePublished" datetime="2024-02-06T09:28:24+08:00">2024-02-06</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-02-07 15:44:30" itemprop="dateModified" datetime="2024-02-07T15:44:30+08:00">2024-02-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C/" itemprop="url" rel="index"><span itemprop="name">C++</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/C/projects/" itemprop="url" rel="index"><span itemprop="name">projects</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>11k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>10 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="项目背景">项目背景</h1>
+<p>为了提高MySQL数据库（基于客户端服务端模型）的访问瓶颈</p>
+<p>策略一：减小磁盘的IO。</p>
+<ul>
+<li><p>在服务器端增加缓存服务器缓存常用的数据（例如redis）</p></li>
+<li><p>可以增加连接池，来提高MySQL Server的访问效率。</p>
+<p>在高并发情况下，大量的TCP三次握手、MySQL Server连接认证、MySQL
+Server关闭连接回收资源和TCP四次挥手所耗费的性能时间也是很明显的，增加连接池就是为了减少这一部分的性能损耗。</p></li>
+</ul>
+<p>本项目就是为了在C/C++项目中，提高MySQL
+Server的访问效率，实现基于C++代码的数据库连接池模块。</p>
+<h1 id="什么是连接池">什么是连接池</h1>
+<p>数据库连接池的解决方案是在应用程序启动时建立足够的数据库连接，并讲这些连接组成一个连接池，由应用程序动态地对池中的连接进行申请、使用和释放。对于多于连接池中连接数的并发请求，应该在请求队列中排队等待。并且应用程序可以根据池中连接的使用率，动态增加或减少池中的连接数。</p>
+<p>连接池一般包含了数据库连接所用的ip地址、port端口号、用户名和密码以及其它的性能参数，例如初始连接量，最大连接量，最大空闲时间、连接超时时间等。</p>
+<p><strong>初始连接量（initSize）</strong>：表示连接池事先会和MySQL
+Server创建initSize个数的connection连接，当应用发起MySQL访问时，不用再创建和MySQL
+Server新的连接，直接从连接池中获取一个可用的连接就可以，使用完成后，并不去释放connection，而是把当前connection再归还到连接池当中。</p>
+<p><strong>最大连接量（maxSize）</strong>：当并发访问MySQL
+Server的请求增多时，初始连接量已经不够使用了，此时会根据新的请求数量去创建更多的连接给应用去使用，但是新创建的连接数量上限是maxSize，不能无限制的创建连接，因为每一个连接都会占用一个socket资源，一般连接池和服务器程序是部署在一台主机上的，如果连接池占用过多的socket资源，那么服务器就不能接收太多的客户端请求了。当这些连接使用完成后，再次归还到连接池当中来维护。</p>
+<p><strong>最大空闲时间（maxIdleTime）</strong>：当访问MySQL的并发请求多了以后，连接池里面的连接数量会动态增加，上限是maxSize个，当这些连接用完再次归还到连接池当中。如果在指定的maxIdleTime里面，这些新增加的连接都没有被再次使用过，那么新增加的这些连接资源就要被回收掉，只需要保持初始连接量initSize个连接就可以了。</p>
+<p><strong>连接超时时间（connectionTimeout）</strong>：当MySQL的并发请求量过大，连接池中的连接数量已经到达maxSize了，而此时没有空闲的连接可供使用，那么此时应用从连接池获取连接无法成功，它通过阻塞的方式获取连接的时间如果超过connectionTimeout时间，那么获取连接失败，无法访问数据库。该项目主要实现上述的连接池四大功能。</p>
+<h1 id="mysql部分的连接实现">MYSQL部分的连接实现</h1>
+<p>MySQL数据库C++代码封装</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;mysql.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;string&gt;</span></span></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> std;</span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;public.h&quot;</span></span></span><br><span class="line"><span class="comment">// 数据库操作类</span></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">MySQL</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line"><span class="comment">// 初始化数据库连接</span></span><br><span class="line"><span class="built_in">MySQL</span>()</span><br><span class="line">&#123;</span><br><span class="line">_conn = <span class="built_in">mysql_init</span>(<span class="literal">nullptr</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 释放数据库连接资源</span></span><br><span class="line">~<span class="built_in">MySQL</span>()</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">if</span> (_conn != <span class="literal">nullptr</span>)</span><br><span class="line"><span class="built_in">mysql_close</span>(_conn);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 连接数据库</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">connect</span><span class="params">(string ip, <span class="type">unsigned</span> <span class="type">short</span> port, string user, string password,</span></span></span><br><span class="line"><span class="params"><span class="function">string dbname)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">MYSQL *p = <span class="built_in">mysql_real_connect</span>(_conn, ip.<span class="built_in">c_str</span>(), user.<span class="built_in">c_str</span>(),</span><br><span class="line">password.<span class="built_in">c_str</span>(), dbname.<span class="built_in">c_str</span>(), port, <span class="literal">nullptr</span>, <span class="number">0</span>);</span><br><span class="line"><span class="keyword">return</span> p != <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 更新操作 insert、delete、update</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">update</span><span class="params">(string sql)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">mysql_query</span>(_conn, sql.<span class="built_in">c_str</span>()))</span><br><span class="line">&#123;</span><br><span class="line"><span class="built_in">LOG</span>(<span class="string">&quot;更新失败:&quot;</span> + sql);</span><br><span class="line"><span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 查询操作 select</span></span><br><span class="line"><span class="function">MYSQL_RES* <span class="title">query</span><span class="params">(string sql)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"><span class="keyword">if</span> (<span class="built_in">mysql_query</span>(_conn, sql.<span class="built_in">c_str</span>()))</span><br><span class="line">&#123;</span><br><span class="line"><span class="built_in">LOG</span>(<span class="string">&quot;查询失败:&quot;</span> + sql);</span><br><span class="line"><span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">return</span> <span class="built_in">mysql_use_result</span>(_conn);</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">MYSQL *_conn; <span class="comment">// 表示和MySQL Server的一条连接</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>在官方提供的基础上进行功能增加：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Connection</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="comment">// 初始化数据库连接</span></span><br><span class="line">	<span class="built_in">Connection</span>();</span><br><span class="line">	<span class="comment">// 释放数据库连接资源</span></span><br><span class="line">	~<span class="built_in">Connection</span>();</span><br><span class="line">	<span class="comment">// 连接数据库</span></span><br><span class="line">	<span class="function"><span class="type">bool</span> <span class="title">connect</span><span class="params">(string ip, </span></span></span><br><span class="line"><span class="params"><span class="function">		<span class="type">unsigned</span> <span class="type">short</span> port, </span></span></span><br><span class="line"><span class="params"><span class="function">		string user, </span></span></span><br><span class="line"><span class="params"><span class="function">		string password,</span></span></span><br><span class="line"><span class="params"><span class="function">		string dbname)</span></span>;</span><br><span class="line">	<span class="comment">// 更新操作 insert、delete、update</span></span><br><span class="line">	<span class="function"><span class="type">bool</span> <span class="title">update</span><span class="params">(string sql)</span></span>;</span><br><span class="line">	<span class="comment">// 查询操作 select</span></span><br><span class="line">	<span class="function">MYSQL_RES* <span class="title">query</span><span class="params">(string sql)</span></span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 刷新一下连接的起始的空闲时间点</span></span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">refreshAliveTime</span><span class="params">()</span> </span>&#123; _alivetime = <span class="built_in">clock</span>(); &#125;</span><br><span class="line">	<span class="comment">// 返回存活的时间</span></span><br><span class="line">	<span class="function"><span class="type">clock_t</span> <span class="title">getAliveeTime</span><span class="params">()</span><span class="type">const</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">clock</span>() - _alivetime; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	MYSQL *_conn; <span class="comment">// 表示和MySQL Server的一条连接</span></span><br><span class="line">	<span class="type">clock_t</span> _alivetime; <span class="comment">// 记录进入空闲状态后的起始存活时间</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h1 id="连接池实现">连接池实现</h1>
+<figure>
+<img src="/2024/02/06/C++projects/%E6%89%8B%E5%86%99%E6%95%B0%E6%8D%AE%E5%BA%93%E8%BF%9E%E6%8E%A5%E6%B1%A0-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%92%8C%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88/image-20240206174324136.png" alt="原理">
+<figcaption aria-hidden="true">原理</figcaption>
+</figure>
+<ol type="1">
+<li><p>连接池只需要一个实例，所以ConnectionPool以单例模式进行设计</p></li>
+<li><p>从ConnectionPool中可以获取和MySQL的连接Connection</p></li>
+<li><p><code>空闲连接Connection</code>全部维护在一个线程安全的<code>Connection队列</code>中，使用线程<code>互斥锁</code>保证队列的线程安全</p></li>
+<li><p>如果Connection队列为空，还需要再获取连接，此时需要动态创建连接，上限数量是maxSize.因此这里是一个生产者线程，生产连接。</p></li>
+<li><p>队列中空闲连接时间超过maxIdleTime的就要被释放掉，只保留初始的initSize个连接就可以了。也就是说需要一个定时线程清理队列多余的空闲连接</p></li>
+<li><p>如果Connection队列为空，而此时连接的数量已达上限maxSize，那么等待connectionTimeout时间如果还获取不到空闲的连接，那么获取连接失败，此处从Connection队列获取空闲连接，可以使用带超时时间的mutex互斥锁来实现连接超时时间</p></li>
+<li><p>用户获取的连接用shared_ptr智能指针来管理，用lambda表达式定制连接释放的功能（不真正释放连接，而是把连接归还到连接池中）</p></li>
+<li><p>连接的生产和连接的消费采用生产者-消费者线程模型来设计，使用了线程间的同步通信机制条件变量和互斥锁</p></li>
+</ol>
+<h2 id="线程安全的单例">线程安全的单例</h2>
+<p>这里采用的是线程安全的懒汉式单例模式。</p>
+<blockquote>
+<p>什么是懒汉模式：在程序运行到需要用到该类的实例化时，instance()方法才去判断单例指针p，进而实例化单例指针p，让人它有一种懒惰，不到最后关头不实例化的感觉。</p>
+</blockquote>
+<p>首先，将类的构造函数进行私有化</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	<span class="comment">// 单例#1 构造函数私有化</span></span><br><span class="line">	<span class="built_in">ConnectionPool</span>();</span><br></pre></td></tr></table></figure>
+<p>为了实现线程安全的懒汉式单例模式，可以采用锁，也可以利用静态区。这里采用的是后者。使用在静态数据区实现类的实现的方法，<strong>因为分配在静态区中所以无论获取实例的函数被调用多少次，所得的都是同一份实例</strong>。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span>:</span><br><span class="line">	<span class="comment">// 获取连接池对象实例</span></span><br><span class="line">	<span class="function"><span class="type">static</span> ConnectionPool* <span class="title">getConnectionPool</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+<h2 id="根据配置文件配置参数">根据配置文件配置参数</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 从配置文件中加载配置项</span></span><br><span class="line"><span class="function"><span class="type">bool</span> <span class="title">ConnectionPool::loadConfigFile</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//打开文件</span></span><br><span class="line">	FILE *pf = <span class="built_in">fopen</span>(<span class="string">&quot;mysql.ini&quot;</span>, <span class="string">&quot;r&quot;</span>);</span><br><span class="line">	<span class="keyword">if</span> (pf == <span class="literal">nullptr</span>)</span><br><span class="line">	&#123;</span><br><span class="line">        <span class="comment">//处理文件没打开的情况</span></span><br><span class="line">		...</span><br><span class="line">	&#125;</span><br><span class="line">    <span class="comment">//逐行读文件</span></span><br><span class="line">	<span class="keyword">while</span> (!<span class="built_in">feof</span>(pf))</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="type">char</span> line[<span class="number">1024</span>] = &#123; <span class="number">0</span> &#125;;</span><br><span class="line">		<span class="built_in">fgets</span>(line, <span class="number">1024</span>, pf);</span><br><span class="line">		string str = line;</span><br><span class="line">		<span class="type">int</span> idx = str.<span class="built_in">find</span>(<span class="string">&#x27;=&#x27;</span>, <span class="number">0</span>);</span><br><span class="line">		<span class="keyword">if</span> (idx == <span class="number">-1</span>) <span class="comment">// 无效的配置项</span></span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="type">int</span> endidx = str.<span class="built_in">find</span>(<span class="string">&#x27;\n&#x27;</span>, idx);</span><br><span class="line">		string key = str.<span class="built_in">substr</span>(<span class="number">0</span>, idx);</span><br><span class="line">		string value = str.<span class="built_in">substr</span>(idx + <span class="number">1</span>, endidx - idx - <span class="number">1</span>);</span><br><span class="line">		<span class="keyword">if</span> (key == <span class="string">&quot;ip&quot;</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			_ip = value;</span><br><span class="line">		&#125;</span><br><span class="line">		...<span class="comment">//依次匹配设置其它参数</span></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="构造函数">构造函数</h2>
+<p>构造函数只执行一次</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;thread&gt;</span></span></span><br><span class="line">ConnectionPool::<span class="built_in">ConnectionPool</span>()</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">// 加载配置项</span></span><br><span class="line">	<span class="keyword">if</span> (!<span class="built_in">loadConfigFile</span>())</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="comment">// 创建初始数量的连接，此时是系统启动过程中的所以不用考虑线程安全</span></span><br><span class="line">	<span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; _initSize; ++i)</span><br><span class="line">	&#123;</span><br><span class="line">		Connection *p = <span class="keyword">new</span> <span class="built_in">Connection</span>();<span class="comment">//创建连接</span></span><br><span class="line">		p-&gt;<span class="built_in">connect</span>(_ip, _port, _username, _password, _dbname);</span><br><span class="line">		p-&gt;<span class="built_in">refreshAliveTime</span>(); <span class="comment">// 刷新一下开始空闲的起始时间</span></span><br><span class="line">		_connectionQue.<span class="built_in">push</span>(p); <span class="comment">//包含到队列中去</span></span><br><span class="line">		_connectionCnt++;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 启动一个新的线程，作为连接的生产者 linux thread =&gt; pthread_create</span></span><br><span class="line">	<span class="function">thread <span class="title">produce</span><span class="params">(std::bind(&amp;ConnectionPool::produceConnectionTask, <span class="keyword">this</span>))</span></span>;</span><br><span class="line">	produce.<span class="built_in">detach</span>();</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 启动一个新的定时线程，扫描超过maxIdleTime时间的空闲连接，进行对于的连接回收</span></span><br><span class="line">	<span class="function">thread <span class="title">scanner</span><span class="params">(std::bind(&amp;ConnectionPool::scannerConnectionTask, <span class="keyword">this</span>))</span></span>;</span><br><span class="line">	scanner.<span class="built_in">detach</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>部分解释：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::thread <span class="title">produce</span><span class="params">(std::bind(&amp;ConnectionPool::produceConnectionTask, <span class="keyword">this</span>))</span></span>;</span><br><span class="line"><span class="comment">//需要使用bind绑定对象this不然没法访问成员变量</span></span><br><span class="line">produce.<span class="built_in">detach</span>();</span><br></pre></td></tr></table></figure>
+<p>这行代码创建了一个名为 <code>produce</code> 的线程对象。它使用
+<code>std::bind</code> 函数将
+<code>ConnectionPool::produceConnectionTask</code>
+成员函数绑定到当前对象实例 (<code>this</code>) 上，然后传递给
+<code>std::thread</code> 构造函数。这样，线程 <code>produce</code>
+将执行 <code>ConnectionPool</code> 类<code>produceConnectionTask</code>
+成员函数。</p>
+<p>调用 <code>detach</code> 函数，将线程 <code>produce</code>
+从主线程中分离。这意味着一旦主线程结束，不再等待 <code>produce</code>
+线程的完成。线程的生命周期将独立于主线程，允许它在后台继续执行。通常，<code>detach</code>
+被用于在主线程退出时，确保所有线程都能完成它们的任务。</p>
+<h2 id="生产者线程连接生产者">生产者线程：连接生产者</h2>
+<p>首先这个线程一直在查看并创建连接，因此应该在一个死循环里面</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">ConnectionPool::produceConnectionTask</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>设置条件变量作为成员变量，用于连接生产线程和连接消费线程的通信</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">condition_variable cv; </span><br></pre></td></tr></table></figure>
+<p>核心逻辑：如果队列不空，则生产者线程等待暂不生产，否则，当连接数量没有达到上限的时候生产新的连接，生产完后通知消费者</p>
+<p>使用互斥锁维护队列之间的线程安全：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mutex _queueMutex; <span class="comment">// 维护连接队列的线程安全互斥锁</span></span><br><span class="line"></span><br><span class="line"><span class="function">unique_lock&lt;mutex&gt; <span class="title">lock</span><span class="params">(_queueMutex)</span></span>;</span><br></pre></td></tr></table></figure>
+<p><code>std::mutex</code> 是 C++11
+标准引入的互斥量类，用于实现线程同步。互斥量用于保护共享资源，确保同一时间只有一个线程可以访问它。</p>
+<p>这行代码的含义是创建一个 <code>std::unique_lock</code> 对象
+<code>lock</code>，该对象对 <code>_queueMutex</code>
+进行独占性的锁定。在 <code>lock</code>
+对象的生命周期内，<code>_queueMutex</code> 将一直被锁定，直到
+<code>lock</code> 被销毁（通常是离开作用域时）或显式调用
+<code>unlock</code>
+方法来释放锁。这样做的目的是确保在互斥量保护的临界区内，只有一个线程能够执行，防止多个线程同时访问共享资源导致竞态条件。</p>
+<p>这里生产者加锁后，消费者就拿不到这把锁了</p>
+<h3 id="线程安全队列">线程安全队列</h3>
+<p><code>std::queue</code> 是 C++
+标准模板库（STL）中的队列容器，但它本身并不提供线程安全性。在多线程环境中，多个线程可能会同时访问和修改队列，这可能导致竞态条件（race
+condition）和数据不一致性。</p>
+<p>以下是一些导致 <code>std::queue</code>
+不适用于多线程环境的主要原因：</p>
+<ol type="1">
+<li><p><strong>缺乏同步机制：</strong> <code>std::queue</code>
+不包含内建的同步机制，比如互斥量或锁。在多线程环境下，当多个线程同时尝试访问或修改队列时，没有适当的同步措施可能导致数据竞争。</p></li>
+<li><p><strong>不提供原子操作：</strong> <code>std::queue</code>
+不提供原子操作，即使是简单的 <code>push</code> 和 <code>pop</code>
+操作，也不能在多线程环境中保证原子性。多个线程可能同时执行这些操作，而没有合适的同步机制，可能导致不一致的队列状态。</p></li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;condition_variable&gt;</span></span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ConnectionPool::produceConnectionTask</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="function">unique_lock&lt;mutex&gt; <span class="title">lock</span><span class="params">(_queueMutex)</span></span>;<span class="comment">//通过互斥锁实现线程安全队列</span></span><br><span class="line">        <span class="comment">// lock 在此离开作用域时，会自动释放互斥量</span></span><br><span class="line">		<span class="keyword">while</span> (!_connectionQue.<span class="built_in">empty</span>())</span><br><span class="line">		&#123;</span><br><span class="line">			cv.<span class="built_in">wait</span>(lock); <span class="comment">// 队列不空，此处生产线程进入等待状态</span></span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 连接数量没有到达上限，继续创建新的连接</span></span><br><span class="line">		<span class="keyword">if</span> (_connectionCnt &lt; _maxSize)</span><br><span class="line">		&#123;</span><br><span class="line">			Connection *p = <span class="keyword">new</span> <span class="built_in">Connection</span>();</span><br><span class="line">			p-&gt;<span class="built_in">connect</span>(_ip, _port, _username, _password, _dbname);</span><br><span class="line">			p-&gt;<span class="built_in">refreshAliveTime</span>(); <span class="comment">// 刷新一下开始空闲的起始时间</span></span><br><span class="line">			_connectionQue.<span class="built_in">push</span>(p);</span><br><span class="line">			_connectionCnt++;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 通知消费者线程，可以消费连接了</span></span><br><span class="line">		cv.<span class="built_in">notify_all</span>();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="消费者线程">消费者线程</h2>
+<ul>
+<li><p><code>cv.wait_for(lock, std::chrono::milliseconds(_connectionTimeout))</code>
+是等待条件变为真或超时的操作。它会在等待的过程中释放锁，允许其他线程在这段时间内访问共享资源。等待的时间由
+<code>_connectionTimeout</code> 指定，单位是毫秒。</p>
+<p>整个 <code>if</code>
+语句检查条件变量的等待状态是否是超时状态。如果等待超时，表示在指定的时间内条件变为真的情况未发生。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (cv_status::timeout == cv.<span class="built_in">wait_for</span>(lock, chrono::<span class="built_in">milliseconds</span>(_connectionTimeout)))</span><br></pre></td></tr></table></figure>
+<p>这里如果写成下面的语句：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (cv.<span class="built_in">wait_for</span>(lock, chrono::<span class="built_in">milliseconds</span>(_connectionTimeout)))</span><br></pre></td></tr></table></figure>
+<p>又可能出现并不是超时唤醒，而是被其它的进程唤醒了的问题。</p></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 给外部提供接口，从连接池中获取一个可用的空闲连接</span></span><br><span class="line"><span class="function">shared_ptr&lt;Connection&gt; <span class="title">ConnectionPool::getConnection</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="function">unique_lock&lt;mutex&gt; <span class="title">lock</span><span class="params">(_queueMutex)</span></span>;<span class="comment">//涉及到操作队列，需要保证线程安全，所以需要上锁</span></span><br><span class="line">	<span class="keyword">while</span> (_connectionQue.<span class="built_in">empty</span>())<span class="comment">//如果连接池空了，需要</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="comment">// sleep</span></span><br><span class="line">        <span class="comment">//如果在超时时间内仍没有获取到，获取失败</span></span><br><span class="line">		<span class="keyword">if</span> (cv_status::timeout == cv.<span class="built_in">wait_for</span>(lock, chrono::<span class="built_in">milliseconds</span>(_connectionTimeout)))</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (_connectionQue.<span class="built_in">empty</span>())</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="built_in">LOG</span>(<span class="string">&quot;获取空闲连接超时了...获取连接失败!&quot;</span>);</span><br><span class="line">					<span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">/*</span></span><br><span class="line"><span class="comment">	shared_ptr智能指针析构时，会把connection资源直接delete掉，相当于</span></span><br><span class="line"><span class="comment">	调用connection的析构函数，connection就被close掉了。</span></span><br><span class="line"><span class="comment">	这里需要自定义shared_ptr的释放资源的方式，把connection直接归还到queue当中</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">	<span class="function">shared_ptr&lt;Connection&gt; <span class="title">sp</span><span class="params">(_connectionQue.front(), </span></span></span><br><span class="line"><span class="params"><span class="function">		[&amp;](Connection *pcon) &#123;</span></span></span><br><span class="line"><span class="params"><span class="function">		<span class="comment">// 这里是在服务器应用线程中调用的，所以一定要考虑队列的线程安全操作</span></span></span></span><br><span class="line"><span class="params"><span class="function">		unique_lock&lt;mutex&gt; lock(_queueMutex);</span></span></span><br><span class="line"><span class="params"><span class="function">		pcon-&gt;refreshAliveTime(); <span class="comment">// 刷新一下开始空闲的起始时间</span></span></span></span><br><span class="line"><span class="params"><span class="function">		_connectionQue.push(pcon);</span></span></span><br><span class="line"><span class="params"><span class="function">	&#125;)</span></span>;</span><br><span class="line"></span><br><span class="line">	_connectionQue.<span class="built_in">pop</span>();</span><br><span class="line">	cv.<span class="built_in">notify_all</span>();  <span class="comment">// 消费完连接以后，通知生产者线程检查一下，如果队列为空了，赶紧生产连接</span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">return</span> sp;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="利用智能指针实现给外部提供接口">利用智能指针实现给外部提供接口</h2>
+<p>如果是给外界返回一个指针，还得实现一个把连接归还给连接池的过程比较复杂。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Conection* <span class="title">getConnection</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+<p>可以返回一个智能指针，智能指针出作用域后会自动析构，我们可以重定义一些删除器让其在析构的时候把连接归还给连接池</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;memory&gt;</span></span></span><br><span class="line"><span class="function">shared_ptr&lt;Connection&gt; <span class="title">getConnection</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">shared_ptr&lt;Connection&gt; <span class="title">sp</span><span class="params">(_connectionQue.front(), </span></span></span><br><span class="line"><span class="params"><span class="function">	[&amp;](Connection *pcon) &#123;</span></span></span><br><span class="line"><span class="params"><span class="function">	<span class="comment">// 这里是在服务器应用线程中调用的，所以一定要考虑队列的线程安全操作</span></span></span></span><br><span class="line"><span class="params"><span class="function">	unique_lock&lt;mutex&gt; lock(_queueMutex);</span></span></span><br><span class="line"><span class="params"><span class="function">	pcon-&gt;refreshAliveTime(); <span class="comment">// 刷新一下开始空闲的起始时间</span></span></span></span><br><span class="line"><span class="params"><span class="function">	_connectionQue.push(pcon);</span></span></span><br><span class="line"><span class="params"><span class="function">&#125;)</span></span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p><code>std::shared_ptr&lt;Connection&gt;</code>
+是一个智能指针，用于管理 <code>Connection</code> 类型的对象。这里使用
+<code>_connectionQue.front()</code> 获取队列头部的
+<code>Connection</code> 指针作为被 <code>shared_ptr</code>
+所管理的对象。</p></li>
+<li><p>第二个参数是一个自定义的删除器，使用了 lambda 表达式
+<code>([&amp;](Connection *pcon) &#123;...&#125;)</code>。这个删除器会在
+<code>shared_ptr</code>
+管理的对象引用计数变为零时被调用，用于自定义对象的销毁行为。</p>
+<ul>
+<li>在这个例子中，当 <code>shared_ptr</code>
+的引用计数变为零时（没有任何 <code>shared_ptr</code>
+持有这个对象时），lambda 表达式会被调用。</li>
+<li>在 lambda 表达式内部，首先通过互斥量 <code>_queueMutex</code>
+对队列进行锁定（<code>std::unique_lock&lt;std::mutex&gt;lock(_queueMutex);</code>）。这是因为涉及到队列的操作，需要考虑线程安全。</li>
+<li>然后调用 <code>pcon-&gt;refreshAliveTime()</code> 刷新
+<code>Connection</code> 对象的空闲时间。</li>
+<li>最后，将 <code>pcon</code> 重新放入队列中
+<code>_connectionQue.push(pcon)</code>。</li>
+</ul></li>
+</ul>
+<p>这样，通过自定义删除器，你可以在 <code>Connection</code>
+对象被释放时执行一些额外的操作。在这个例子中，是刷新空闲时间并将连接重新放入队列。这通常用于对象的资源管理和回收。</p>
+<ul>
+<li><p>lambda表达式部分解释</p>
+<ul>
+<li><code>[&amp;]</code>: 这是 lambda 表达式的捕获列表（capture
+list），用于指定在 lambda 函数体内可访问的外部变量。<code>[&amp;]</code>
+表示以引用方式捕获所有外部变量，即在 lambda 函数体内，可以访问包含这个
+lambda 的函数作用域内的所有变量，并且可以修改这些变量的值。</li>
+<li><code>(Connection *pcon)</code>: 这是 lambda 表达式的参数列表，表示
+lambda 函数接受一个名为 <code>pcon</code>，类型为
+<code>Connection*</code> 的参数。</li>
+<li><code>&#123; /* ... */ &#125;</code>: 这是 lambda 表达式的函数体，包含了
+lambda 函数要执行的代码块。</li>
+</ul>
+<p>综合起来，<code>[&amp;](Connection *pcon) &#123; /* ... */ &#125;</code> 这个
+lambda 表达式表示一个接受一个 <code>Connection*</code> 类型的参数
+<code>pcon</code>
+的函数，它以引用方式捕获了包含它的作用域内的所有变量，并在函数体内执行一些操作。</p></li>
+</ul>
+<h2 id="最大空闲时间回收连接扫描线程">最大空闲时间回收连接扫描线程</h2>
+<h3 id="时间的记录">时间的记录</h3>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">	<span class="comment">// 刷新一下连接的起始的空闲时间点</span></span><br><span class="line">	<span class="function"><span class="type">void</span> <span class="title">refreshAliveTime</span><span class="params">()</span> </span>&#123; _alivetime = <span class="built_in">clock</span>(); &#125; <span class="comment">//在每次的队列push的操作时，要刷新一下空闲的起始时间</span></span><br><span class="line">	<span class="comment">// 返回存活的时间</span></span><br><span class="line">     <span class="comment">//const: 这里的 const 表示这是一个常量成员函数。在常量成员函数内部，不能修改该对象的任何非 mutable 成员变量。</span></span><br><span class="line">	<span class="function"><span class="type">clock_t</span> <span class="title">getAliveeTime</span><span class="params">()</span><span class="type">const</span> </span>&#123; <span class="keyword">return</span> <span class="built_in">clock</span>() - _alivetime; &#125;</span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">	MYSQL *_conn; <span class="comment">// 表示和MySQL Server的一条连接</span></span><br><span class="line">	<span class="type">clock_t</span> _alivetime; <span class="comment">// 记录进入空闲状态后的起始存活时间</span></span><br></pre></td></tr></table></figure>
+<h3 id="定时线程">定时线程</h3>
+<p>在构造函数里面进行线程的初始化：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 启动一个新的定时线程，扫描超过maxIdleTime时间的空闲连接，进行对于的连接回收</span></span><br><span class="line"><span class="function">thread <span class="title">scanner</span><span class="params">(std::bind(&amp;ConnectionPool::scannerConnectionTask, <span class="keyword">this</span>))</span></span>;</span><br><span class="line">scanner.<span class="built_in">detach</span>();</span><br></pre></td></tr></table></figure>
+<p><strong>scannerConnectionTask</strong></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 扫描超过maxIdleTime时间的空闲连接，进行对于的连接回收</span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">ConnectionPool::scannerConnectionTask</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">for</span> (;;)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="comment">// 通过sleep模拟定时效果</span></span><br><span class="line">		this_thread::<span class="built_in">sleep_for</span>(chrono::<span class="built_in">seconds</span>(_maxIdleTime));</span><br><span class="line"></span><br><span class="line">		<span class="comment">// 扫描整个队列，释放多余的连接</span></span><br><span class="line">		<span class="function">unique_lock&lt;mutex&gt; <span class="title">lock</span><span class="params">(_queueMutex)</span></span>;</span><br><span class="line">		<span class="keyword">while</span> (_connectionCnt &gt; _initSize)</span><br><span class="line">            <span class="comment">//当当前的连接数量大于初始化最大队列大小的时候才进行检测，有点像缓冲区的设计思想。</span></span><br><span class="line">		&#123;</span><br><span class="line">			Connection *p = _connectionQue.<span class="built_in">front</span>();</span><br><span class="line">			<span class="keyword">if</span> (p-&gt;<span class="built_in">getAliveeTime</span>() &gt;= (_maxIdleTime * <span class="number">1000</span>))</span><br><span class="line">			&#123;</span><br><span class="line">				_connectionQue.<span class="built_in">pop</span>();</span><br><span class="line">				_connectionCnt--;</span><br><span class="line">				<span class="keyword">delete</span> p; <span class="comment">// 调用~Connection()释放连接</span></span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span></span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">break</span>; <span class="comment">// 队头的连接没有超过_maxIdleTime，其它连接肯定没有</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%A4%9A%E7%BA%BF%E7%A8%8B/" rel="tag"># 多线程</a>
+              <a href="/tags/%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%EF%BC%8Cc/" rel="tag"># 智能指针，c++</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/26/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%89%91%E6%8C%87offer%E5%88%B7%E9%A2%98%E6%80%BB%E7%BB%93/%E9%98%9F%E5%88%97%E6%A0%88%E6%80%BB%E7%BB%93/" rel="prev" title="队列栈总结">
+                  <i class="fa fa-chevron-left"></i> 队列栈总结
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/02/28/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/%E7%BC%96%E8%AF%91%E5%92%8C%E9%93%BE%E6%8E%A5/" rel="next" title="编译和链接">
+                  编译和链接 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"fb36a5de12331baa94558e00183df438"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

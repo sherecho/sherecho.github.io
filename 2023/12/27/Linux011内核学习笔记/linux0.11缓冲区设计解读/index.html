@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="linux0.11缓冲区设计解读 在之前的笔记中，我们已经零散的介绍了缓冲区的相关设计。这里我们系统的总结linux0.11关于缓冲区的相关设计 缓冲区：高速缓冲区位于内核代码块和主内存区之间   高速缓存  缓冲区的作用与设计原则 首先，我们需要考虑，我们为什么需要缓冲区，在什么情况下缓冲区可以没有。 缓冲区：开一块内存，磁盘内容先读到缓冲区，在缓冲区读到内存   缓冲区">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux0.11缓冲区设计解读">
+<meta property="og:url" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="linux0.11缓冲区设计解读 在之前的笔记中，我们已经零散的介绍了缓冲区的相关设计。这里我们系统的总结linux0.11关于缓冲区的相关设计 缓冲区：高速缓冲区位于内核代码块和主内存区之间   高速缓存  缓冲区的作用与设计原则 首先，我们需要考虑，我们为什么需要缓冲区，在什么情况下缓冲区可以没有。 缓冲区：开一块内存，磁盘内容先读到缓冲区，在缓冲区读到内存   缓冲区">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115095947238.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204000645279.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115093737912.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204001805864.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115101114916.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115101151894.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115104420577.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/缓冲绘图2.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/缓冲初始化.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231120112732685.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204103021783.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204103333791.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204125344146.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204124000143.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204130401382.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204132338271.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/getblk3.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115104420577.png">
+<meta property="article:published_time" content="2023-12-26T16:28:24.000Z">
+<meta property="article:modified_time" content="2024-01-23T15:31:26.631Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115095947238.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/","path":"2023/12/27/Linux011内核学习笔记/linux0.11缓冲区设计解读/","title":"linux0.11缓冲区设计解读"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>linux0.11缓冲区设计解读 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB"><span class="nav-number">1.</span> <span class="nav-text">linux0.11缓冲区设计解读</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E5%8C%BA%E7%9A%84%E4%BD%9C%E7%94%A8%E4%B8%8E%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99"><span class="nav-number">1.1.</span> <span class="nav-text">缓冲区的作用与设计原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E5%8C%BA%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.2.</span> <span class="nav-text">缓冲区数据结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%93%E5%86%B2%E5%8C%BA%E5%8F%8C%E5%90%91%E7%8E%AF%E9%93%BE%E8%A1%A8%E5%92%8Chash"><span class="nav-number">1.2.1.</span> <span class="nav-text">缓冲区双向环链表和hash</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#linux0.11%E5%81%9A%E7%9A%84%E7%BC%93%E5%86%B2%E5%8C%BA%E7%9B%B8%E5%85%B3%E5%88%9D%E5%A7%8B%E5%8C%96%E6%93%8D%E4%BD%9C"><span class="nav-number">1.3.</span> <span class="nav-text">linux0.11做的缓冲区相关初始化操作</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#buffer"><span class="nav-number">1.3.1.</span> <span class="nav-text">buffer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#blk_dev"><span class="nav-number">1.3.2.</span> <span class="nav-text">blk_dev</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#request"><span class="nav-number">1.3.3.</span> <span class="nav-text">request</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E7%BC%93%E5%86%B2%E5%9D%97%E7%BC%93%E5%86%B2%E5%9D%97%E4%B8%8E%E8%BF%9B%E7%A8%8B%E7%A3%81%E7%9B%98%E8%AE%BE%E5%A4%87%E7%BB%91%E5%AE%9A"><span class="nav-number">1.4.</span> <span class="nav-text">获取缓冲块，缓冲块与进程，磁盘设备绑定</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#get_hash_table"><span class="nav-number">1.4.1.</span> <span class="nav-text">get_hash_table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#find_buffer"><span class="nav-number">1.4.2.</span> <span class="nav-text">find_buffer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#getblk"><span class="nav-number">1.4.3.</span> <span class="nav-text">getblk</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#remove_from_queues"><span class="nav-number">1.4.4.</span> <span class="nav-text">remove_from_queues</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#insert_into_queues"><span class="nav-number">1.4.5.</span> <span class="nav-text">insert_into_queues</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bread"><span class="nav-number">1.4.6.</span> <span class="nav-text">bread</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BC%93%E5%86%B2%E5%9D%97"><span class="nav-number">1.5.</span> <span class="nav-text">进程与缓冲块</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="linux0.11缓冲区设计解读 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux0.11缓冲区设计解读
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-12-27 00:28:24" itemprop="dateCreated datePublished" datetime="2023-12-27T00:28:24+08:00">2023-12-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-01-23 23:31:26" itemprop="dateModified" datetime="2024-01-23T23:31:26+08:00">2024-01-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/LINUX011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">LINUX011内核学习笔记</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>9.8k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="linux0.11缓冲区设计解读">linux0.11缓冲区设计解读</h1>
+<p>在之前的笔记中，我们已经零散的介绍了缓冲区的相关设计。这里我们系统的总结linux0.11关于缓冲区的相关设计</p>
+<p>缓冲区：高速缓冲区位于内核代码块和主内存区之间</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115095947238.png" alt="高速缓存">
+<figcaption aria-hidden="true">高速缓存</figcaption>
+</figure>
+<h2 id="缓冲区的作用与设计原则">缓冲区的作用与设计原则</h2>
+<p>首先，我们需要考虑，我们为什么需要缓冲区，在什么情况下缓冲区可以没有。</p>
+<p>缓冲区：开一块内存，磁盘内容先读到缓冲区，在缓冲区读到内存</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204000645279.png" alt="缓冲区示意图">
+<figcaption aria-hidden="true">缓冲区示意图</figcaption>
+</figure>
+<blockquote>
+<p>缓冲区的优势：</p>
+<p>1.块设备的统一集散地，使得操作系统设计更方便，更灵活</p>
+<p>2.对块设备的文件操作运行效率更高</p>
+</blockquote>
+<p>前提：从内存读比从磁盘读快200倍</p>
+<p><img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115093737912.png" alt="image-20231115093737912" style="zoom:55%;"></p>
+<p><strong>怎么设计缓冲区才能重复使用。 </strong></p>
+<blockquote>
+<p>为啥使用缓冲区快：存在重复读写的时候变快，有点像catche</p>
+<p>怎么设计缓冲区才能满足重复使用，使得读写变快？</p>
+<p><strong>思路：缓冲区的数据一旦进了缓冲区就尽可能呆在缓冲区时间长：怎么设计</strong></p>
+<p>如果counter=0且没有新的请求或者缓冲区没满，那么这个conuter的buffer
+head还得在缓冲区里面放着，满足在缓冲区时间长</p>
+<p>如果缓冲区满了，有新的请求，则把counter=0的挪出去，把新的加进来</p>
+<p>如果缓冲区满了，没有counter=0的，有新的请求，则新的请求等待。</p>
+</blockquote>
+<h2 id="缓冲区数据结构">缓冲区数据结构</h2>
+<p>缓冲区涉及的操作主要是buffer
+head和request，也就是缓冲区部分和块设备部分</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204001805864.png" alt="主要操作">
+<figcaption aria-hidden="true">主要操作</figcaption>
+</figure>
+<h3 id="缓冲区双向环链表和hash">缓冲区双向环链表和hash</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> &#123;</span></span><br><span class="line">	<span class="type">char</span> * b_data;	<span class="comment">// 指向数据块的指针（数据块为 1024 字节）	/* pointer to data block (1024 bytes) */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> b_blocknr;	<span class="comment">// 块号//块号/* block number */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">short</span> b_dev;	<span class="comment">// 数据源的设备号（0 表示未用）。	/* device (0 = free) */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> b_uptodate; <span class="comment">// 更新标志：表示数据是否已更新。</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> b_dirt;	<span class="comment">// 修改标志：0-未修改，1-已修改。	/* 0-clean,1-dirty */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> b_count;		<span class="comment">// 使用该数据块的用户数。 /* users using this block */</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">char</span> b_lock;	<span class="comment">// 缓冲区是否被锁定，0-未锁；1-已锁定。	/* 0 - ok, 1 -locked */</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> * <span class="title">b_wait</span>;</span><span class="comment">// 指向等待该缓冲区解锁的任务。 </span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">b_prev</span>;</span> <span class="comment">// 前一块（这四个指针用于缓冲区的管理）。 </span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">b_next</span>;</span>  <span class="comment">// 下一块。</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">b_prev_free</span>;</span> <span class="comment">// 前一空闲块。 </span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">b_next_free</span>;</span> <span class="comment">// 下一空闲块。</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<p>其中 ==b_blocknr== ==unsigned short
+b_dev==，是缓冲区接受多进程文件和设计的基础</p>
+<p><strong>如何保证缓冲块的唯一性：</strong>、</p>
+<p>每个缓冲块有唯一的bufffer_head,内核通过b_dev和b_blocknr设备号块号把缓冲块和磁盘数据块绑定保证了关系的唯一性</p>
+<p>buffer_head 被链接成一个空闲缓冲块双向链表结构。</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115101114916.png" alt="双向环链表">
+<figcaption aria-hidden="true">双向环链表</figcaption>
+</figure>
+<p>为了能够快速地在缓冲区中寻找请求的数据块是否已经被读入到缓冲区中，buffer.c
+程序使用了具有307 个 buffer_head 指针项的==hash 表结构==。上图中
+buffer_head 结构的指针 b_prev、b_next 就是用于
+hash表中散列在同一项上多个缓冲块之间的双向连接。Hash
+表所使用的散列函数由==设备号和逻辑块号组合而成==。程序中使用的具体函数是：==(设备号^逻辑块号)
+Mod 307==。</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115101151894.png" alt="hash结构">
+<figcaption aria-hidden="true">hash结构</figcaption>
+</figure>
+<p><img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115104420577.png" alt="image-20231115104420577" style="zoom:80%;"></p>
+<p><strong>request 数据结构</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">request</span> &#123;</span></span><br><span class="line">	<span class="type">int</span> dev;		<span class="comment">/* -1 if no request */</span> <span class="comment">//使用的设备号</span></span><br><span class="line">	<span class="type">int</span> cmd;		<span class="comment">/* READ or WRITE */</span></span><br><span class="line">	<span class="type">int</span> errors;<span class="comment">//操作时产生的错误次数</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> sector;<span class="comment">//起始扇区</span></span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> nr_sectors;<span class="comment">//读写扇区数</span></span><br><span class="line">	<span class="type">char</span> * buffer;<span class="comment">//数据缓冲区</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">task_struct</span> * <span class="title">waiting</span>;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">bh</span>;</span><span class="comment">//缓冲区头指针</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">request</span> * <span class="title">next</span>;</span><span class="comment">//指向下一个请求项</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>request是一个数组，被用到的request挂载dev_hd这个数组结构下面形成一条链表</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/缓冲绘图2.png" alt="缓冲绘图">
+<figcaption aria-hidden="true">缓冲绘图</figcaption>
+</figure>
+<h2 id="linux0.11做的缓冲区相关初始化操作">linux0.11做的缓冲区相关初始化操作</h2>
+<p>进程与缓冲区交互以块为单位，内核支持缓冲区与磁盘交互通过request交互。块是操作系统的概念，磁盘只有扇区的概念。（request相当于一个翻译官）</p>
+<h3 id="buffer">buffer</h3>
+<p><code>buffer_init(buffer_memory_end);</code></p>
+<p><code>struct buffer_head * start_buffer = (struct buffer_head *) &amp;end;</code></p>
+<p>这里的end就是内核代码末端的地址，设计者较难事先预估在内核模块链接期间设置end值，在这里使用</p>
+<p>buffer.c里面的buffer_init:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">buffer_init</span><span class="params">(<span class="type">long</span> buffer_end)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">h</span> =</span> start_buffer;</span><br><span class="line">	<span class="type">void</span> * b;</span><br><span class="line">	<span class="type">int</span> i;</span><br><span class="line"> <span class="comment">// 如果缓冲区高端等于 1Mb，则由于从 640KB-1MB 被显示内存和 BIOS 占用，因此实际可用缓冲区内存 </span></span><br><span class="line"> <span class="comment">// 高端应该是 640KB。否则内存高端一定大于 1MB。 </span></span><br><span class="line">	<span class="keyword">if</span> (buffer_end == <span class="number">1</span>&lt;&lt;<span class="number">20</span>)</span><br><span class="line">		b = (<span class="type">void</span> *) (<span class="number">640</span>*<span class="number">1024</span>);</span><br><span class="line">	<span class="keyword">else</span></span><br><span class="line">		b = (<span class="type">void</span> *) buffer_end;</span><br><span class="line"><span class="comment">// 这段代码用于初始化缓冲区，建立空闲缓冲区环链表，并获取系统中缓冲块的数目。 </span></span><br><span class="line"> <span class="comment">// 操作的过程是从缓冲区高端开始划分 1K 大小的缓冲块，与此同时在缓冲区低端建立描述该缓冲块 </span></span><br><span class="line"> <span class="comment">// 的结构 buffer_head，并将这些 buffer_head 组成双向链表。 </span></span><br><span class="line"> <span class="comment">// h 是指向缓冲头结构的指针，而 h+1 是指向内存地址连续的下一个缓冲头地址，也可以说是指向 h </span></span><br><span class="line"> <span class="comment">// 缓冲头的末端外。为了保证有足够长度的内存来存储一个缓冲头结构，需要 b 所指向的内存块 </span></span><br><span class="line"> <span class="comment">// 地址 &gt;= h 缓冲头的末端，也即要&gt;=h+1。 </span></span><br><span class="line">	</span><br><span class="line">	<span class="keyword">while</span> ( (b -= BLOCK_SIZE) &gt;= ((<span class="type">void</span> *) (h+<span class="number">1</span>)) ) &#123;</span><br><span class="line">		h-&gt;b_dev = <span class="number">0</span>; <span class="comment">// 使用该缓冲区的设备号。 </span></span><br><span class="line">		h-&gt;b_dirt = <span class="number">0</span>; <span class="comment">// 脏标志，也即缓冲区修改标志。</span></span><br><span class="line">		h-&gt;b_count = <span class="number">0</span>;<span class="comment">// 该缓冲区引用计数。</span></span><br><span class="line">		h-&gt;b_lock = <span class="number">0</span>;<span class="comment">// 缓冲区锁定标志</span></span><br><span class="line">		h-&gt;b_uptodate = <span class="number">0</span>;<span class="comment">// 缓冲区更新标志（或称数据有效标志）。</span></span><br><span class="line">		h-&gt;b_wait = <span class="literal">NULL</span>;<span class="comment">// 指向等待该缓冲区解锁的进程。 </span></span><br><span class="line">		h-&gt;b_next = <span class="literal">NULL</span>; <span class="comment">// 指向具有相同 hash 值的下一个缓冲头。</span></span><br><span class="line">		h-&gt;b_prev = <span class="literal">NULL</span>;<span class="comment">// 指向具有相同 hash 值的前一个缓冲头。 </span></span><br><span class="line">		h-&gt;b_data = (<span class="type">char</span> *) b;<span class="comment">// 指向对应缓冲区数据块（1024 字节）。 </span></span><br><span class="line">		h-&gt;b_prev_free = h<span class="number">-1</span>;<span class="comment">// 指向链表中前一项。 </span></span><br><span class="line">		h-&gt;b_next_free = h+<span class="number">1</span>;<span class="comment">// 指向链表中下一项。 </span></span><br><span class="line">		h++;<span class="comment">// h 指向下一新缓冲头位置</span></span><br><span class="line">		NR_BUFFERS++;<span class="comment">// 缓冲区块数累加。</span></span><br><span class="line">		<span class="keyword">if</span> (b == (<span class="type">void</span> *) <span class="number">0x100000</span>)<span class="comment">// 如果地址 b 递减到等于 1MB，则跳过 384KB， </span></span><br><span class="line">			b = (<span class="type">void</span> *) <span class="number">0xA0000</span>;<span class="comment">// 让 b 指向地址 0xA0000(640KB)处。</span></span><br><span class="line">	&#125;</span><br><span class="line">	h--;<span class="comment">// 让 h 指向最后一个有效缓冲头。 </span></span><br><span class="line">	free_list = start_buffer;<span class="comment">// 让空闲链表头指向头一个缓冲区头。</span></span><br><span class="line">	free_list-&gt;b_prev_free = h;<span class="comment">// 链表头的 b_prev_free 指向前一项（即最后一项）。</span></span><br><span class="line">	h-&gt;b_next_free = free_list;<span class="comment">// h 的下一项指针指向第一项，形成一个环链。</span></span><br><span class="line">	<span class="comment">// 初始化 hash 表（哈希表、散列表），置表中所有的指针为 NULL。</span></span><br><span class="line">	<span class="keyword">for</span> (i=<span class="number">0</span>;i&lt;NR_HASH;i++)</span><br><span class="line">		hash_table[i]=<span class="literal">NULL</span>;</span><br><span class="line">&#125;	</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/缓冲初始化.png" alt="缓冲初始化">
+<figcaption aria-hidden="true">缓冲初始化</figcaption>
+</figure>
+<h3 id="blk_dev">blk_dev</h3>
+<p>blk.h：</p>
+<p><code>\#define NR_BLK_DEV  7</code></p>
+<p>系统管理外设的重要数据结构：对于各种块设备，内核使用了一张块设备表
+blk_dev[]来进行管理</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">blk_dev_struct</span> &#123;</span> </span><br><span class="line"> <span class="type">void</span> (*request_fn)(<span class="type">void</span>); <span class="comment">// 请求项操作的函数指针。 </span></span><br><span class="line"> <span class="class"><span class="keyword">struct</span> <span class="title">request</span> * <span class="title">current_request</span>;</span> <span class="comment">// 当前请求项指针。 </span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">blk_dev_struct</span> <span class="title">blk_dev</span>[<span class="title">NR_BLK_DEV</span>] =</span> &#123;</span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* no_dev */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev mem */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev fd */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev hd */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev ttyx */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;,		<span class="comment">/* dev tty */</span></span><br><span class="line">	&#123; <span class="literal">NULL</span>, <span class="literal">NULL</span> &#125;		<span class="comment">/* dev lp */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231120112732685.png" alt="主设备号">
+<figcaption aria-hidden="true">主设备号</figcaption>
+</figure>
+<p>blk_dev[major].request
+在hd_init里面做了初始化，挂载了请求项函数：do_hd_request，
+current_request指向null</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> DEVICE_REQUEST do_hd_request</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">hd_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204103021783.png" alt="blk_dev">
+<figcaption aria-hidden="true">blk_dev</figcaption>
+</figure>
+<h3 id="request">request</h3>
+<p><code>struct request request[NR_REQUEST];</code>//32</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">blk_dev_init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">int</span> i;</span><br><span class="line">    <span class="comment">//NR_REQUEST是请求项的数量=32</span></span><br><span class="line">	<span class="keyword">for</span> (i=<span class="number">0</span> ; i&lt;NR_REQUEST ; i++) &#123;</span><br><span class="line">		request[i].dev = <span class="number">-1</span>;<span class="comment">//设为空闲，说明这个请求项还没有聚体对应那个设备，用于判断请求项当前设备是否空闲</span></span><br><span class="line">		request[i].next = <span class="literal">NULL</span>;<span class="comment">//互不挂接，说明还没形成请求队列</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>一个是七个blk_dev的一个是32个的request(是一个数组链表)</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204103333791.png" alt="request">
+<figcaption aria-hidden="true">request</figcaption>
+</figure>
+<h2 id="获取缓冲块缓冲块与进程磁盘设备绑定">获取缓冲块，缓冲块与进程，磁盘设备绑定</h2>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> buffer_head * <span class="title function_">bread</span><span class="params">(<span class="type">int</span> dev,<span class="type">int</span> block)</span><span class="comment">//读指定的dev，block，第一块dev是0x300   block：0</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">bh</span>;</span></span><br><span class="line">    <span class="comment">//先到缓冲区里面找有没有相同的块</span></span><br><span class="line">	<span class="comment">//dev设备号block 块号</span></span><br><span class="line">	<span class="keyword">if</span> (!(bh=getblk(dev,block))) <span class="comment">//在缓冲区找与dev，block相符合的缓冲块</span></span><br><span class="line">		panic(<span class="string">&quot;bread: getblk returned NULL\n&quot;</span>); <span class="comment">//因为现在是进程一第一次使用缓冲区不可能没有空闲块</span></span><br><span class="line">    <span class="comment">/*找到缓冲块与请求项挂载*/</span></span><br><span class="line">	<span class="keyword">if</span> (bh-&gt;b_uptodate) <span class="comment">//如果在缓冲区找到了相符合的块，如果该缓冲区中的数据是有效的（已更新的），否则可能内存还没向缓冲区完成写</span></span><br><span class="line">		<span class="keyword">return</span> bh;   <span class="comment">//返回块</span></span><br><span class="line">	<span class="comment">// 否则调用 ll_rw_block()函数，产生读设备块请求。并等待缓冲区解锁。</span></span><br><span class="line">	ll_rw_block(READ,bh); </span><br><span class="line">	wait_on_buffer(bh);<span class="comment">//之前调用了读盘的操作，数据还没用从硬盘中读完，因此等待</span></span><br><span class="line">	<span class="comment">// 如果该缓冲区已更新，则返回缓冲区头指针，退出。</span></span><br><span class="line">	<span class="keyword">if</span> (bh-&gt;b_uptodate)</span><br><span class="line">		<span class="keyword">return</span> bh;</span><br><span class="line">	<span class="comment">// 否则表明读设备操作失败，释放该缓冲区，返回 NULL 指针，退出。 </span></span><br><span class="line">	brelse(bh);</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="get_hash_table">get_hash_table</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> buffer_head * <span class="title function_">get_hash_table</span><span class="params">(<span class="type">int</span> dev, <span class="type">int</span> block)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">bh</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (;;) &#123;</span><br><span class="line">		<span class="keyword">if</span> (!(bh=find_buffer(dev,block)))<span class="comment">//在hash的链表中找相同设备号块号的缓冲区</span></span><br><span class="line">			<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">		bh-&gt;b_count++;<span class="comment">//增加缓冲块的引用计数</span></span><br><span class="line">		wait_on_buffer(bh);<span class="comment">//等待缓冲块，因为之前的进程不一定用完了，如果是lock的该进程sleep</span></span><br><span class="line">		<span class="keyword">if</span> (bh-&gt;b_dev == dev &amp;&amp; bh-&gt;b_blocknr == block)</span><br><span class="line">			<span class="keyword">return</span> bh;</span><br><span class="line">		bh-&gt;b_count--;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204125344146.png" alt="gethashtable">
+<figcaption aria-hidden="true">gethashtable</figcaption>
+</figure>
+<h3 id="find_buffer">find_buffer</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> hash(dev,block) hash_table[_hashfn(dev,block)]</span></span><br><span class="line"></span><br><span class="line"><span class="type">static</span> <span class="keyword">struct</span> buffer_head * <span class="title function_">find_buffer</span><span class="params">(<span class="type">int</span> dev, <span class="type">int</span> block)</span></span><br><span class="line">&#123;		</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">tmp</span>;</span></span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (tmp = hash(dev,block) ; tmp != <span class="literal">NULL</span> ; tmp = tmp-&gt;b_next)</span><br><span class="line">		<span class="keyword">if</span> (tmp-&gt;b_dev==dev &amp;&amp; tmp-&gt;b_blocknr==block)</span><br><span class="line">			<span class="keyword">return</span> tmp;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204124000143.png" alt="find—buffer">
+<figcaption aria-hidden="true">find—buffer</figcaption>
+</figure>
+<h3 id="getblk">getblk</h3>
+<p>缓冲块搜索函数 getblk()，以获取适合的缓冲块。该函数首先 调用
+get_hash_table()函数，在 hash
+表队列中搜索指定设备号和逻辑块号的缓冲块是否已经存在。如果存在就立刻返回对应缓冲头结构的指针；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> buffer_head * <span class="title function_">getblk</span><span class="params">(<span class="type">int</span> dev,<span class="type">int</span> block)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">tmp</span>, * <span class="title">bh</span>;</span></span><br><span class="line"></span><br><span class="line">repeat:</span><br><span class="line">	<span class="keyword">if</span> (bh = get_hash_table(dev,block))</span><br><span class="line">		<span class="keyword">return</span> bh;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204130401382.png"></p>
+<p>如果不存在现成的，则从空闲链表头开始，对空闲链表进行扫描，寻找
+一个空闲缓冲块。在寻找过程中还要对找到的空闲缓冲块作比较，根据赋予修改标志和锁定标志组合而成的权值，比较哪个空闲块最适合。若找到的空闲块既没有被修改也没有被锁定，就不用继续寻找了。</p>
+<p>这里的dirt指的是进程方向的，dirt=1指的是进程修改了缓冲块，还没有写到硬盘中，而update是硬盘方向的，update=1指的是硬盘刷新过的缓冲块，数据已经读入内存。dirt和lock的区别体现在，lock是指缓冲块正在同步（正在写入硬盘），而dirt还不知道什么时候写，所以相比之下，dirt位比lock位更加的不好。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> BADNESS(bh) (((bh)-&gt;b_dirt<span class="string">&lt;&lt;1)+(bh)-&gt;</span>b_lock)</span></span><br><span class="line"><span class="type">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">buffer_head</span> * <span class="title">free_list</span>;</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">struct</span> buffer_head * <span class="title function_">getblk</span><span class="params">(<span class="type">int</span> dev,<span class="type">int</span> block)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">	tmp = free_list;</span><br><span class="line">	<span class="keyword">do</span> &#123;</span><br><span class="line">		<span class="comment">//如果被人用了就接着往下遍历</span></span><br><span class="line">		<span class="keyword">if</span> (tmp-&gt;b_count)</span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">			<span class="comment">//BADNESS：dirt&lt;&lt;2+lock</span></span><br><span class="line">			<span class="comment">//一读一写才有竞争，生产者消费者模型，谁是自动化的，谁是主动的进程可以干预的，所以要锁住内存到缓冲区的路径</span></span><br><span class="line">			<span class="comment">//因此一加锁说明缓冲区到磁盘正在自动化操作</span></span><br><span class="line">			<span class="comment">//dirt说明缓冲区被进程写过，还没开始自动化的过程</span></span><br><span class="line">			<span class="comment">//因此dirt和lock选一个，选lock，因为lock干的时间短</span></span><br><span class="line">			<span class="comment">//dirt左移说明加了权重了</span></span><br><span class="line">			<span class="comment">//要从11 10 01 00 里面找最小的一个</span></span><br><span class="line">		<span class="keyword">if</span> (!bh || BADNESS(tmp)&lt;BADNESS(bh)) &#123;</span><br><span class="line">			bh = tmp;</span><br><span class="line">			<span class="keyword">if</span> (!BADNESS(tmp))</span><br><span class="line">				<span class="keyword">break</span>;</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">/* and repeat until we find something good */</span></span><br><span class="line">	&#125; <span class="keyword">while</span> ((tmp = tmp-&gt;b_next_free) != free_list);</span><br><span class="line">        </span><br><span class="line">	<span class="keyword">if</span> (!bh) &#123;</span><br><span class="line">		sleep_on(&amp;buffer_wait);</span><br><span class="line">		<span class="keyword">goto</span> repeat;</span><br><span class="line">	&#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231204132338271.png" alt="getblk1">
+<figcaption aria-hidden="true">getblk1</figcaption>
+</figure>
+<p>若没有找到空闲块，则让当前进程进入睡眠状态，待继续执行时再次寻找。若该空闲块被锁定，则进程也需进入睡眠，等待其它进程解锁。若在睡眠等待的过程中，该缓冲块又被其它进程占用，那么只要再
+重头开始搜索缓冲块。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wait_on_buffer(bh);<span class="comment">//等待写完缓冲区</span></span><br><span class="line">	<span class="keyword">if</span> (bh-&gt;b_count)<span class="comment">//不空闲则重复上面的操作//在buffer_init里面初始化的时候设置成0</span></span><br><span class="line">		<span class="keyword">goto</span> repeat;</span><br></pre></td></tr></table></figure>
+<p>否则判断该缓冲块是否已被修改过，若是，则将该块写盘，并等待该块解锁。此
+时如果该缓冲块又被别的进程占用，那么又一次全功尽弃，只好再重头开始执行
+getblk()。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//脏位置一，说明缓冲块被写了，当前正等待用户写</span></span><br><span class="line">	<span class="keyword">while</span> (bh-&gt;b_dirt) &#123;</span><br><span class="line">		sync_dev(bh-&gt;b_dev);</span><br><span class="line">		wait_on_buffer(bh);</span><br><span class="line">		<span class="keyword">if</span> (bh-&gt;b_count)</span><br><span class="line">			<span class="keyword">goto</span> repeat;<span class="comment">//又被其它进程小贼抢占了，只能继续从头再来</span></span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+<p>在经历了以上
+折腾后，此时有可能出现另外一个意外情况，也就是在我们睡眠时，可能其它进程已经将我们所需要的
+缓冲块加进了 hash 队列中，因此这里需要最后一次搜索一下 hash
+队列。如果真的在 hash 队列中找到了
+我们所需要的缓冲块，那么我们又得对找到的缓冲块进行以上判断处理，因此，又一次需要重头开始执
+行
+getblk()。最后，我们才算找到了一块没有被进程使用、没有被上锁，而且是干净（修改标志未置位）
+的空闲缓冲块。于是我们就将该块的引用次数置
+1，并复位其它几个标志，然后从空闲表中移出该块的
+缓冲头结构。在设置了该缓冲块所属的设备号和相应的逻辑号后，在将其放入
+hash 表对应表项的第一个
+和空闲队列的末尾处。最终，返回该缓冲块头的指针。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">struct</span> buffer_head * <span class="title function_">getblk</span><span class="params">(<span class="type">int</span> dev,<span class="type">int</span> block)</span></span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line"> <span class="comment">//终于申请到能用的缓冲块了，发现有好兄弟进程先自己一步找到了缓冲块并且加入了hash表里面，自己有白忙活了，只能去等好兄弟用完用他的缓冲块了。</span></span><br><span class="line"><span class="keyword">if</span> (find_buffer(dev,block))</span><br><span class="line">		<span class="keyword">goto</span> repeat;</span><br><span class="line"><span class="comment">/* OK, FINALLY we know that this buffer is the only one of it&#x27;s kind, */</span></span><br><span class="line"><span class="comment">/* and that it&#x27;s unused (b_count=0), unlocked (b_lock=0), and clean */</span></span><br><span class="line">	bh-&gt;b_count=<span class="number">1</span>;<span class="comment">//占用该缓冲块</span></span><br><span class="line">	bh-&gt;b_dirt=<span class="number">0</span>;<span class="comment">//还没有读盘dirt不置1</span></span><br><span class="line">	bh-&gt;b_uptodate=<span class="number">0</span>;</span><br><span class="line">	remove_from_queues(bh);<span class="comment">//假设都满了就会在叉子上面摘下来，放到其他的设备号块号上面</span></span><br><span class="line">	bh-&gt;b_dev=dev;<span class="comment">//更换设备号块号</span></span><br><span class="line">	bh-&gt;b_blocknr=block;</span><br><span class="line">	<span class="comment">//要把缓冲块叉在hash上面才算纳入了缓冲区的管理范围</span></span><br><span class="line">	insert_into_queues(bh);<span class="comment">//重新插到合适的位置</span></span><br><span class="line">	<span class="keyword">return</span> bh;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>占用缓冲块：</p>
+<figure>
+<img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/getblk3.png" alt="getblk2">
+<figcaption aria-hidden="true">getblk2</figcaption>
+</figure>
+<h3 id="remove_from_queues">remove_from_queues</h3>
+<p><img src="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/image-20231115104420577.png" alt="image-20231115104420577" style="zoom:100%;"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 从 hash 队列中移除缓冲块 */</span> </span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">remove_from_queues</span><span class="params">(<span class="keyword">struct</span> buffer_head * bh)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">/* remove from hash-queue */</span></span><br><span class="line"><span class="comment">//hash队列链表上删除结点，但是始终都在双向环链表上面</span></span><br><span class="line">	<span class="keyword">if</span> (bh-&gt;b_next)</span><br><span class="line">		bh-&gt;b_next-&gt;b_prev = bh-&gt;b_prev;</span><br><span class="line">	<span class="keyword">if</span> (bh-&gt;b_prev)</span><br><span class="line">		bh-&gt;b_prev-&gt;b_next = bh-&gt;b_next;</span><br><span class="line"><span class="comment">// 如果该缓冲区是该队列的头一个块，则让 hash 表的对应项指向本队列中的下一个缓冲区。</span></span><br><span class="line">	<span class="keyword">if</span> (hash(bh-&gt;b_dev,bh-&gt;b_blocknr) == bh)</span><br><span class="line">		hash(bh-&gt;b_dev,bh-&gt;b_blocknr) = bh-&gt;b_next;</span><br><span class="line"><span class="comment">/* remove from free list */</span></span><br><span class="line"><span class="comment">/* 从空闲缓冲区的双向环链表中移除缓冲块 */</span></span><br><span class="line">	<span class="keyword">if</span> (!(bh-&gt;b_prev_free) || !(bh-&gt;b_next_free))</span><br><span class="line">		panic(<span class="string">&quot;Free block list corrupted&quot;</span>);</span><br><span class="line">	bh-&gt;b_prev_free-&gt;b_next_free = bh-&gt;b_next_free;</span><br><span class="line">	bh-&gt;b_next_free-&gt;b_prev_free = bh-&gt;b_prev_free;</span><br><span class="line">	<span class="keyword">if</span> (free_list == bh)</span><br><span class="line">		free_list = bh-&gt;b_next_free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="insert_into_queues">insert_into_queues</h3>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//// 将指定缓冲区插入空闲链表尾并放入 hash 队列中。</span></span><br><span class="line"><span class="type">static</span> <span class="keyword">inline</span> <span class="type">void</span> <span class="title function_">insert_into_queues</span><span class="params">(<span class="keyword">struct</span> buffer_head * bh)</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="comment">/* put at end of free list */</span></span><br><span class="line"><span class="comment">/* 放在空闲链表末尾处 */</span> </span><br><span class="line">	bh-&gt;b_next_free = free_list;</span><br><span class="line">	bh-&gt;b_prev_free = free_list-&gt;b_prev_free;</span><br><span class="line">	free_list-&gt;b_prev_free-&gt;b_next_free = bh;</span><br><span class="line">	free_list-&gt;b_prev_free = bh;</span><br><span class="line"><span class="comment">/* put the buffer in new hash-queue if it has a device */</span></span><br><span class="line"><span class="comment">/* 如果该缓冲块对应一个设备，则将其插入新 hash 队列中，头插入 */</span></span><br><span class="line">	bh-&gt;b_prev = <span class="literal">NULL</span>;</span><br><span class="line">	bh-&gt;b_next = <span class="literal">NULL</span>;</span><br><span class="line">	<span class="keyword">if</span> (!bh-&gt;b_dev)</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	bh-&gt;b_next = hash(bh-&gt;b_dev,bh-&gt;b_blocknr);</span><br><span class="line">	hash(bh-&gt;b_dev,bh-&gt;b_blocknr) = bh;</span><br><span class="line">	bh-&gt;b_next-&gt;b_prev = bh;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="bread">bread</h3>
+<h2 id="进程与缓冲块">进程与缓冲块</h2>
+<p>内核通过文件操作指针计算出文件数据所在的设备号块号，进程方面延申到缓冲块位置，执行<code>bread</code>后就不在与硬盘数据块直接打交道了</p>
+<p>写文件同样延申到bread为止</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/12/20/Linux%E7%BD%91%E7%BB%9C/linux%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%96%E7%A8%8B/%E6%8A%93%E5%8C%85%E5%88%86%E6%9E%90https/" rel="prev" title="wireshark抓包分析https">
+                  <i class="fa fa-chevron-left"></i> wireshark抓包分析https
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/" rel="next" title="linux 0.11内存管理">
+                  linux 0.11内存管理 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"a965d7baf3a41687e19bf5354a40ed1a"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

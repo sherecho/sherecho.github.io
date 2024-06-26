@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="16位实模式 -&gt; 32位保护模式 EP&#x2F;EIP 相当于pc指针，从实模式16位-&gt;保护模式32位 BIOS 加电后进入实模式运行，16位。 上电后CS（代码段寄存器）设置为0XF000（纯硬件完成）,因此第一条程序跳到0XF000执行。0XF000是BIOS的程序入口地址,因此此时主动权交到了BIOS手上   image-20230926154112305  如图可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从开机加电到main函数之前过程">
+<meta property="og:url" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="16位实模式 -&gt; 32位保护模式 EP&#x2F;EIP 相当于pc指针，从实模式16位-&gt;保护模式32位 BIOS 加电后进入实模式运行，16位。 上电后CS（代码段寄存器）设置为0XF000（纯硬件完成）,因此第一条程序跳到0XF000执行。0XF000是BIOS的程序入口地址,因此此时主动权交到了BIOS手上   image-20230926154112305  如图可">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927080114009.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927090739464.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927094109074.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927134028219.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003092439766.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003100723241.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003101530040.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003102018552.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003105617140.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145416320.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111046230.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111819195.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160110786.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003114017638.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145504688.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160040393.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003162657094.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003163507170.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165058386.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165553164.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003171101035.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003192816784.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201544973.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003193634497.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003194434372.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003195656562.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092145578.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092929709.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003225759273.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003232851762.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235254879.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092016126.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005095121645.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235415139.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150359552.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111510079.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150641596.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201644907.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201757163.png">
+<meta property="og:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005100625737.png">
+<meta property="article:published_time" content="2023-10-08T16:28:24.000Z">
+<meta property="article:modified_time" content="2024-01-22T08:18:07.505Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/","path":"2023/10/09/Linux011内核学习笔记/第一章节笔记/","title":"从开机加电到main函数之前过程"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>从开机加电到main函数之前过程 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#bios"><span class="nav-number">1.</span> <span class="nav-text">BIOS</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#bootsect.s"><span class="nav-number">2.</span> <span class="nav-text">bootsect.s</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E5%B0%86bootsect%E7%9A%84%E7%A8%8B%E5%BA%8F%E4%B8%80%E4%B8%AA%E6%89%87%E5%8C%BA512%E5%AD%97%E8%8A%82%E5%A4%8D%E5%88%B6%E5%88%B00x90000%E5%A4%84%E5%B9%B6%E8%B7%B3%E8%BD%AC%E8%BF%87%E5%8E%BB%E6%89%A7%E8%A1%8C0x90000-0x901ff"><span class="nav-number">2.1.</span> <span class="nav-text">第一步：将bootsect的程序(一个扇区512字节）复制到0x90000处，并跳转过去执行（0x90000-0x901FF)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5-%E5%8A%A0%E8%BD%BD%E7%A3%81%E7%9B%9825%E4%B8%AA%E6%89%87%E5%8C%BA%E7%9A%84setup%E7%A8%8B%E5%BA%8F"><span class="nav-number">2.2.</span> <span class="nav-text">第二步
+加载磁盘2~5个扇区的setup程序</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%E5%8A%A0%E8%BD%BD%E5%86%85%E6%A0%B8%E4%BB%A3%E7%A0%81"><span class="nav-number">2.3.</span> <span class="nav-text">第三步：加载内核代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%B3%E5%88%B0setup"><span class="nav-number">2.4.</span> <span class="nav-text">跳到setup</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#setup.s"><span class="nav-number">3.</span> <span class="nav-text">setup.s</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%E5%8D%B8%E7%A3%A8%E6%9D%80%E9%A9%B4%E5%BB%BA%E7%AB%8B%E8%AE%BE%E5%A4%87%E4%BF%A1%E6%81%AF%E8%A1%A8"><span class="nav-number">3.1.</span> <span class="nav-text">第一步，卸磨杀驴，建立设备信息表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%AE%9E%E6%A8%A1%E5%BC%8F%E5%90%91%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E8%B7%A8%E8%B6%8A"><span class="nav-number">3.2.</span> <span class="nav-text">实现实模式向保护模式跨越</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%AD%E6%96%AD%E6%9C%BA%E5%88%B6%E5%BB%BA%E7%AB%8B"><span class="nav-number">3.3.</span> <span class="nav-text">中断机制建立</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%BC%80a20%E5%AE%9E%E7%8E%B032%E4%BD%8D%E5%AF%BB%E5%9D%80"><span class="nav-number">3.4.</span> <span class="nav-text">打开A20,实现32位寻址</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%BC%80%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F"><span class="nav-number">3.5.</span> <span class="nav-text">打开保护模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%92%E9%87%8D%E7%82%B9-jmpi-0-8%E6%98%AF%E4%BB%80%E4%B9%88%E6%84%8F%E6%80%9D"><span class="nav-number">3.6.</span> <span class="nav-text">划重点 jmpi 0，
+8是什么意思</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#head.s"><span class="nav-number">4.</span> <span class="nav-text">head.s</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%8C%E5%96%84%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F"><span class="nav-number">4.1.</span> <span class="nav-text">完善保护模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AEdsesp%E6%A0%88%E7%AD%89"><span class="nav-number">4.2.</span> <span class="nav-text">设置DS，esp栈等</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AEidt"><span class="nav-number">4.3.</span> <span class="nav-text">设置IDT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%9F%E9%99%A4%E5%B7%B2%E6%9C%89%E7%9A%84gdt%E6%96%B0%E5%BB%BAgdt"><span class="nav-number">4.4.</span> <span class="nav-text">废除已有的GDT新建GDT</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95a20%E6%98%AF%E5%90%A6%E6%89%93%E5%BC%80"><span class="nav-number">4.5.</span> <span class="nav-text">测试A20是否打开</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#main%E5%87%BD%E6%95%B0%E5%8E%8B%E6%A0%88"><span class="nav-number">4.6.</span> <span class="nav-text">main函数压栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%BA%E7%AB%8B%E5%88%86%E9%A1%B5%E6%9C%BA%E5%88%B6"><span class="nav-number">4.7.</span> <span class="nav-text">建立分页机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%86%85%E5%AD%98%E6%81%92%E7%AD%89%E6%98%A0%E5%B0%84"><span class="nav-number">4.8.</span> <span class="nav-text">内核内存恒等映射</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">小结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%9E%E6%A8%A1%E5%BC%8F%E5%92%8C%E4%BF%9D%E6%8A%A4%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%AF%BB%E5%9D%80%E5%8C%BA%E5%88%AB"><span class="nav-number">6.</span> <span class="nav-text">实模式和保护模式的寻址区别</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E9%A1%B5%E5%90%8E%E5%AF%BB%E5%9D%80"><span class="nav-number">6.1.</span> <span class="nav-text">分页后寻址</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="从开机加电到main函数之前过程 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          从开机加电到main函数之前过程
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-10-09 00:28:24" itemprop="dateCreated datePublished" datetime="2023-10-09T00:28:24+08:00">2023-10-09</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-01-22 16:18:07" itemprop="dateModified" datetime="2024-01-22T16:18:07+08:00">2024-01-22</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/LINUX011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">LINUX011内核学习笔记</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>14k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>13 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>16位实模式 -&gt; 32位保护模式</p>
+<p>EP/EIP 相当于pc指针，从实模式16位-&gt;保护模式32位</p>
+<h1 id="bios">BIOS</h1>
+<p>加电后进入实模式运行，16位。</p>
+<p>上电后CS（代码段寄存器）设置为0XF000（纯硬件完成）,因此第一条程序跳到0XF000执行。<strong>0XF000是BIOS的程序入口地址</strong>,因此此时主动权交到了BIOS手上</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230926154112305.png" alt="image-20230926154112305">
+<figcaption aria-hidden="true">image-20230926154112305</figcaption>
+</figure>
+<p>如图可以看出BIOS的中断向量表有0x400大小-&gt;1024-&gt;1KB</p>
+<p>BIOS 的中断向量表256个中断向量：cs+ip</p>
+<p>bios
+执行int0x19中断，将磁盘的第一个扇区（bootsect.s的程序）复制到0x07C00处</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927080114009.png" alt="image-20230927080114009">
+<figcaption aria-hidden="true">image-20230927080114009</figcaption>
+</figure>
+<h1 id="bootsect.s">bootsect.s</h1>
+<p>此时位于实模式，寻址空间1MB （<span class="math inline">\(2^{20}\)</span>)</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927090739464.png" alt="image-20230927090739464">
+<figcaption aria-hidden="true">image-20230927090739464</figcaption>
+</figure>
+<h2 id="第一步将bootsect的程序一个扇区512字节复制到0x90000处并跳转过去执行0x90000-0x901ff">第一步：将bootsect的程序(一个扇区512字节）复制到0x90000处，并跳转过去执行（0x90000-0x901FF)</h2>
+<p>CS寄存器存储当前代码段的起始地址，IP寄存器存储下一条要执行的指令的偏移量，它们共同组成了8086处理器中的程序计数器（PC），指导CPU按照指令序列执行程序。</p>
+<p>一开始cs在0x7c0</p>
+<p><code>DS:SI</code>(偏移量) 和 <code>ES:DI</code>（偏移量）
+是在x86汇编语言中常用于字符串操作的寄存器组合。它们通常在字符串复制、字符串比较和其他字符串处理操作中一起使用。在字符串操作中，<code>DS:SI</code>
+组合通常用于指示源字符串（例如，要复制的字符串），而 <code>ES:DI</code>
+组合通常用于指示目标字符串（例如，复制到的目标位置）。这些寄存器组合使汇编程序员能够高效地复制、比较或处理字符串数据。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">start:</span><br><span class="line">	mov	ax,#BOOTSEG</span><br><span class="line">	mov	ds,ax !</span><br><span class="line">	mov	ax,#INITSEG </span><br><span class="line">	mov	es,ax</span><br><span class="line">	mov	cx,#256 !一个字是2字节-》512字节就是第一扇区的大小，循环256次</span><br><span class="line">	sub	si,si</span><br><span class="line">	sub	di,di</span><br><span class="line">	rep</span><br><span class="line">	movw</span><br><span class="line">	jmpi	go,INITSEG</span><br><span class="line">go:	mov	ax,cs</span><br><span class="line">	mov	ds,ax</span><br><span class="line">	mov	es,ax</span><br></pre></td></tr></table></figure>
+<p>因此上一段程序中</p>
+<p>设置了 ds：si BOOTSEG：0x0000 es：di INITSEG :0x9000</p>
+<p><code>CX</code>
+寄存器是x86架构中的一个16位通用寄存器，它常常用于循环计数和计数相关的操作。<code>CX</code>
+寄存器的前身是8086处理器中的 <code>CX</code>
+寄存器，后来的x86处理器也保留了这个寄存器，并且它在汇编语言和编程中仍然非常重要。</p>
+<p><code>rep</code>
+是一个前缀指令，通常与一些数据传输或操作指令一起使用，如
+<code>movs</code>、<code>stos</code>、<code>cmps</code>
+等。它表示重复执行指定的操作，直到满足某个条件为止。</p>
+<p>​
+movw是指一次移动两个字节，因此这里就是重复操作移动2个字节，重复256次</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927094109074.png" alt="image-20230927094109074">
+<figcaption aria-hidden="true">image-20230927094109074</figcaption>
+</figure>
+<p>在x86汇编语言中，<code>CS:IP</code>
+寄存器组合（也称为程序计数器，PC）用于指示当前正在执行的指令的内存地址。跳转指令（如<code>jmp</code>、<code>call</code>、<code>ret</code>
+等）可以影响 <code>CS:IP</code>
+寄存器组合，从而改变程序的控制流。更加深入了解请参考链接：https://cloud.tencent.com/developer/article/1680474</p>
+<p>实模式下物理地址的计算方式是：CS ＊ 16 ＋ IP。
+段基址寻址参考博客：https://mp.ofweek.com/it/a256714278117</p>
+<p>执行完这段循环，执行go语句。go转移指令会导致pc指针的变化，即ip寄存器被修改为（0x90000）。因此下一条语句执行<code>mov   ax,cs</code>cs段变为INITSEG段</p>
+<p><strong>完成复制以后，cs ip段通过jmpi
+go,INITSEG跳转继续执行，此时0x07c00和0x90000的代码是一致的</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">go:	mov	ax,cs</span><br><span class="line">	mov	ds,ax</span><br><span class="line">	mov	es,ax</span><br></pre></td></tr></table></figure>
+<p>上述代码将其它寄存器的值做了调整，压栈方向从高地址到低地址</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20230927134028219.png" alt="image-20230927134028219">
+<figcaption aria-hidden="true">image-20230927134028219</figcaption>
+</figure>
+<h2 id="第二步-加载磁盘25个扇区的setup程序">第二步
+加载磁盘2~5个扇区的setup程序</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">load_setup:</span><br><span class="line">	mov	dx,#0x0000		! drive 0, head 0</span><br><span class="line">	mov	cx,#0x0002		! sector 2, track 0</span><br><span class="line">	mov	bx,#0x0200		! address = 512, in INITSEG</span><br><span class="line">	mov	ax,#0x0200+SETUPLEN	! service 2, nr of sectors</span><br><span class="line">	int	0x13			! read it</span><br><span class="line">	jnc	ok_load_setup		! ok - continue</span><br><span class="line">	mov	dx,#0x0000</span><br><span class="line">	mov	ax,#0x0000		! reset the diskette</span><br><span class="line">	int	0x13</span><br><span class="line">	j	load_setup</span><br></pre></td></tr></table></figure>
+<p>int 0x19 实际上是int 0x13的一个特例。注意这俩都属于BIOS的中断函数</p>
+<p>int 0x13，将扇区加载到指定地址的内存</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003092439766.png" alt="image-20231003092439766">
+<figcaption aria-hidden="true">image-20231003092439766</figcaption>
+</figure>
+<p>可以看出bootsect的起始位置是0x90000，占用512字节-》0x901FF</p>
+<p>bootsect将setup代码对应的四个扇区加载到SETUPSEG：0x9020紧挨着bootsect</p>
+<h2 id="第三步加载内核代码">第三步：加载内核代码</h2>
+<p>仍使用int 0x13 将240个扇区加载到内存</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">mov	ax,#SYSSEG</span><br><span class="line">mov	es,ax		! segment of 0x010000</span><br><span class="line">call	read_it</span><br><span class="line">call	kill_motor</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">read_it:</span><br><span class="line">	mov ax,es</span><br><span class="line">	test ax,#0x0fff</span><br><span class="line">die:	jne die			! es must be at 64kB boundary</span><br><span class="line">	xor bx,bx		! bx is starting address within segment</span><br><span class="line">rp_read:</span><br><span class="line">	mov ax,es</span><br><span class="line">	cmp ax,#ENDSEG		! have we loaded all yet?</span><br><span class="line">	jb ok1_read</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<p>调用 read_it 将240个扇区加载到SYSSEG
+=0x100,首先将SYSSEG赋值给ax，ax又赋值给es，其中es是int0x13读取时的输入参数，</p>
+<p><code>jne die</code>：根据前面的测试结果，如果 <code>ax</code>
+的低12位不全为零（即测试结果不等于零），则跳转到标签
+<code>die</code>，进入无限循环</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003100723241.png" alt="image-20231003100723241">
+<figcaption aria-hidden="true">image-20231003100723241</figcaption>
+</figure>
+<h2 id="跳到setup">跳到setup</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">! after that (everyting loaded), we jump to</span><br><span class="line">! the setup-routine loaded directly after</span><br><span class="line">! the bootblock:</span><br><span class="line"></span><br><span class="line">	jmpi	0,SETUPSEG ！0代表偏移量是0，目标地址是SETUPSEG</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003101530040.png" alt="image-20231003101530040">
+<figcaption aria-hidden="true">image-20231003101530040</figcaption>
+</figure>
+<h1 id="setup.s">setup.s</h1>
+<h2 id="第一步卸磨杀驴建立设备信息表">第一步，卸磨杀驴，建立设备信息表</h2>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003102018552.png" alt="image-20231003102018552">
+<figcaption aria-hidden="true">image-20231003102018552</figcaption>
+</figure>
+<p>由于bootesect已经运行完了，所以把设备信息表建立再原来bootesect程序的部分。即0x90000~0x901FD</p>
+<h2 id="实现实模式向保护模式跨越">实现实模式向保护模式跨越</h2>
+<p>在此之前，系统运行在实模式。现在要执行以下操作：</p>
+<ul>
+<li><p>打开32位寻址空间</p></li>
+<li><p>打开保护模式</p></li>
+<li><p>建立保护模式下的中断响应机制</p></li>
+<li><p>建立内存分页机制</p></li>
+</ul>
+<h2 id="中断机制建立">中断机制建立</h2>
+<p>首先关闭bios中断，废除bios中断机制</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003105617140.png" alt="image-20231003105617140">
+<figcaption aria-hidden="true">image-20231003105617140</figcaption>
+</figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">! now we want to move to protected mode ...</span><br><span class="line"></span><br><span class="line">	cli			! no interrupts allowed !</span><br><span class="line"></span><br><span class="line">! first we move the system to it&#x27;s rightful place</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">	mov	ax,#0x0000</span><br><span class="line">	cld			! &#x27;direction&#x27;=0, movs moves forward</span><br><span class="line">do_move:</span><br><span class="line">	mov	es,ax		! destination segment  es:di是目的地址(0x0000:0x0)</span><br><span class="line">	add	ax,#0x1000</span><br><span class="line">	cmp	ax,#0x9000</span><br><span class="line">	jz	end_move</span><br><span class="line">	mov	ds,ax		! source segment  ds:si 源地址 0x1000：0x0</span><br><span class="line">	sub	di,di  </span><br><span class="line">	sub	si,si</span><br><span class="line">	mov 	cx,#0x8000 ！移动0x8000字，即32kB字=64KB字节</span><br><span class="line">	rep</span><br><span class="line">	movsw</span><br><span class="line">	jmp	do_move</span><br><span class="line"></span><br><span class="line">! then we load the segment descriptors</span><br></pre></td></tr></table></figure>
+<p>将位于0x10000的内核程序复制到0x0000处，覆盖原来的BIOS中断向量表和数据区</p>
+<p>这一部分具有head.s和main里面的kernel代码</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145416320.png" alt="image-20231003145416320">
+<figcaption aria-hidden="true">image-20231003145416320</figcaption>
+</figure>
+<p>下一步建立新的中断机制</p>
+<p>通过GDT(全局描符表)，GDTR(gdt基址寄存器)，IDT 中断描述符表，IDTR（IDT
+基址寄存器）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">end_move:</span><br><span class="line">	mov	ax,#SETUPSEG	! right, forgot this at first. didn&#x27;t work :-)</span><br><span class="line">	mov	ds,ax           ! ds指向本程序</span><br><span class="line">	lidt	idt_48		! load idt with 0,0</span><br><span class="line">	lgdt	gdt_48		! load gdt with whatever appropriate</span><br><span class="line">gdt:</span><br><span class="line">	.word	0,0,0,0		! dummy</span><br><span class="line">     !第0项，空的</span><br><span class="line">     ！第一项，这里在gdt的表中偏移量是0x08.当加载代码段寄存器CS的时候，使用的是这个偏移值，指向内核代码段</span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9A00		! code read/exec</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line">    ！第二项，这里在gdt的表中偏移量是0x10.当加载数据段寄存器	DS的时候，使用的是这个偏移值，指向内核数据段</span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9200		! data read/write</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line"></span><br><span class="line">idt_48:</span><br><span class="line">	.word	0			! idt limit=0</span><br><span class="line">	.word	0,0			! idt base=0L</span><br><span class="line"></span><br><span class="line">gdt_48:</span><br><span class="line">	.word	0x800		! 0x800=2^(3+8)=2048=2kB字节,8B组成一个描述项因此256 GDT entries</span><br><span class="line">	.word	512+gdt,0x9	! gdt base = 0X9xxxx 定义了gdt的基址</span><br><span class="line">	!0x0009&lt;&lt;16+0x0200+gdt :32位基地址</span><br></pre></td></tr></table></figure>
+<p>这里的gdt表定义了三项</p>
+<ol type="1">
+<li><p><code>lidt idt_48</code>: 这是加载中断描述符表（Interrupt
+Descriptor Table，IDT）的指令。它用 <code>idt_48</code> 指定的地址加载了
+IDT。IDT 是用于存储中断和异常处理程序地址的数据结构。</p></li>
+<li><p><code>lgdt gdt_48</code>: 这是加载全局描述符表（Global Descriptor
+Table，GDT）的指令。它用 <code>gdt_48</code> 指定的地址加载了 GDT。GDT
+是用于描述段属性的数据结构，包括代码段和数据段的起始地址和限制。
+代码解读：</p></li>
+</ol>
+<p><code>.word</code>
+是汇编语言中的伪指令，通常用于定义数据或者常量。它告诉汇编器将后面的值以16位或32位的形式存储在内存中。<code>.word</code>
+可以用于定义字、半字（16位）或者双字（32位）等数据。</p>
+<p>在上面提到的汇编代码中，<code>.word</code> 用于定义 GDT
+的限制字段和基址字段。例如，<code>.word 0x800</code>
+定义了一个16位的字，其值为
+<code>0x800</code>。<code>.word 512+gdt, 0x9</code>
+定义了两个16位的字，分别是 <code>512+gdt</code> 和 <code>0x9</code></p>
+<p><code>.word 0x800</code>: 这一行定义了 GDT
+的限制字段（limit）。<code>0x800</code> 是一个16位的值，表示 GDT
+的大小。在这里，它的值是 <code>0x800</code>，对应于2048字节。这表示 GDT
+中可以包含2048/8=256个条目。</p>
+<p><strong>GDT</strong>
+GDT的数据结构是一个描述符数组，每个描述符8个字节，可以存放在内存当中任意位置：</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111046230.png" alt="image-20231003111510079">
+<figcaption aria-hidden="true">image-20231003111510079</figcaption>
+</figure>
+<p>一个GDT段描述符占用8个字节，包含三个部分：</p>
+<p>段基址（32位），占据描述符的第16～39位和第55位～63位，前者存储低16位，后者存储高16位
+段界限（20位），占据描述符的第0～15位和第48～51位，前者存储低16位，后者存储高4位。
+段属性（12位），占据描述符的第39～47位和第49～55位，段属性可以细分为8种：TYPE属性、S属性、DPL属性、P属性、AVL属性、L属性、D/B属性和G属性
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111819195.png" alt="image-20231003111819195"></p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160110786.png" alt="image-20231003160110786">
+<figcaption aria-hidden="true">image-20231003160110786</figcaption>
+</figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003114017638.png" alt="image-20231003114017638">
+<figcaption aria-hidden="true">image-20231003114017638</figcaption>
+</figure>
+<p>gdt表放在了是0x90200部分，也就是setup刚执行完的代码部分立刻就被覆盖用来干别的了。</p>
+<p>其中gdt表的段基址和限长被保存在看GDTR中，保证gdt的唯一性。gdtr可以看成是一个指针</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">idt_48:</span><br><span class="line">	.word	0			! idt limit=0</span><br><span class="line">	.word	0,0			! idt base=0L</span><br></pre></td></tr></table></figure>
+<p>可以看出IDT此时只是搭了一个框架，还没有填东西，填东西这部分在后面main函数的内核部分完成。同理idtr指向了idt</p>
+<h2 id="打开a20实现32位寻址">打开A20,实现32位寻址</h2>
+<p>IBM 公司最初推出的个人计算机 IBM PC 使用的 CPU 是 Intel
+8088。在该微机中地址 线只有 20 根(A0 – A19)。其所能寻址的最高地址是
+0xffff:0xffff，也即 0x10ffef。对于超出 0x100000(1MB)的寻址地址
+将默认地==环绕==到 0x0ffef。当 IBM 公司于 1985 年引入 AT 机时，使用的是
+Intel 80286 CPU，具有 24 根地 址线，最高可寻址 16MB，并且有一个与 8088
+完全兼容的实模式运行方式。然而，在寻址值超过 1MB时它却不能象 8088
+那样实现地址寻址的环绕。但是当时已经有一些程序是利用这种地址环绕机制进行工
+作的。为了实现完全的<strong>兼容性</strong>，IBM
+公司发明了使用一个<strong>开关来开启或禁止 0x100000
+地址比特位</strong>。由 于在当时的 8042
+键盘控制器上恰好有空闲的端口引脚（输出端口 P2，引脚
+P21），于是便使用了该引脚 来作为与门控制这个地址比特位。该信号即被称为
+A20。如果它为零，则比特 20 及以上地址都被清除。 从而实现了兼容性。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">! that was painless, now we enable A20</span><br><span class="line">	call	empty_8042  ! 等待输入缓冲器空</span><br><span class="line">	mov	al,#0xD1		! command write，0xD1 表示要写数据到</span><br><span class="line">	out	#0x64,al</span><br><span class="line">	call	empty_8042</span><br><span class="line">	mov	al,#0xDF		! A20 on</span><br><span class="line">	out	#0x60,al</span><br><span class="line">	call	empty_8042</span><br></pre></td></tr></table></figure>
+<p>在汇编语言中，<code>out</code>
+是一个用于向特定端口发送数据的指令。它通常用于与外部设备或I/O端口进行通信。</p>
+<p><code>out #0x64, al</code>: 这一行使用 <code>out</code> 汇编指令将
+<code>al</code> 中的值 <code>0xD1</code> 写入端口
+<code>0x64</code>。在这里，端口 <code>0x64</code>
+是用于与键盘控制器通信的端口。通过向该端口发送命令或数据，可以控制键盘的行为或向键盘发送数据。</p>
+<p>地址由原来的1M扩展为4G</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003145504688.png" alt="image-20231003145504688">
+<figcaption aria-hidden="true">image-20231003145504688</figcaption>
+</figure>
+<h2 id="打开保护模式">打开保护模式</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mov	ax,#0x0001	! protected mode (PE) bit</span><br><span class="line">lmsw	ax		! This is it!</span><br><span class="line">jmpi	0,8		! jmp offset 0 of segment 8 (cs)</span><br></pre></td></tr></table></figure>
+<p>CR0 控制寄存器(32位）用于存放系统控制标志，</p>
+<ul>
+<li><p>CR0的第０位是PE(protection enable 开启保护模式的标志位)
+置零为实模式，置一为保护模式</p></li>
+<li><p>CR0的第31位是paging即(分页的标志位)</p>
+<p><code>lmsw</code>
+是汇编语言中的指令，用于加载机器状态字寄存器（Machine Status Word
+Register，MSW）指令执行后，源操作数中的值将被加载到机器状态字寄存器中，从而改变了处理器的一些状态和特性。这个指令通常用于操作系统内核或特权级别的代码，以更改处理器的运行模式或特权级别</p></li>
+</ul>
+<h2 id="划重点-jmpi-0-8是什么意思"><strong>划重点 jmpi 0，
+8是什么意思</strong></h2>
+<p>跳转到内核代码段，从setup跳转到head.s开始执行</p>
+<p>分析：0指的是段内偏移为0，8指的是段选择符。8的二进制：8(0b0000 0000
+0000
+1000)这里最后两个0代表特权级00内核特权级，11代表用户特权级，第三位0代表全局描述符表即GDT如果是1代表局部描述符表LDT。第四位的1代表是GDT中的第一项</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">gdt:</span><br><span class="line">	.word	0,0,0,0		! dummy</span><br><span class="line">     !第0项，空的</span><br><span class="line">     ！第一项，这里在gdt的表中偏移量是0x08.当加载代码段寄存器CS的时候，使用的是这个偏移值，指向内核代码段</span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)段限长8MB</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9A00		! code read/exec</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br><span class="line">    ！第二项，这里在gdt的表中偏移量是0x10.当加载数据段寄存器	DS的时候，使用的是这个偏移值，指向内核数据段</span><br><span class="line">	.word	0x07FF		! 8Mb - limit=2047 (2048*4096=8Mb)</span><br><span class="line">	.word	0x0000		! base address=0</span><br><span class="line">	.word	0x9200		! data read/write</span><br><span class="line">	.word	0x00C0		! granularity=4096, 386</span><br></pre></td></tr></table></figure>
+<p>第一项是cs段，可以用于确定段基址和段限长等信息。这里段基址目前为0x0000，偏移前面说了是0，因此代码跳转到0x0000处执行。而这一部分是之前0x10000部分的代码，在废除BIOS的中断之后，这部分代码被搬移到了0x0000处也就是head.s+main里面的kernel。所以这里跳转到head.s开始执行。（这部分代码首先由bootsect加载到0x10000，然后在setup.s打开保护模式的过程中挪到了0x0000处）</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003160040393.png" alt="image-20231003160040393">
+<figcaption aria-hidden="true">image-20231003160040393</figcaption>
+</figure>
+<h1 id="head.s">head.s</h1>
+<h2 id="完善保护模式">完善保护模式</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">.globl _idt,_gdt,_pg_dir,_tmp_floppy_area</span><br><span class="line">_pg_dir:</span><br></pre></td></tr></table></figure>
+<p>_pg_dir,用于标识内核分页后内核的起始位置，也就是物理内存的起始位置0x000000</p>
+<h2 id="设置dsesp栈等">设置DS，esp栈等</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">startup_32:</span><br><span class="line">	movl $0x10,%eax</span><br><span class="line">	mov %ax,%ds</span><br><span class="line">	mov %ax,%es</span><br><span class="line">	mov %ax,%fs</span><br><span class="line">	mov %ax,%gs</span><br></pre></td></tr></table></figure>
+<p>可知在jmpi
+0，8部分CS已经从实模式的寻址转变到了保护模式寻址，这一段代码是将其它寄存器也转变到保护模式</p>
+<p>ds，es，fs，gs设置为0x10 。
+0x10：b（10000）特权级是0，全局描述符表，第10也就是第三项，即内核数据段。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003162657094.png" alt="image-20231003162657094">
+<figcaption aria-hidden="true">image-20231003162657094</figcaption>
+</figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lss _stack_start,%esp</span><br></pre></td></tr></table></figure>
+<p>_stack_start 这种加了下滑线的代表在C语言里面也有定义：</p>
+<p>kernel/sched.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">	<span class="type">long</span> * a;</span><br><span class="line">	<span class="type">short</span> b;</span><br><span class="line">	&#125; stack_start = &#123; &amp; user_stack [PAGE_SIZE&gt;&gt;<span class="number">2</span>] , <span class="number">0x10</span> &#125;;</span><br><span class="line">    <span class="comment">//#define PAGE_SIZE 4096 因此这里是user_stack [1024]</span></span><br></pre></td></tr></table></figure>
+<p>这段代码定义了一个结构体（struct）<code>stack_start</code>，该结构体包含两个成员：</p>
+<ol type="1">
+<li><code>a</code>：一个指向长整数（long）的指针。在这里，<code>a</code>
+被初始化为指向 <code>user_stack[PAGE_SIZE&gt;&gt;2]</code> 的指针，其中
+<code>PAGE_SIZE&gt;&gt;2</code> 表示将 <code>PAGE_SIZE</code>
+右移两位，相当于将 <code>PAGE_SIZE</code> 除以 4，然后
+<code>user_stack</code> 是一个数组，这个指针 <code>a</code> 最终指向数组
+<code>user_stack</code> 中的某个元素。</li>
+<li><code>b</code>：一个短整数（short）。在这里，<code>b</code>
+被初始化为 <code>0x10</code>，表示十六进制数 0x10，也就是十进制数
+16。</li>
+</ol>
+<p>所以，这段代码的目的是创建一个名为 <code>stack_start</code>
+的结构体，并初始化其中的两个成员，一个是指针 <code>a</code> 指向数组
+<code>user_stack</code> 中的某个元素，另一个是短整数 <code>b</code>
+被初始化为十六进制数 0x10（十进制数 16）.</p>
+<p>将32位栈顶指针指向user_stack数据结构的最末位置如下所示。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003163507170.png" alt="image-20231003163507170">
+<figcaption aria-hidden="true">image-20231003163507170</figcaption>
+</figure>
+<p>在内核初始化操作过程中被用作内核栈，初始化完成以后将被用作task0的用户态堆栈。</p>
+<h2 id="设置idt">设置IDT</h2>
+<p>中断描述符:</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165058386.png" alt="image-20231003165058386">
+<figcaption aria-hidden="true">image-20231003165058386</figcaption>
+</figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">setup_idt:</span><br><span class="line">	lea ignore_int,%edx</span><br><span class="line">	movl $0x00080000,%eax</span><br><span class="line">	movw %dx,%ax		/* selector = 0x0008 = cs */</span><br><span class="line">	movw $0x8E00,%dx	/* interrupt gate - dpl=0, present */</span><br><span class="line"></span><br><span class="line">	lea _idt,%edi /*_idt中断描述符表的地址*/</span><br><span class="line">	mov $256,%ecx</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003165553164.png" alt="image-20231003165553164">
+<figcaption aria-hidden="true">image-20231003165553164</figcaption>
+</figure>
+<p><code>lea</code> 是 x86 汇编语言中的一条指令，它代表 "Load Effective
+Address"，用于将一个有效地址加载到目标寄存器中。<code>lea</code>
+指令并不执行内存引用操作，而只是将 <code>ignore_int</code>
+变量的内存地址（有效地址）加载到 <code>edx</code> 寄存器中ignore_int
+是中断门。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_idt:	.fill 256,8,0		# idt is uninitialized</span><br></pre></td></tr></table></figure>
+<p>这行汇编指令的作用是创建一个名为 <code>_idt</code>
+的数组，这个数组的长度是 256 个元素，每个元素占据 8
+个字节，并且将所有元素初始化为
+0。这种语法通常用于声明并分配一块内存，用于存储中断描述符表（Interrupt
+Descriptor Table，IDT）的内容。 IDT 通常用于 x86
+架构的操作系统中，用于处理中断和异常。</p>
+<h2 id="废除已有的gdt新建gdt">废除已有的GDT新建GDT</h2>
+<p>因为原有的gdt表建在setup那段程序中，后面会被用来干别的覆盖。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">setup_gdt:</span><br><span class="line">	lgdt gdt_descr</span><br><span class="line">	ret</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">gdt_descr:</span><br><span class="line">	.word 256*8-1		# so does gdt (not that that&#x27;s any</span><br><span class="line">	.long _gdt		# magic number, but it works for me :^)</span><br><span class="line"></span><br><span class="line">	.align 3</span><br></pre></td></tr></table></figure>
+<ul>
+<li><code>.word 256*8-1</code> 表示 GDT 的限制（limit）。在这里，256*8-1
+是 GDT 表的限制值，表示 GDT 中可以存放的描述符数量。每个描述符占用 8
+个字节，所以限制值设置为 <code>256*8-1</code> 表示 GDT 中可以存放 256
+个描述符。</li>
+<li><code>.long _gdt</code> 表示 GDT 的基地址（base
+address）。在这里，<code>_gdt</code> 是 GDT 数组的地址，这个地址将作为
+GDT 表的基地址。</li>
+<li><code>.align 3</code> 指令用于确保接下来的数据或代码在内存中按照 2^3
+= 8 字节对齐。这通常用于对齐数据或代码，以提高访问效率。</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">_gdt:	.quad 0x0000000000000000	/* NULL descriptor */</span><br><span class="line">	.quad 0x00c09a0000000fff	/* 16Mb */</span><br><span class="line">	.quad 0x00c0920000000fff	/* 16Mb 为啥是16M:段限长：0x00fff，C:1100 G=1粒度是4k ，0~0fff-&gt;2^12*4k=16M*/</span><br><span class="line">	.quad 0x0000000000000000	/* TEMPORARY - don&#x27;t use */</span><br><span class="line">	.fill 252,8,0			/* space for LDT&#x27;s and TSS&#x27;s etc 有增加了一项空项*/</span><br></pre></td></tr></table></figure>
+<p><code>.quad</code> 是汇编中的伪指令，用于定义 64 位（8
+字节）的数据项</p>
+<p>0x00c09a0000000fff /* 16Mb */为啥?</p>
+<p>16Mb 为啥是16M:段限长：0x00fff，C:1100 G=1粒度是4k
+，0~0fff-&gt;2^12<em>4k=16M</em></p>
+<p>前八位是段基址，即C0。</p>
+<p>注意后三位的FFF是段限长，说明段限长由原来的7FF（8MB)变为了16MB</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003171101035.png" alt="image-20231003171101035">
+<figcaption aria-hidden="true">image-20231003171101035</figcaption>
+</figure>
+<p>因为段限长变了，所以要对DS,ES,FS,GS,SS进行修改，每个描述符的限长也修改了，因此需要重新加载一次</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">movl $0x10,%eax		# reload all the segment registers</span><br><span class="line">mov %ax,%ds		# after changing gdt. CS was already</span><br><span class="line">mov %ax,%es		# reloaded in &#x27;setup_gdt&#x27;</span><br><span class="line">mov %ax,%fs</span><br><span class="line">mov %ax,%gs</span><br><span class="line">lss _stack_start,%esp</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003192816784.png" alt="image-20231003192816784">
+<figcaption aria-hidden="true">image-20231003192816784</figcaption>
+</figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201544973.png" alt="image-20231003201544973">
+<figcaption aria-hidden="true">image-20231003201544973</figcaption>
+</figure>
+<h2 id="测试a20是否打开">测试A20是否打开</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">xorl %eax,%eax</span><br><span class="line">1:	incl %eax		# check that A20 really IS enabled</span><br><span class="line">	movl %eax,0x000000	# loop forever if it isn&#x27;t</span><br><span class="line">	cmpl %eax,0x100000</span><br><span class="line">	je 1b</span><br></pre></td></tr></table></figure>
+<p>测试A20是否真的打开了<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003193634497.png" alt="image-20231003193634497"></p>
+<h2 id="main函数压栈">main函数压栈</h2>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">after_page_tables:</span><br><span class="line">	pushl $0		# These are the parameters to main :-)</span><br><span class="line">	pushl $0</span><br><span class="line">	pushl $0</span><br><span class="line">	pushl $L6		# return address for main, if it decides to.</span><br><span class="line">	pushl $_main</span><br><span class="line">	jmp setup_paging</span><br><span class="line">L6:</span><br><span class="line">	jmp L6			# main should never return here, but</span><br><span class="line">				# just in case, we know what happens.</span><br></pre></td></tr></table></figure>
+<p>将L6和main函数入口地址压栈，当head.s执行完以后执行·ret就会pop栈顶指针，跳转到main函数执行，这里面的栈就是上面的栈</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003194434372.png" alt="image-20231003194434372">
+<figcaption aria-hidden="true">image-20231003194434372</figcaption>
+</figure>
+<h2 id="建立分页机制">建立分页机制</h2>
+<p>完成main函数的压栈后，开始建立分页机制</p>
+<p>首先从内存起始位置放一个页目录表和四个页表，每页4KB</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">setup_paging:</span><br><span class="line">	movl $1024*5,%ecx		/* 5 pages - pg_dir+4 page tables */</span><br><span class="line">	xorl %eax,%eax</span><br><span class="line">	xorl %edi,%edi			/* pg_dir is at 0x000 */</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003195656562.png" alt="image-20231003195656562">
+<figcaption aria-hidden="true">image-20231003195656562</figcaption>
+</figure>
+<p>设置页目录表前四项使之分别指向四个页表。</p>
+<p>32位地址：CPU 在看到我们给出的内存地址后，首先把线性地址被拆分成</p>
+<p>高 10 位：中间 10 位：后 12 位。</p>
+<p>线性地址的位 31-22 共 10 个比特用来确定页目录中的目录项，位 21-12
+用来寻址页目录项指定的页 表中的页表项，最后的 12
+个比特正好用作页表项指定的一页物理内存中的偏移地址。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092145578.png" alt="image-20231006092145578">
+<figcaption aria-hidden="true">image-20231006092145578</figcaption>
+</figure>
+<p><span class="math inline">\(2^{10}\)</span>=1K,一个页目录表有1k个页表，一个页表包含1k个页表项，一个页表指向一个页面(4k)。</p>
+<p>因此一个页表对应了4M的物理空间。这里一共建立了4个页表：16M空间，理论上可以更大。由于硬件中cpu是4k对齐的</p>
+<p>因此低12位会是零，所以可以用高20位来表示4KB对齐的页表和页，因此可以用后12位设置权限。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092929709.png" alt="image-20231006092929709">
+<figcaption aria-hidden="true">image-20231006092929709</figcaption>
+</figure>
+<p>其中，页框地址(PAGE FRAME
+ADDRESS)指定了一页内存的物理起始地址。因为内存页是位于
+4K边界上的，所以其低 12 比特总是 0，因此表项的低 12
+比特可作它用。图中的存在位（PRESENT –
+P）确定了一个页表项是否可以用于地址转换过程。P=1 表示该项可用。
+当目录表项或第二级表项的 P=0
+时，则该表项是无效的，不能用于地址转换过程。此时该表项的所有其
+它比特位都可供程序使用；处理器不对这些位进行测试。</p>
+<p>当 CPU 试图使用一个页表项进行地址转换时，如果此时任意一级页表项的
+P=0，则处理器就会发出
+页异常信号。此时缺页中断异常处理程序就可以把所请求的页加入到物理内存中，并且导致异常的指令
+会被重新执行。</p>
+<p>已访问（Accessed – A）和已修改（Dirty –
+D）比特位用于提供有关页使用的信息。除了页目录项中
+的已修改位，这些比特位将由硬件置位，但不复位。</p>
+<p>在对一页内存进行读或写操作之前，CPU
+将设置相关的目录和二级页表项的已访问位。在向一个二
+级页表项所涵盖的地址进行写操作之前，处理器将设置该二级页表项的已修改位，而页目录项中的已修
+改位是不用的。当所需求的内存超出实际物理内存量时，内存管理程序就可以使用这些位来确定那些页
+可以从内存中取走，以腾出空间。内存管理程序还需负责检测和复位这些比特位。</p>
+<p>读/写位（Read/Write – R/W）和用户/超级用户位（User/Supervisor –
+U/S）并不用于地址转换，但用 于分页级的保护机制，是由 CPU
+在地址转换过程中同时操作的。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003225759273.png" alt="image-20231003225759273">
+<figcaption aria-hidden="true">image-20231003225759273</figcaption>
+</figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">.org 0x1000</span><br><span class="line">pg0:</span><br><span class="line"></span><br><span class="line">.org 0x2000</span><br><span class="line">pg1:</span><br><span class="line"></span><br><span class="line">.org 0x3000</span><br><span class="line">pg2:</span><br><span class="line"></span><br><span class="line">.org 0x4000</span><br><span class="line">pg3:</span><br><span class="line"></span><br><span class="line">.org 0x5000</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">   movl $pg0+7,_pg_dir		/* set present bit/user r/w */</span><br><span class="line">movl $pg1+7,_pg_dir+4		/*  --------- &quot; &quot; --------- */</span><br><span class="line">movl $pg2+7,_pg_dir+8		/*  --------- &quot; &quot; --------- */</span><br><span class="line">movl $pg3+7,_pg_dir+12		/*  --------- &quot; &quot; --------- */</span><br><span class="line">	/*在这段汇编代码中，_pg_dir 是一个地址，_pg_dir+4 是将 _pg_dir 的地址值增加 4 个字节，</span><br><span class="line">以访问 _pg_dir 中的下一个 4 字节的位置。这种情况通常出现在处理数组或数据结构的情况下，</span><br><span class="line">需要按字节访问连续的内存位置。</span><br><span class="line">在汇编语言中，符号$通常用于表示立即数（immediate value），而不是地址偏移。$pg2+7 </span><br><span class="line">中的7是一个立即数，而不是偏移量。这个7代表了一个具体的数值，而不是表示字节或二进制值。 */</span><br></pre></td></tr></table></figure>
+<p>上面的7代表111，这三位分别代表用户u，读写rw，存在p。如果是000代表内核，只读，不存在页。加7就是把后12位用于存权限问题。<code>movl $pg0+7,_pg_dir</code>
+这行汇编指令的含义是将地址 <code>pg0</code> 加上 7 存储到
+<code>_pg_dir</code>
+地址处。因此上面这一段代码的意义就是让页目录表指向每个页表项，同时第一个地方指向页目录自己，每次递增4个字节即32位地址。也就是如下图所示,这里的_pg_dir就是head的起始地址，这里是在一边执行head.s的代码一边覆盖。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003232851762.png" alt="image-20231003232851762">
+<figcaption aria-hidden="true">image-20231003232851762</figcaption>
+</figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">	movl $pg3+4092,%edi/*一个页表的最后一项在页表中的位置是1023*4=4092（一共1024项，第1024项的开始地址） */</span><br><span class="line">	movl $0xfff007,%eax		/*  16Mb - 4096 + 7 (r/w user,p) 一个页面4k=4096，16M是整个页面管理的空间，所以这里是最后一个页面的地址*/	   </span><br><span class="line">	std/*方向位置位，edi递减 */</span><br><span class="line">1:	stosl			/* fill pages backwards - more efficient :-) */</span><br><span class="line">	subl $0x1000,%eax  /*每写好一项物理地址递减0x1000 ，16^3=2^12=4k */</span><br><span class="line">	jge 1b/*如果小于0说明全填好了 */</span><br></pre></td></tr></table></figure>
+<p>edi指向了第一个页面，eax指向了最后一个页面</p>
+<p><strong>设置CR3,CR0</strong></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">xorl %eax,%eax		/* pg_dir is at 0x0000 */</span><br><span class="line">movl %eax,%cr3		/* cr3 - page directory start */</span><br><span class="line">movl %cr0,%eax</span><br><span class="line">orl $0x80000000,%eax</span><br><span class="line">movl %eax,%cr0		/* set paging (PG) bit */</span><br><span class="line">ret			/* 依赖前面的push stack转到main函数运行。this also flushes prefetch-queue */</span><br></pre></td></tr></table></figure>
+<p>CR3是页目录基址寄存器，其高20位存放页目录表基地址，这里就是0。orl
+$0x80000000,%eax，将最高位置一。==CR0寄存器==的第31位是分页机制控制位，置一代表开启分页。至此内核分页构建完成</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235254879.png" alt="image-20231003235254879">
+<figcaption aria-hidden="true">image-20231003235254879</figcaption>
+</figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231006092016126.png" alt="image-20231006092016126">
+<figcaption aria-hidden="true">image-20231006092016126</figcaption>
+</figure>
+<h2 id="内核内存恒等映射">内核内存恒等映射</h2>
+<p>根据内核分页为线性地址恒等映射的要求，推导出四个页表的映射公式，写出页表的设置代码。</p>
+<p>在Linux 0.11
+内核中，为了有效地使用机器中的物理内存，内存被划分成几个功能区域</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005095121645.png" alt="image-20231005095121645">
+<figcaption aria-hidden="true">image-20231005095121645</figcaption>
+</figure>
+<p>在 Linux 0.11 内核中，给每个程序（进程）都划分了总容量为 64MB
+的虚拟内存空 间。因此程序的逻辑地址范围是 0x0000000 到 0x4000000。</p>
+<p>在内存分段系统中，一个程序的逻辑地址是通过分段机制自动地映射（变换）到中间层的线性地址
+上。每次对内存的引用都是对内存段中内存的引用。当一个程序引用一个内存地址时，通过把相应的段
+基址加到程序员看得见的逻辑地址上就形成了一个对应的线性地址。此时若没有启用分页机制，则该线
+性地址就被送到 CPU 的外部地址总线上，用于直接寻址对应的物理内存。</p>
+<p><strong>转到main</strong></p>
+<p>ret返回，结合前面所说的main函数压栈，这里返回，得到main函数的入口地址，接下来就执行main函数了。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003235415139.png" alt="image-20231003235415139">
+<figcaption aria-hidden="true">image-20231003235415139</figcaption>
+</figure>
+<h1 id="小结">小结</h1>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150359552.png" alt="image-20231003150359552">
+<figcaption aria-hidden="true">image-20231003150359552</figcaption>
+</figure>
+<h1 id="实模式和保护模式的寻址区别">实模式和保护模式的寻址区别</h1>
+<p>在实模式中，CPU通过段地址和段偏移量寻址。其中段地址保存到段寄存器，包含：CS、SS、DS、ES、FS、GS。段偏移量可以保存到IP、BX、SI、DI寄存器。在汇编代码<code>mov ds:[si], ax</code>中，会将AX寄存器的数据写入到物理内存地址<code>DS * 16 + SI</code>中。</p>
+<p>而在保护模式下，也是通过段寄存器和段偏移量寻址，但是此时段寄存器保存的数据意义不同了。
+此时的CS和SS寄存器后13位相当于GDT表中某个描述符的索引，即<strong>==段选择子==</strong>。第2位存储了TI值（0代表GDT，1代表LDT），第0、1位存储了当前的特权级（CPL）。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003111510079.png" alt="image-20231003111510079">
+<figcaption aria-hidden="true">image-20231003111510079</figcaption>
+</figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003150641596.png" alt="image-20231003150641596">
+<figcaption aria-hidden="true">image-20231003150641596</figcaption>
+</figure>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201644907.png" alt="image-20231003201644907">
+<figcaption aria-hidden="true">image-20231003201644907</figcaption>
+</figure>
+<h2 id="分页后寻址">分页后寻址</h2>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231003201757163.png" alt="image-20231003201757163">
+<figcaption aria-hidden="true">image-20231003201757163</figcaption>
+</figure>
+<p>高 10
+位负责在<strong>页目录表</strong>中找到一个<strong>页目录项</strong>，这个页目录项的值加上中间
+10
+位拼接后的地址去<strong>页表</strong>中去寻找一个<strong>页表项</strong>，这个页表项的值，再加上后
+12 位偏移地址，就是最终的物理地址。</p>
+<p>intel CPU
+使用段（Segment）的概念来对程序进行寻址。每个段定义了内存中的某个区域以及访问
+的优先级等信息。而每个程序都可有若干个内存段组成。访问控制是基于段的访问控制</p>
+<p>程序的==逻辑地址==（或称为虚拟地址）即是用于
+寻址这些段和段中具体地址位置。在 Linux 0.11
+中，程序逻辑地址到线性地址的变换过程使用了 CPU 的 全局段描述符表 GDT
+和局部段描述符表 LDT。由 GDT 映射的地址空间称为全局地址空间，由 LDT 映
+射的地址空间则称为局部地址空间，而这两者构成了虚拟地址的空间。</p>
+<figure>
+<img src="/2023/10/09/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/%E7%AC%AC%E4%B8%80%E7%AB%A0%E8%8A%82%E7%AC%94%E8%AE%B0/image-20231005100625737.png" alt="image-20231005100625737">
+<figcaption aria-hidden="true">image-20231005100625737</figcaption>
+</figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/02/08/AI/%E5%89%AA%E6%9E%9D/" rel="prev" title="剪枝">
+                  <i class="fa fa-chevron-left"></i> 剪枝
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/11/06/%E5%93%88%E5%B7%A5%E5%A4%A7%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AE%9E%E9%AA%8C/%E5%93%88%E5%B7%A5%E5%A4%A7%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%AE%9E%E9%AA%8C%E7%B3%BB%E7%BB%9F%E8%B0%83%E7%94%A8/" rel="next" title="哈工大操作系统实验系统调用">
+                  哈工大操作系统实验系统调用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"1a878cd0b52c31b0e70bdd4cb10ed021"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

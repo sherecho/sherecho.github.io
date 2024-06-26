@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="linux 0.11内存管理 线性地址空间的格局 每个线程的虚拟地址空间并不重叠，每个进程不跨越自己的空间。如何防止进程跨越64M的空间进行非法访问？ 非法跨越进程边界有两种情况：  一个进程非法跨越到内核 一个进程非法跨越到另一个进程    示意图  非法跨越问题 如何防止进程跨越到内核的非法访问 通过cpu硬件禁止从3特权级跳转到0特权级。通过设置LDT,GDT设定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux 0.11内存管理">
+<meta property="og:url" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="linux 0.11内存管理 线性地址空间的格局 每个线程的虚拟地址空间并不重叠，每个进程不跨越自己的空间。如何防止进程跨越64M的空间进行非法访问？ 非法跨越进程边界有两种情况：  一个进程非法跨越到内核 一个进程非法跨越到另一个进程    示意图  非法跨越问题 如何防止进程跨越到内核的非法访问 通过cpu硬件禁止从3特权级跳转到0特权级。通过设置LDT,GDT设定">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217152531971.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217153206961.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217170102227.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217185638982.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/copypagetable.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217194700032.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006095735771.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006181323379.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217105146944.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006101019220.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092145578.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092929709.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217201708437.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217131946111.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217133450858.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217134055231.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217135134825.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217151900014.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/gdt的变迁.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006182614416.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006185241375.png">
+<meta property="article:published_time" content="2023-12-27T16:28:24.000Z">
+<meta property="article:modified_time" content="2024-01-23T15:27:30.196Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="Linux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/","path":"2023/12/28/Linux011内核学习笔记/linux 0.11内存管理/","title":"linux 0.11内存管理"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>linux 0.11内存管理 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#linux-0.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">linux 0.11内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E6%80%A7%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4%E7%9A%84%E6%A0%BC%E5%B1%80"><span class="nav-number">1.1.</span> <span class="nav-text">线性地址空间的格局</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E6%B3%95%E8%B7%A8%E8%B6%8A%E9%97%AE%E9%A2%98"><span class="nav-number">1.2.</span> <span class="nav-text">非法跨越问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E9%98%B2%E6%AD%A2%E8%BF%9B%E7%A8%8B%E8%B7%A8%E8%B6%8A%E5%88%B0%E5%86%85%E6%A0%B8%E7%9A%84%E9%9D%9E%E6%B3%95%E8%AE%BF%E9%97%AE"><span class="nav-number">1.2.1.</span> <span class="nav-text">如何防止进程跨越到内核的非法访问</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E6%80%8E%E4%B9%88%E5%90%88%E7%90%86%E7%9A%84%E8%B7%A8%E8%B6%8A%E7%89%B9%E6%9D%83%E7%BA%A7"><span class="nav-number">1.2.2.</span> <span class="nav-text">进程怎么合理的跨越特权级</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E9%A1%B5%E7%AE%A1%E7%90%86"><span class="nav-number">1.3.</span> <span class="nav-text">分页管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E6%A0%B8%E5%88%86%E9%A1%B5%E6%9C%BA%E5%88%B6"><span class="nav-number">1.3.1.</span> <span class="nav-text">内核分页机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B5%E9%9D%A2%E7%AE%A1%E7%90%86"><span class="nav-number">1.3.2.</span> <span class="nav-text">页面管理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%88%B6%E5%AD%90%E8%BF%9B%E7%A8%8B%E5%85%B1%E4%BA%AB%E9%A1%B5%E9%9D%A2"><span class="nav-number">1.3.3.</span> <span class="nav-text">父子进程共享页面</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%A1%B5%E9%9D%A2%E5%8F%8C%E6%8C%87%E9%92%88%E7%AE%A1%E7%90%86"><span class="nav-number">1.3.4.</span> <span class="nav-text">页面双指针管理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%BB%E5%9D%80"><span class="nav-number">1.4.</span> <span class="nav-text">寻址</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%BB%E5%9D%80%E8%BF%87%E7%A8%8B"><span class="nav-number">1.4.1.</span> <span class="nav-text">寻址过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%80%BB%E8%BE%91%E5%9C%B0%E5%9D%80-%E7%BA%BF%E6%80%A7%E5%9C%B0%E5%9D%80"><span class="nav-number">1.4.1.1.</span> <span class="nav-text">逻辑地址-&gt;线性地址</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%BA%BF%E6%80%A7%E5%9C%B0%E5%9D%80-%E7%89%A9%E7%90%86%E5%9C%B0%E5%9D%80"><span class="nav-number">1.4.1.2.</span> <span class="nav-text">线性地址-&gt;物理地址</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ia-32-%E7%89%B9%E6%9D%83%E7%BA%A7%E4%BF%9D%E6%8A%A4"><span class="nav-number">1.4.2.</span> <span class="nav-text">IA-32 特权级保护</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E6%95%B0%E6%8D%AE%E6%AE%B5"><span class="nav-number">1.4.2.1.</span> <span class="nav-text">访问数据段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A0%86%E6%A0%88"><span class="nav-number">1.4.2.2.</span> <span class="nav-text">堆栈</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BF%E9%97%AE%E4%BB%A3%E7%A0%81%E6%AE%B5"><span class="nav-number">1.4.2.3.</span> <span class="nav-text">访问代码段</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gdt%E7%9A%84%E5%8F%98%E8%BF%81"><span class="nav-number">1.4.3.</span> <span class="nav-text">GDT的变迁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AE%B5%E6%8F%8F%E8%BF%B0%E7%AC%A6%E7%BB%93%E6%9E%84"><span class="nav-number">1.5.</span> <span class="nav-text">段描述符结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#section"><span class="nav-number">1.6.</span> <span class="nav-text"></span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="linux 0.11内存管理 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux 0.11内存管理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-12-28 00:28:24" itemprop="dateCreated datePublished" datetime="2023-12-28T00:28:24+08:00">2023-12-28</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-01-23 23:27:30" itemprop="dateModified" datetime="2024-01-23T23:27:30+08:00">2024-01-23</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/LINUX011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">LINUX011内核学习笔记</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>7.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="linux-0.11内存管理">linux 0.11内存管理</h1>
+<h2 id="线性地址空间的格局">线性地址空间的格局</h2>
+<p>每个线程的虚拟地址空间并不重叠，每个进程不跨越自己的空间。如何防止进程跨越64M的空间进行非法访问？</p>
+<p>非法跨越进程边界有两种情况：</p>
+<ul>
+<li><p>一个进程非法跨越到内核</p></li>
+<li><p>一个进程非法跨越到另一个进程</p></li>
+</ul>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231216204104687.png" alt="示意图">
+<figcaption aria-hidden="true">示意图</figcaption>
+</figure>
+<h2 id="非法跨越问题">非法跨越问题</h2>
+<h3 id="如何防止进程跨越到内核的非法访问">如何防止进程跨越到内核的非法访问</h3>
+<p>通过cpu硬件禁止从3特权级跳转到0特权级。通过设置LDT,GDT设定了特权级。进程能否自己修改LDT,GDT?不能，因为这两个都在内核数据段，是0特权级，进程无法访问。那进程能不能自己建一个LDT,GDT狸猫换太子？也不能，因为运行的时候CPU只将GDTR和LDTR寄存器指向的数据结构认定为LDT,GDT，进程自己没法伪造。而LDTR和GDTR是0特权级的进程没法把自己伪造的挂上去。</p>
+<p>在寻址过程中我们会对这一内容做一个总结。详见下面的寻址章节。</p>
+<h3 id="进程怎么合理的跨越特权级">进程怎么合理的跨越特权级</h3>
+<p>涉及进程通信和中断门，TSS进程切换</p>
+<h2 id="分页管理">分页管理</h2>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217152531971.png" alt="页面地址映射">
+<figcaption aria-hidden="true">页面地址映射</figcaption>
+</figure>
+<p>重要寄存器：</p>
+<p>CR3:指向页目录表的地址。CR3里面存放的是物理地址</p>
+<p>CR0寄存器： <img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217153206961.png" alt="CR0"></p>
+<h3 id="内核分页机制">内核分页机制</h3>
+<p>建立过程：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">.org 0x1000</span><br><span class="line">pg0:</span><br><span class="line">.org 0x2000</span><br><span class="line">pg1:</span><br><span class="line">.org 0x3000</span><br><span class="line">pg2:</span><br><span class="line">.org 0x4000</span><br><span class="line">pg3:</span><br><span class="line">.org 0x5000</span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">   movl $pg0+7,_pg_dir		/* set present bit/user r/w */</span><br><span class="line">movl $pg1+7,_pg_dir+4		/*  --------- &quot; &quot; --------- */</span><br><span class="line">movl $pg2+7,_pg_dir+8		/*  --------- &quot; &quot; --------- */</span><br><span class="line">movl $pg3+7,_pg_dir+12		/*  --------- &quot; &quot; --------- */</span><br><span class="line">	/*在这段汇编代码中，_pg_dir 是一个地址，_pg_dir+4 是将 _pg_dir 的地址值增加 4 个字节，</span><br><span class="line">以访问 _pg_dir 中的下一个 4 字节的位置。这种情况通常出现在处理数组或数据结构的情况下，</span><br><span class="line">需要按字节访问连续的内存位置。</span><br><span class="line">在汇编语言中，符号$通常用于表示立即数（immediate value），而不是地址偏移。$pg2+7 </span><br><span class="line">中的7是一个立即数，而不是偏移量。这个7代表了一个具体的数值，而不是表示字节或二进制值。 */</span><br></pre></td></tr></table></figure>
+<p>上面的7代表111，这三位分别代表用户u，读写rw，存在p。如果是000代表内核，只读，不存在页。加7就是把后12位用于存权限问题。<code>movl $pg0+7,_pg_dir</code>
+这行汇编指令的含义是将地址 <code>pg0</code> 加上 7 存储到
+<code>_pg_dir</code>
+地址处。因此上面这一段代码的意义就是让页目录表指向每个页表项，同时第一个地方指向页目录自己，每次递增4个字节即32位地址。也就是如下图所示,这里的_pg_dir就是head的起始地址，这里是在一边执行head.s的代码一边覆盖。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">	movl $pg3+4092,%edi/*一个页表的最后一项在页表中的位置是1023*4=4092（一共1024项，第1024项的开始地址） */</span><br><span class="line">	movl $0xfff007,%eax		/*  16Mb - 4096 + 7 (r/w user,p) 一个页面4k=4096，16M是整个页面管理的空间，所以这里是最后一个页面的地址*/</span><br><span class="line">	std/*方向位置位，edi递减 */</span><br><span class="line">1:	stosl			/* fill pages backwards - more efficient :-) */</span><br><span class="line">	subl $0x1000,%eax  /*每写好一项物理地址递减0x1000 ，16^3=2^12=4k */</span><br><span class="line">	jge 1b/*如果小于0说明全填好了 */</span><br></pre></td></tr></table></figure>
+<p>edi指向了第一个页面，eax指向了最后一个页面</p>
+<p>其中进程0用的是内核的页表。</p>
+<p>地址32位4字节，一共页表4k，可以保存1k个线性地址间接指向下一级页表<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217170102227.png" alt="页表映射关系"></p>
+<h3 id="页面管理">页面管理</h3>
+<p>内核通过mem_map管理1M以上的内存空间。</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217185638982.png" alt="mem_map">
+<figcaption aria-hidden="true">mem_map</figcaption>
+</figure>
+<p>目录项或页表项P位为1的时候说明已经和某页面建立了映射，如果为0说明没有建立映射机制。此时如果使用该页表项的页面会发送缺页中断。</p>
+<p><strong>进程管理自己的页</strong></p>
+<p>进程的页目录表是通过内核代码调用得到的，处于内核数据段。因此进程自己是没有权限修改自己的页目录表的，是由内核全权代理。</p>
+<h3 id="父子进程共享页面">父子进程共享页面</h3>
+<p>copy pagetable：</p>
+<p>进入copy_page_tables函数后，先为新的页表申请一个空闲页面，并把进程0中第一个页表里的前160个页表项复制到这个页面中（1个页表项控制一个页面4KB内存空间，160个页表项可以控制640KB内存空间）。进程0和进程1的页表暂时度指向了相同的页面，意味着进程1也可以操作进程0的页面。之后对进程1的页目录表进行设置。最后，用重置CR3的方法刷新页面变换高速缓存。进程1的页表和页目录表设置完毕。进程1此时是一个空架子，还没有对应的程序，它的页表又是从进程0的页表复制过来的，它们管理的页面完全一致，也就是它暂时和进程0共享一套页面管理结构。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//from 父进程的段基地址，to子进程的段基地址</span></span><br><span class="line"><span class="comment">/*分页实现的是从线性地址到物理地址的转换，因此函数的输入一定是线性地址，</span></span><br><span class="line"><span class="comment">  为了方便遍历，把单位换算为M,此处硬件MMU要求页目录项的地址4M对齐*/</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">copy_page_tables</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> from,<span class="type">unsigned</span> <span class="type">long</span> to,<span class="type">long</span> size)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> * from_page_table;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> * to_page_table;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> this_page;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> * from_dir, * to_dir;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> nr;</span><br><span class="line">	<span class="comment">//0x3fffff 是4M，是一个页表的管辖范围，22位from和to必须是4MB的整数倍，一个页表对应的4MB连续的线性地址空间必须是从0开始的4MB的整数倍数</span></span><br><span class="line">    <span class="comment">//4M一个页表的覆盖范围，如果4M没有对齐则panic，cpu的要求，cpu分页要对齐，页目录表项要4M对齐</span></span><br><span class="line">	<span class="keyword">if</span> ((from&amp;<span class="number">0x3fffff</span>) || (to&amp;<span class="number">0x3fffff</span>)) <span class="comment">//必须满足后面22位都是0才能不panic</span></span><br><span class="line">		panic(<span class="string">&quot;copy_page_tables called with wrong alignment&quot;</span>);</span><br><span class="line">	<span class="comment">//父进程页目录表项的位置，一个线性地址空间对应一个页目录表</span></span><br><span class="line">	<span class="comment">//from右移20位：以MB为单位，例如0010 0000 0000 0000 0000 000》0010就是2M</span></span><br><span class="line">    <span class="comment">//确保from_dir是4M的倍数</span></span><br><span class="line">	from_dir = (<span class="type">unsigned</span> <span class="type">long</span> *) ((from&gt;&gt;<span class="number">20</span>) &amp; <span class="number">0xffc</span>); <span class="comment">/* _pg_dir = 0 */</span><span class="comment">//地址数由字节数变成M，c：1100，ffc肯定是4的倍数，因此是4M的倍数,</span></span><br><span class="line">	<span class="comment">//有ff是因为32位地址，右移20，还剩12位，ffc，十二位</span></span><br><span class="line">	<span class="comment">//确保to_dir是4M的倍数</span></span><br><span class="line">	to_dir = (<span class="type">unsigned</span> <span class="type">long</span> *) ((to&gt;&gt;<span class="number">20</span>) &amp; <span class="number">0xffc</span>);</span><br><span class="line">	<span class="comment">//22 4MB，这里是不足4M强行等于一个4M</span></span><br><span class="line">	size = ((<span class="type">unsigned</span>) (size+<span class="number">0x3fffff</span>)) &gt;&gt; <span class="number">22</span>;</span><br><span class="line">	<span class="comment">//基地址的低第一位：是P位，指示页表是否存在</span></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">    以进程0创建进程1为例：</span></span><br><span class="line"><span class="comment">    此时from：0</span></span><br><span class="line"><span class="comment">       to :0x4000000(64M)</span></span><br><span class="line"><span class="comment">       SIZE:段限长：0x9f（0xa0)160*4k=640k</span></span><br><span class="line"><span class="comment">       进行单位换算以后就变成了：from 0M TO 64 M size=1M ,如下所示的from和to两个指针进行拷贝操作</span></span><br><span class="line"><span class="comment">       ---------</span></span><br><span class="line"><span class="comment">       ^(0M from_dir)</span></span><br><span class="line"><span class="comment">       ----...----</span></span><br><span class="line"><span class="comment">              ^(64M to_dir)</span></span><br><span class="line"><span class="comment">       两层循环：</span></span><br><span class="line"><span class="comment">       for 父进程的遍历页目录项对应的每一个页表</span></span><br><span class="line"><span class="comment">           if子进程页目录项存在报错</span></span><br><span class="line"><span class="comment">           if 父进程页目录项不存在则跳过，继续便历下一项</span></span><br><span class="line"><span class="comment">                    为子进程的页表分配页面</span></span><br><span class="line"><span class="comment">         for 遍历该页目录项指向的页表对应的页面</span></span><br><span class="line"><span class="comment">             if（父进程该页表不存在，则跳过，继续遍历下一个页表）</span></span><br><span class="line"><span class="comment">             (用nr来记录要遍历的页面的数量，如果from是0M也就是进程0，则要遍历的页面长度是段限长640K.这是因为进程0比较特殊，与内核公用了一个页表，进程0的东西不能都被拷贝给子进程，否则就有问题了.比如进程0的页目录由16	M后两页的内容，后两页有子进程1的task_struct 和页表项，这俩子进程应该无权访问，否则子进程就可以修改自己的页面映射关系了显然不大对。)</span></span><br><span class="line"><span class="comment">             注意：1M以内的页面不参与用户分页管理</span></span><br><span class="line"><span class="comment">             1.设置页面的权限，因为子进程共享了父进程的页面，因此应该把子进程的权限设置位只读，否则两个进程如果存在同时写的情况就会出错。子进程如果需要修改页面，则会引出后面要讲的copy on write</span></span><br><span class="line"><span class="comment">             2.将页面填到子进程的页表（页框frame）里面，完成映射关系</span></span><br><span class="line"><span class="comment">             3.修改mem_map里面的引用计数，表面该页面被新增的进程占用</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">	<span class="keyword">for</span>( ; size--&gt;<span class="number">0</span> ; from_dir++,to_dir++) &#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="number">1</span> &amp; *to_dir)<span class="comment">//1:p位。</span></span><br><span class="line">			panic(<span class="string">&quot;copy_page_tables: already exist&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span> (!(<span class="number">1</span> &amp; *from_dir)) <span class="comment">//from的页表不存在，则没必要进行下去了</span></span><br><span class="line">			<span class="keyword">continue</span>;</span><br><span class="line">		<span class="comment">//0xfffff000 低12位清零，from_dir是页目录项的地址，高20位是页表的地址</span></span><br><span class="line">		from_page_table = (<span class="type">unsigned</span> <span class="type">long</span> *) (<span class="number">0xfffff000</span> &amp; *from_dir);</span><br><span class="line">		<span class="keyword">if</span> (!(to_page_table = (<span class="type">unsigned</span> <span class="type">long</span> *) get_free_page()))<span class="comment">//获得空页面。上次调用是在找一个空页面放         task_struct</span></span><br><span class="line">			<span class="keyword">return</span> <span class="number">-1</span>;	<span class="comment">/* Out of memory, see freeing */</span></span><br><span class="line">		*to_dir = ((<span class="type">unsigned</span> <span class="type">long</span>) to_page_table) | <span class="number">7</span>;<span class="comment">//这次是给子进程的基地址段分配页面</span></span><br><span class="line">		nr = (from==<span class="number">0</span>)?<span class="number">0xA0</span>:<span class="number">1024</span>; <span class="comment">//0xa0：0x9f 可以查看init task里面的ldt的断限长计算，把父进程的160个页表项640KB空间的内容复制给子进程</span></span><br><span class="line">		<span class="keyword">for</span> ( ; nr-- &gt; <span class="number">0</span> ; from_page_table++,to_page_table++) &#123;</span><br><span class="line">			this_page = *from_page_table;</span><br><span class="line">			<span class="keyword">if</span> (!(<span class="number">1</span> &amp; this_page)) </span><br><span class="line">				<span class="keyword">continue</span>;</span><br><span class="line">			this_page &amp;= ~<span class="number">2</span>;<span class="comment">//设置页表属性~2:101 用户，只读，存在</span></span><br><span class="line">			*to_page_table = this_page;</span><br><span class="line">			<span class="keyword">if</span> (this_page &gt; LOW_MEM) &#123;<span class="comment">//1MB以内的内核区域不参与用户分页管理</span></span><br><span class="line">				*from_page_table = this_page;</span><br><span class="line">				this_page -= LOW_MEM;</span><br><span class="line">				this_page &gt;&gt;= <span class="number">12</span>; <span class="comment">//</span></span><br><span class="line">				mem_map[this_page]++; <span class="comment">//增加引用计数，说明这个页被这个进程占用了</span></span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	invalidate();<span class="comment">//重置CR3为0，刷新页变换高速缓存</span></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/copypagetable.png" alt="copypagetable">
+<figcaption aria-hidden="true">copypagetable</figcaption>
+</figure>
+<h3 id="页面双指针管理">页面双指针管理</h3>
+<p>分配给进程的页面除了进程通过建立页表项的映射，内核本身也在管理</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217194700032.png" alt="双指针">
+<figcaption aria-hidden="true">双指针</figcaption>
+</figure>
+<h2 id="寻址">寻址</h2>
+<h3 id="寻址过程">寻址过程</h3>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006095735771.png" alt="寻址机制">
+<figcaption aria-hidden="true">寻址机制</figcaption>
+</figure>
+<h4 id="逻辑地址-线性地址">逻辑地址-&gt;线性地址</h4>
+<p>一个==逻辑地址==由一个 16 位的段选择子和一个 32 位的偏移组成</p>
+<p>例如<code>jmpi 0，8</code>，0是偏移，8是段选择子：==1000==</p>
+<p><strong>段选择子</strong>格式：</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006181323379.png" alt="段选择子格式">
+<figcaption aria-hidden="true">段选择子格式</figcaption>
+</figure>
+<p>1000：</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217105146944.png" alt="解释图">
+<figcaption aria-hidden="true">解释图</figcaption>
+</figure>
+<p>转换关系：</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006101019220.png" alt="转换关系">
+<figcaption aria-hidden="true">转换关系</figcaption>
+</figure>
+<h4 id="线性地址-物理地址">线性地址-&gt;物理地址</h4>
+<p>32位地址：CPU 在看到我们给出的内存地址后，首先把线性地址被拆分成</p>
+<p>高 10 位：中间 10 位：后 12 位。</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092145578.png" alt="线性地址">
+<figcaption aria-hidden="true">线性地址</figcaption>
+</figure>
+<p><span class="math inline">\(2^{10}\)</span>=1K,一个页目录表有1k个页表，一个页表包含1k个页表项，一个页表指向一个页面(4k)。</p>
+<p>因此一个页表对应了4M的物理空间。这里一共建立了4个页表：16M空间，理论上可以更大。由于硬件中cpu是4k对齐的</p>
+<p>因此低12位会是零，所以可以用高20位来表示4KB对齐的页表和页，因此可以用后12位设置权限。</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006092929709.png" alt="线性地址">
+<figcaption aria-hidden="true">线性地址</figcaption>
+</figure>
+<p><strong>代码示例</strong>：</p>
+<p>以如下代码为例展示从线性地址转换到物理地址的过程</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span> <span class="title function_">write_verify</span><span class="params">(<span class="type">unsigned</span> <span class="type">long</span> address)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="type">unsigned</span> <span class="type">long</span> page;</span><br><span class="line">    <span class="comment">// 判断指定地址所对应页目录项的页表是否存在(P)，若不存在(P=0)则返回。4M对齐</span></span><br><span class="line">	<span class="keyword">if</span> (!( (page = *((<span class="type">unsigned</span> <span class="type">long</span> *) ((address&gt;&gt;<span class="number">20</span>) &amp; <span class="number">0xffc</span>)) )&amp;<span class="number">1</span>))</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	<span class="comment">// 取页表的地址，加上指定地址的页面在页表中的页表项偏移值，得对应物理页面的页表项指针。</span></span><br><span class="line">	page &amp;= <span class="number">0xfffff000</span>;<span class="comment">//4k对齐</span></span><br><span class="line">	page += ((address&gt;&gt;<span class="number">10</span>) &amp; <span class="number">0xffc</span>);<span class="comment">//（ffc，置0了除了11~2位的所有位）高10位置零，低十位置零只留了中间十位，后两位置零了起到乘4的效果，因为每一个偏移量是以4字节（32位）为单位的，避免后面取到了index再乘4的操作</span></span><br><span class="line">	<span class="comment">// 如果该页面不可写(标志 R/W 没有置位)，则执行共享检验和复制页面操作（写时复制）。</span></span><br><span class="line">	<span class="keyword">if</span> ((<span class="number">3</span> &amp; *(<span class="type">unsigned</span> <span class="type">long</span> *) page) == <span class="number">1</span>)  <span class="comment">/* non-writeable, present */</span></span><br><span class="line">		un_wp_page((<span class="type">unsigned</span> <span class="type">long</span> *) page);</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>page = *((unsigned long *) ((address&gt;&gt;20) &amp; 0xffc))</code></p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217201708437.png" alt="地址转换">
+<figcaption aria-hidden="true">地址转换</figcaption>
+</figure>
+<h3 id="ia-32-特权级保护">IA-32 特权级保护</h3>
+<p>linux 0.11的特权级保护是基于==段==的。</p>
+<p>访问控制是针对==内存==的访问控制，是以字节为单位的。</p>
+<p>首先，程序发生跳转指令的时候会有非法访问的嫌疑。短跳转不会涉及段的变化，不会非法访问。而长跳转例如
+jmpi 0，8</p>
+<p>怎么确保不会从低特权级跳到高特权级？</p>
+<h4 id="访问数据段">访问数据段</h4>
+<p>高特权级的代码段可以访问第特权级的数据段，低特权不允许访问高特权的数据</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217131946111.png" alt="访问数据段的时候的特权检查">
+<figcaption aria-hidden="true">访问数据段的时候的特权检查</figcaption>
+</figure>
+<p><img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217133450858.png" alt="举个例子" style="zoom:80%;"></p>
+<h4 id="堆栈">堆栈</h4>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217134055231.png" alt="SS寄存器加载">
+<figcaption aria-hidden="true">SS寄存器加载</figcaption>
+</figure>
+<h4 id="访问代码段">访问代码段</h4>
+<p>程序控制从一个代码段转换到另一个代码段时，必须把目标代码段的段选择子装
+入 CS
+寄存器。在装载过程中，处理器会检查目标代码段的段描述符，对段界限、类型
+及特权级进行检验。进程控制转移是用
+JMP、CALL、RET、SYEENTER、SYSEXIT、INT n 和 IRET
+指令或者异常和中断机制来实现的。</p>
+<p>目标代码段描述符的一致性（C）标志（段描述符类型域），这个标志确定一个段是一个一致性代
+码段（标志为 1）还是非一致性代码段（标志为 0）。</p>
+<p><strong>访问非一致性代码段</strong></p>
+<p>当访问非一致性代码段时，调用例程的 CPL 必须与目标代码段的 DPL
+相等，否则 处理器会产生一个一般保护异常（#GP）。</p>
+<p><img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217135134825.png" alt="访问非一致性代码段" style="zoom:80%;"></p>
+<p><strong>访问一致性代码段</strong></p>
+<p>当访问一致性代码段时，调用例程的 CPL
+可以在数值上等于或小于（较低特权级）目标代码段的 DPL。仅当 CPL 大于 DPL
+的时候，处理器产生一个一般保护异常（#GP）。
+（当目标代码段是一致性代码段时，不用检验目标代码段的 RPL。）</p>
+<p><strong>门调用</strong></p>
+<p><img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231217151900014.png" alt="门调用" style="zoom: 67%;"></p>
+<h3 id="gdt的变迁">GDT的变迁</h3>
+<p>==详见：第一章和第二章笔记==</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/gdt的变迁.png" alt="GDT的变迁">
+<figcaption aria-hidden="true">GDT的变迁</figcaption>
+</figure>
+<h2 id="段描述符结构">段描述符结构</h2>
+<p><strong>段描述符</strong>：写在gdt表里面的那个内容也是段描述符。段描述符是
+GDT 或 LDT 中的一个数据结构，它为处理器提供诸如段基地址、段大
+小、访问权限及状态等信息。</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006182614416.png" alt="段描述符结构">
+<figcaption aria-hidden="true">段描述符结构</figcaption>
+</figure>
+<p>G表示粒度：</p>
+<ul>
+<li><p>如果粒度标志位为 0，则段大小可以从 <strong>1 字节到 1M</strong>
+字节，段长 增量单位为字节。</p></li>
+<li><p>如果粒度标志位为 1，则段大小可以从 <strong>4K 字节到 4G</strong>
+字节，段长 增量单位为 4K 字节。</p></li>
+</ul>
+<p><strong>D/B（默认操 作数大小/默认 栈指针大小和/
+或上限）标志</strong></p>
+<p>根据段描述符所指的是可执行代码段、向下扩展的数据段还是堆栈
+段，这个标志有不同的功能。（对 32 位的代码和数据段，这个标志 总是被置为
+1，而 16 位的代码和数据段，这个标志总是被置为 0。）</p>
+<p><strong>P（段存在） 标志</strong></p>
+<p>指明段当前是否在内存中（1 表示在内存中，0 表示不在）。当指向
+段描述符的段选择子被装进段寄存器时，如果这个标志为 0，处理器
+会产生段不存在异常（#NP）。内存管理软件可以通过这个标志，来
+控制在某个特定时间有哪些段是真正的被载入物理内存的。这是除
+分页之外的另一个虚拟内存控制机制。 图 3-9 演示了段存在标志置 0
+时段描述符的格式。当这个标志置 0
+时，操作系统或者管理软件就可以随意去使用标明为“可用”的地
+方（段描述符里）来存贮自己的数据，比如有关已消失段的所在位
+置的信息。</p>
+<p><strong>DPL（描述符 特权级）域</strong></p>
+<p>指明段的特权级。特权级从 0 到 3，0 为最高特权级。DPL 用来控制
+对段的访问。DPL:访问该段的权限设置</p>
+<p><strong>S（描述符类 型）标志</strong></p>
+<p>确定段描述符是系统描述符（S 标记为 0）或者代码、数据段描述符 （S
+标记为 1）</p>
+<p><strong>类型域</strong>
+指明段或者门的类型，确定段的访问权限和增长方向。如何解释这
+个域，取决于该描述符是应用程序描述符（代码或数据）还是系统
+描述符。代码段、数据段和系统段对类型域有不同的编码</p>
+<figure>
+<img src="/2023/12/28/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux%200.11%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/image-20231006185241375.png" alt="类型域">
+<figcaption aria-hidden="true">类型域</figcaption>
+</figure>
+<h2 id="section"></h2>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/12/27/Linux011%E5%86%85%E6%A0%B8%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/linux0.11%E7%BC%93%E5%86%B2%E5%8C%BA%E8%AE%BE%E8%AE%A1%E8%A7%A3%E8%AF%BB/" rel="prev" title="linux0.11缓冲区设计解读">
+                  <i class="fa fa-chevron-left"></i> linux0.11缓冲区设计解读
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/12/28/Linux%E7%BD%91%E7%BB%9C/linux%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%96%E7%A8%8B/HTTP%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A/" rel="next" title="HTTP服务器实验报告">
+                  HTTP服务器实验报告 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"866eaa9a9a1a287cbf0be5ff0331d01a"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

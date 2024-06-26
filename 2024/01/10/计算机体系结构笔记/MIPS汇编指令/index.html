@@ -1,0 +1,1331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="MIPS 汇编指令 MIPS的意思是 “无内部互锁流水级的微处理器” (Microprocessor without interlocked piped stages) 指令系统常见指令分类  算术和逻辑运算指令  ​ 加、减、乘、除、开方…… ​ 移位：左移与右移、逻辑移位与算术移位…… ​ 与、或、非、异或…… ​ 格式转换……  访存指令：取数、存数  ​ 不同">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MIPS 汇编指令">
+<meta property="og:url" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="MIPS 汇编指令 MIPS的意思是 “无内部互锁流水级的微处理器” (Microprocessor without interlocked piped stages) 指令系统常见指令分类  算术和逻辑运算指令  ​ 加、减、乘、除、开方…… ​ 移位：左移与右移、逻辑移位与算术移位…… ​ 与、或、非、异或…… ​ 格式转换……  访存指令：取数、存数  ​ 不同">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231001100653770.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110095539899.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002172735180.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110101934646.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110102135710.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110102244573.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231001102233068.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002170111052.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002112606615.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002114134669.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002114423677.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002115214583.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002131220203.png">
+<meta property="og:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002152257410.png">
+<meta property="article:published_time" content="2024-01-10T01:44:53.237Z">
+<meta property="article:modified_time" content="2024-01-10T02:24:07.746Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="MIPS">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231001100653770.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/","path":"2024/01/10/计算机体系结构笔记/MIPS汇编指令/","title":"MIPS 汇编指令"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>MIPS 汇编指令 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mips-%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4"><span class="nav-number">1.</span> <span class="nav-text">MIPS 汇编指令</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E7%B3%BB%E7%BB%9F%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E5%88%86%E7%B1%BB"><span class="nav-number">1.1.</span> <span class="nav-text">指令系统常见指令分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8C%87%E4%BB%A4%E7%89%B9%E7%82%B9"><span class="nav-number">1.2.</span> <span class="nav-text">指令特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mips-%E7%9A%84%E5%AF%84%E5%AD%98%E5%99%A8"><span class="nav-number">1.3.</span> <span class="nav-text">MIPS 的寄存器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E7%B1%BB%E5%9E%8B%E6%8C%87%E4%BB%A4"><span class="nav-number">1.4.</span> <span class="nav-text">三种类型指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#r-typearithmetic-instruction"><span class="nav-number">1.4.1.</span> <span class="nav-text">R-type：arithmetic
+instruction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#i-typedata-transfer-arithmetic-instruction"><span class="nav-number">1.4.2.</span> <span class="nav-text">I-type：data
+transfer, arithmetic instruction</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#j-typebranch-instructionconditional-unconditional"><span class="nav-number">1.4.3.</span> <span class="nav-text">J-type：branch
+instruction(conditional &amp; unconditional)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4"><span class="nav-number">1.4.4.</span> <span class="nav-text">常见指令</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AF%84%E5%AD%98%E5%99%A8%E5%92%8C%E7%AB%8B%E5%8D%B3%E8%AE%A1%E7%AE%97%E6%8C%87%E4%BB%A4%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="nav-number">1.5.</span> <span class="nav-text">寄存器和立即计算指令数据流</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E6%95%B0%E5%8A%A0%E8%BD%BD"><span class="nav-number">1.6.</span> <span class="nav-text">常数加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ll-sc%E6%8C%87%E4%BB%A4"><span class="nav-number">1.7.</span> <span class="nav-text">ll sc指令</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90"><span class="nav-number">1.7.1.</span> <span class="nav-text">例子：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lwl-lwr-swl-swr-%E5%A4%A7%E5%B0%8F%E7%AB%AF%E9%97%AE%E9%A2%98"><span class="nav-number">1.8.</span> <span class="nav-text">lwl lwr swl swr 大小端问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#lwr"><span class="nav-number">1.8.1.</span> <span class="nav-text">LWR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#lwl"><span class="nav-number">1.8.2.</span> <span class="nav-text">lwl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#swr"><span class="nav-number">1.8.3.</span> <span class="nav-text">SWR</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#swl"><span class="nav-number">1.8.4.</span> <span class="nav-text">SWL</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%9C%E4%B8%9A%E4%BE%8B%E9%A2%98"><span class="nav-number">1.8.5.</span> <span class="nav-text">作业例题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B8%B8%E8%A7%81%E6%8C%87%E4%BB%A4%E6%B1%87%E6%80%BB"><span class="nav-number">1.9.</span> <span class="nav-text">常见指令汇总</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%AF%B9%E9%BD%90"><span class="nav-number">1.10.</span> <span class="nav-text">内存对齐</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%A7%E5%B0%BE%E7%AB%AF%E5%92%8C%E5%B0%8F%E5%B0%BE%E7%AB%AF%E7%9A%84%E5%AD%97%E8%8A%82%E5%BA%8F%E9%97%AE%E9%A2%98"><span class="nav-number">1.11.</span> <span class="nav-text">大尾端和小尾端的字节序问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E8%BF%90%E7%AE%97%E9%97%AE%E9%A2%98"><span class="nav-number">1.12.</span> <span class="nav-text">浮点运算问题</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E5%8A%A0%E8%BD%BD"><span class="nav-number">1.12.1.</span> <span class="nav-text">浮点数加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%AE%E7%82%B9%E6%95%B0%E8%BF%90%E7%AE%97"><span class="nav-number">1.12.2.</span> <span class="nav-text">浮点数运算</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90-1"><span class="nav-number">1.12.3.</span> <span class="nav-text">例子：</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="MIPS 汇编指令 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MIPS 汇编指令
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+      
+
+      <time title="创建时间：2024-01-10 09:44:53 / 修改时间：10:24:07" itemprop="dateCreated datePublished" datetime="2024-01-10T09:44:53+08:00">2024-01-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">计算机体系结构</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>8.8k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>8 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="mips-汇编指令">MIPS 汇编指令</h1>
+<p>MIPS的意思是 “无内部互锁流水级的微处理器” (Microprocessor without
+interlocked piped stages)</p>
+<h2 id="指令系统常见指令分类">指令系统常见指令分类</h2>
+<ul>
+<li><strong>算术和逻辑运算指令</strong></li>
+</ul>
+<p>​ <strong>加、减、乘、除、开方……</strong></p>
+<p>​ <strong>移位：左移与右移、逻辑移位与算术移位……</strong></p>
+<p>​ <strong>与、或、非、异或……</strong></p>
+<p>​ <strong>格式转换……</strong></p>
+<ul>
+<li><strong>访存指令：取数、存数</strong></li>
+</ul>
+<p>​
+<strong>不同长度和不同类型：定点/浮点，字节/半字/字/双字</strong></p>
+<p>​ <strong>不同寻址方式</strong></p>
+<ul>
+<li><strong>转移指令</strong></li>
+</ul>
+<p>​ <strong>相对/绝对、直接/间接、条件/无条件</strong></p>
+<ul>
+<li><strong>系统管理指令</strong></li>
+</ul>
+<p>​ <strong>TLB管理、Cache管理、异常管理、安全管理</strong></p>
+<h2 id="指令特点">指令特点</h2>
+<ul>
+<li><p>所有指令都是32位长</p></li>
+<li><p>指令操作必须符合流水线</p>
+<p>MIPS指令一次只能修改一个寄存器的值</p></li>
+<li><p>3操作数指令</p></li>
+<li><p>32个寄存器</p></li>
+<li><p>没有条件标志位</p></li>
+</ul>
+<h2 id="mips-的寄存器">MIPS 的寄存器</h2>
+<ul>
+<li><p>MIPS下一共有32个通用寄存器</p></li>
+<li><p>在汇编中，寄存器标志由 <code>$</code> 符开头</p></li>
+<li><p>寄存器表示可以有两种方式</p>
+<ul>
+<li><p>直接使用该寄存器对应的编号，例如：从 <code>$0</code> 到
+<code>$31</code></p></li>
+<li><p>使用对应的寄存器名称例如： <code>$t1</code> ,
+<code>$sp</code></p></li>
+</ul></li>
+<li><p>栈的走向是从高地址到低地址</p></li>
+<li><table>
+<colgroup>
+<col style="width: 15%">
+<col style="width: 14%">
+<col style="width: 70%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>寄存器编号</th>
+<th>寄存器名</th>
+<th>寄存器用途</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>zero</td>
+<td>永远返回零</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>$at</td>
+<td>汇编保留寄存器</td>
+</tr>
+<tr class="odd">
+<td>2-3</td>
+<td>$v0 - $v1</td>
+<td>存储表达式或者是函数的返回值</td>
+</tr>
+<tr class="even">
+<td>4-7</td>
+<td>$a0 - $a3</td>
+<td>存储子程序的前4个参数，在子程序调用过程中释放</td>
+</tr>
+<tr class="odd">
+<td>8-15</td>
+<td>$t0 - $t7</td>
+<td>临时变量</td>
+</tr>
+<tr class="even">
+<td>16-23</td>
+<td>$s0 - $s7</td>
+<td>静态变量</td>
+</tr>
+<tr class="odd">
+<td>24-25</td>
+<td>$t8 - $t9</td>
+<td>临时变量</td>
+</tr>
+<tr class="even">
+<td>26-27</td>
+<td>$k0 - $k1</td>
+<td>中断函数返回值</td>
+</tr>
+<tr class="odd">
+<td>28</td>
+<td>$gp</td>
+<td>指向静态数据块的中间地址</td>
+</tr>
+<tr class="even">
+<td>29</td>
+<td>$sp</td>
+<td>栈顶指针</td>
+</tr>
+<tr class="odd">
+<td>30</td>
+<td>$fp</td>
+<td>帧指针</td>
+</tr>
+<tr class="even">
+<td>31</td>
+<td>$ra</td>
+<td>返回地址</td>
+</tr>
+</tbody>
+</table></li>
+</ul>
+<h2 id="三种类型指令">三种类型指令</h2>
+<h3 id="r-typearithmetic-instruction">R-type：arithmetic
+instruction</h3>
+<p>寄存器寻址</p>
+<h3 id="i-typedata-transfer-arithmetic-instruction">I-type：data
+transfer, arithmetic instruction</h3>
+<p>立即寻址</p>
+<h3 id="j-typebranch-instructionconditional-unconditional">J-type：branch
+instruction(conditional &amp; unconditional)</h3>
+<p>相对寻址：J(I)-type</p>
+<p>伪直接寻址：J-type</p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231001100653770.png" alt="操作码操作数位数">
+<figcaption aria-hidden="true">操作码操作数位数</figcaption>
+</figure>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110095539899.png" alt="MIPS指令编码格式">
+<figcaption aria-hidden="true">MIPS指令编码格式</figcaption>
+</figure>
+<ul>
+<li><p>R-type：寄存器类指令主要完成寄存器-寄存器的ALU操作</p></li>
+<li><p>I-type
+：立即数类指令主要用于LOAD-STORE操作，条件转移指令等。访存指令是由RS1寄存器的值+immediate得到内存地址，将
+RS2的值存入内存或者从内存取数存RS2。访存指令对存储器进行读写：<code>lw $s1,100(\$s2)</code></p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002172735180.png" alt="访存对象">
+<figcaption aria-hidden="true">访存对象</figcaption>
+</figure>
+<p>条件转移指令，转移条件可能为RS1是否为0，也可能是RS1和RS2是否相等。</p></li>
+<li><p>J-type：直接跳转指令。转移地址是PC的高四位和target直接拼接，后面两位补0（因为内存4字节对齐）。</p></li>
+</ul>
+<h3 id="常见指令"><strong>常见指令</strong></h3>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110101934646.png" alt="MIPSloadstore指令">
+<figcaption aria-hidden="true">MIPSloadstore指令</figcaption>
+</figure>
+<p>其中SDC1,LDC1等是浮点类的指令</p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110102135710.png" alt="ALU常见指令">
+<figcaption aria-hidden="true">ALU常见指令</figcaption>
+</figure>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20240110102244573.png" alt="MIPS控制流指令">
+<figcaption aria-hidden="true">MIPS控制流指令</figcaption>
+</figure>
+<table>
+<thead>
+<tr class="header">
+<th>BEQZ</th>
+<th>条件转移指令，当寄存器中内容为0时转移发生</th>
+<th>BEQZ R1,0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BENZ</td>
+<td>条件转移指令，当寄存器中内容不为0时转移发生</td>
+<td>BNEZ R1,0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="寄存器和立即计算指令数据流">寄存器和立即计算指令数据流</h2>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231001102233068.png" alt="image-20231001102233068">
+<figcaption aria-hidden="true">image-20231001102233068</figcaption>
+</figure>
+<h2 id="常数加载">常数加载</h2>
+<p>加载立即数常数</p>
+<p>dla、la: 用来加载程序中某些带标号的位置或者变量的地址的宏指令；</p>
+<p>dli、li: 装入立即数常数，这是一个宏指令；</p>
+<p>lui: 把立即数加载到寄存器高位。</p>
+<h2 id="ll-sc指令">ll sc指令</h2>
+<p>LL 指令的功能是从内存中读取一个字，以实现接下来的
+RMW（Read-Modify-Write） 操作；</p>
+<p>SC 指令的功能是向内存中写入一个字，以完成前面的 RMW 操作。</p>
+<p>LL/SC
+指令的独特之处在于，它们不是一个简单的内存读取/写入的函数，当使用 LL
+指令从内存中读取一个字之后，比如 LL d, off(b)，处理器会记住 LL
+指令的这次操作（会在 CPU 的寄存器中设置一个不可见的 bit 位），同时 LL
+指令读取的地址 off(b) 也会保存在处理器的寄存器中。接下来的 SC 指令，比如
+SC t, off(b)，会检查上次 LL 指令执行后的 RMW 操作是否是<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=原子操作&amp;spm=1001.2101.3001.7020">原子操作</a>（即不存在其它对这个地址的操作），如果是原子操作，则
+t 的值将会被更新至内存中，同时 t 的值也会变为1，表示操作成功；反之，如果
+RMW 的操作不是原子操作（即存在其它对这个地址的访问冲突），则 t
+的值不会被更新至内存中，且 t 的值也会变为0，表示操作失败。</p>
+<h3 id="例子">例子：</h3>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002170111052.png" alt="image-20231002170111052">
+<figcaption aria-hidden="true">image-20231002170111052</figcaption>
+</figure>
+<p><strong>为啥后面还要加一个nop指令？</strong></p>
+<p><strong>延迟槽填充（Delay Slot Filling）：</strong>
+在MIPS体系结构中，条件分支指令（如<code>beq</code>）的执行是延迟的，意味着在分支判断之前会执行分支指令后的一条指令。为了最大程度地利用流水线处理器的性能，程序员通常需要填充延迟槽，以确保流水线中始终有有效的指令在执行。</p>
+<h2 id="lwl-lwr-swl-swr-大小端问题">lwl lwr swl swr 大小端问题</h2>
+<p>https://courses.cs.duke.edu/fall02/cps104/homework/lwswlr.html</p>
+<p>lw sw用于word对齐情况下的一个字节的移动，lwl lwr swl
+swr用于字节没有对齐情况下的移动</p>
+<h3 id="lwr">LWR</h3>
+<p>This instruction reads the right portion of a register (low-order
+bytes).</p>
+<p>这条指令从寄存器的右边(低地址字节）开始读</p>
+<p>Conceptually, LWR starts at the specified byte in memory and loads
+that byte into the low-order (right most) byte of the destination
+register.</p>
+<p>Then, it proceeds (进入）to the ==high-order byte of the word in
+memory== (since SPARC is big-endian, this is toward lower memory
+addresses) and the high-order byte of the register, loading bytes from
+memory into the register until it reaches the high-order byte of the
+memory word.
+在加载完一个字节以后，进入内存中下一个高字节部分（对于大端模式，高字节部分在低地址位，小端模式反之）并存入寄存器中直到到达内存最高字节</p>
+<p>So, start at some specified address, and start copying bytes from
+memory and <strong>decrement</strong> the memory byte address until you
+reach the next lowest memory address that is word aligned, including the
+byte at this last address. The most significant (left-most) byte(s) of
+the register will not be changed.</p>
+<p>例子：<code>lwr $4, 2($0)</code></p>
+<p><code>lwr $t, offset($s)</code></p>
+<p>从计算得到的地址开始，加载4个字节的数据（一个字）到目标寄存器
+<code>$t</code>
+中，同时将目标寄存器中的其余3个字节保持不变（即不受影响）。</p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002112606615.png" alt="image-20231002112606615">
+<figcaption aria-hidden="true">image-20231002112606615</figcaption>
+</figure>
+<p>从地址0+2处开始取u，到2放到寄存器的右端，然后因为大端模式向高位继续读取1，0依次放到寄存器中，直到遇到了字对齐的地址（内存中四个字一对齐）</p>
+<h3 id="lwl">lwl</h3>
+<p>同理lwl 放到寄存器的左端</p>
+<p>LWL starts at the specified byte in memory and loads that byte into
+the high-order (left most) byte of the destination register. Then, it
+proceeds to the ==low-order byte== of the word in memory (since SPARC is
+big-endian, this is toward higher memory addresses) and the low-order
+byte of the register, loading bytes from memory into the register until
+it reaches the low-order byte of the memory word.</p>
+<p><code>lwl $4, 2($0)</code></p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002114134669.png" alt="image-20231002114134669">
+<figcaption aria-hidden="true">image-20231002114134669</figcaption>
+</figure>
+<h3 id="swr">SWR</h3>
+<p><code>swr $4, 5($0)</code></p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002114423677.png" alt="image-20231002114423677">
+<figcaption aria-hidden="true">image-20231002114423677</figcaption>
+</figure>
+<p>从寄存器4的最有端的值取值，存到地址为5($0)
+的内存中，其中$0+5原来存放的是5，现在存寄存器最右端的D，然后向高位移动。Bytes
+are copied toward the ==left== until the word aligned address is reached
+(byte 0 of word at memory address 4, which has the initial value of 4 in
+this example).</p>
+<h3 id="swl">SWL</h3>
+<p><code>swL $4, 5($0)</code>.Bytes are copied toward the ==right==
+until the the last byte of this memory word is reached (byte 3 of word
+at memory address 4, which has the initial value of 7 in this
+example).</p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002115214583.png" alt="image-20231002115214583">
+<figcaption aria-hidden="true">image-20231002115214583</figcaption>
+</figure>
+<h3 id="作业例题">作业例题</h3>
+<p>在一台小尾端的MIPS机器上，用LWL/LWR/SWL/SWR指令编写一段程序，把内存单元1005-1008的值取到寄存器R1,再存到内存单元2005~2008中</p>
+<ul>
+<li><p>首先，注意由于内存对齐的问题，1005~1008不是一个完整的字，4字节对齐后，开头都是4的倍数：</p>
+<p>因为是小尾端，lwr向高字节走就是向高地址走。lwl向低字节走就是向低地址走。如果是大尾端，lwr向高字节就是向低地址走，lwl就是向高地址走</p>
+<table>
+<thead>
+<tr class="header">
+<th>1008</th>
+<th>1009</th>
+<th>100A</th>
+<th>100B</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1004</td>
+<td>1005</td>
+<td>1006</td>
+<td>1007</td>
+</tr>
+</tbody>
+</table>
+<p>因此，首先我们需要将基地址1005这个立即数存到寄存器当中：</p>
+<p><code>dli \$2 ,1005</code></p>
+<p>,下一步，将内存单元的值加载到寄存器r1当中。</p>
+<p><code>lwr \$1 , 0x0($2)</code></p>
+<p>此时R2:</p>
+<table>
+<thead>
+<tr class="header">
+<th>X</th>
+<th>1007</th>
+<th>1006</th>
+<th>1005</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<p><code>lwl \$1 , 0x3($2)</code></p>
+<p>此时R2:</p>
+<table>
+<thead>
+<tr class="header">
+<th>1008</th>
+<th>1007</th>
+<th>1006</th>
+<th>1005</th>
+</tr>
+</thead>
+<tbody>
+</tbody>
+</table>
+<p>下一步，将r1的内容存到内存2005-2008</p>
+<p>同理该部分内存也不属于一个字</p>
+<table>
+<thead>
+<tr class="header">
+<th>2008</th>
+<th>2009</th>
+<th>200A</th>
+<th>200B</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>2004</td>
+<td>2005</td>
+<td>2006</td>
+<td>2007</td>
+</tr>
+</tbody>
+</table></li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dli \$2 ,2005 #装载基地址</span><br><span class="line">swr  $1, 0x0($2)</span><br><span class="line">swl  $1, 0x3($2)</span><br></pre></td></tr></table></figure>
+<p><strong>思考：如果变成大尾端会有什么变化</strong></p>
+<p>改为大尾端后：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">dli \$2 ,1005 #装载基地址</span><br><span class="line">lwl  $1, 0x0($2)</span><br><span class="line">lwr  $1, 0x3($2)</span><br><span class="line">dli \$2 ,2005</span><br><span class="line">swl  $1, 0x0($2)</span><br><span class="line">swr  $1, 0x3($2)</span><br></pre></td></tr></table></figure>
+<h2 id="常见指令汇总">常见指令汇总</h2>
+<table>
+<colgroup>
+<col style="width: 7%">
+<col style="width: 3%">
+<col style="width: 2%">
+<col style="width: 3%">
+<col style="width: 7%">
+<col style="width: 19%">
+<col style="width: 8%">
+<col style="width: 19%">
+<col style="width: 8%">
+<col style="width: 19%">
+</colgroup>
+<thead>
+<tr class="header">
+<th><strong>MIPS 指令集(共31条）</strong></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>助记符</strong></td>
+<td><strong>指令格式</strong></td>
+<td><strong>示例</strong></td>
+<td><strong>示例含义</strong></td>
+<td><strong>操作及其解释</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>Bit #</td>
+<td>31..26</td>
+<td>25..21</td>
+<td>20..16</td>
+<td>15..11</td>
+<td>10..6</td>
+<td>5..0</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>R-type</td>
+<td>op</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>shamt</td>
+<td>func</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>add</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100000</td>
+<td>add $1,$2,$3</td>
+<td>$1=$2+$3</td>
+<td>rd &lt;- rs + rt ；其中rs＝$2，rt=$3, rd=$1</td>
+</tr>
+<tr class="odd">
+<td>addu</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100001</td>
+<td>addu $1,$2,$3</td>
+<td>$1=$2+$3</td>
+<td>rd &lt;- rs + rt ；其中rs＝$2，rt=$3, rd=$1,无符号数</td>
+</tr>
+<tr class="even">
+<td>sub</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100010</td>
+<td>sub $1,$2,$3</td>
+<td>$1=$2-$3</td>
+<td>rd &lt;- rs - rt ；其中rs＝$2，rt=$3, rd=$1</td>
+</tr>
+<tr class="odd">
+<td>subu</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100011</td>
+<td>subu $1,$2,$3</td>
+<td>$1=$2-$3</td>
+<td>rd &lt;- rs - rt ；其中rs＝$2，rt=$3, rd=$1,无符号数</td>
+</tr>
+<tr class="even">
+<td>and</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100100</td>
+<td>and $1,$2,$3</td>
+<td>$1=$2 &amp; $3</td>
+<td>rd &lt;- rs &amp; rt ；其中rs＝$2，rt=$3, rd=$1</td>
+</tr>
+<tr class="odd">
+<td>or</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100101</td>
+<td>or $1,$2,$3</td>
+<td>$1=$2</td>
+<td>$3</td>
+</tr>
+<tr class="even">
+<td>xor</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100110</td>
+<td>xor $1,$2,$3</td>
+<td>$1=$2 ^ $3</td>
+<td>rd &lt;- rs xor rt ；其中rs＝$2，rt=$3, rd=$1(异或）</td>
+</tr>
+<tr class="odd">
+<td>nor</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>100111</td>
+<td>nor $1,$2,$3</td>
+<td>$1=~($2</td>
+<td>$3)</td>
+</tr>
+<tr class="even">
+<td>slt</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>101010</td>
+<td>slt $1,$2,$3</td>
+<td>if($2&lt;$3) $1=1 else $1=0</td>
+<td>if (rs &lt; rt) rd=1 else rd=0 ；其中rs＝$2，rt=$3, rd=$1</td>
+</tr>
+<tr class="odd">
+<td>sltu</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>101011</td>
+<td>sltu $1,$2,$3</td>
+<td>if($2&lt;$3) $1=1 else $1=0</td>
+<td>if (rs &lt; rt) rd=1 else rd=0 ；其中rs＝$2，rt=$3, rd=$1
+(无符号数）</td>
+</tr>
+<tr class="even">
+<td>sll</td>
+<td>000000</td>
+<td>00000</td>
+<td>rt</td>
+<td>rd</td>
+<td>shamt</td>
+<td>000000</td>
+<td>sll $1,$2,10</td>
+<td>$1=$2&lt;&lt;10</td>
+<td>rd &lt;- rt &lt;&lt; shamt ；shamt存放移位的位数，
+也就是指令中的立即数，其中rt=$2, rd=$1</td>
+</tr>
+<tr class="odd">
+<td>srl</td>
+<td>000000</td>
+<td>00000</td>
+<td>rt</td>
+<td>rd</td>
+<td>shamt</td>
+<td>000010</td>
+<td>srl $1,$2,10</td>
+<td>$1=$2&gt;&gt;10</td>
+<td>rd &lt;- rt &gt;&gt; shamt ；(logical) ，其中rt=$2, rd=$1</td>
+</tr>
+<tr class="even">
+<td>sra</td>
+<td>000000</td>
+<td>00000</td>
+<td>rt</td>
+<td>rd</td>
+<td>shamt</td>
+<td>000011</td>
+<td>sra $1,$2,10</td>
+<td>$1=$2&gt;&gt;10</td>
+<td>rd &lt;- rt &gt;&gt; shamt ；(arithmetic) 注意符号位保留 其中rt=$2,
+rd=$1</td>
+</tr>
+<tr class="odd">
+<td>sllv</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>000100</td>
+<td>sllv $1,$2,$3</td>
+<td>$1=$2&lt;&lt;$3</td>
+<td>rd &lt;- rt &lt;&lt; rs ；其中rs＝$3，rt=$2, rd=$1</td>
+</tr>
+<tr class="even">
+<td>srlv</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>000110</td>
+<td>srlv $1,$2,$3</td>
+<td>$1=$2&gt;&gt;$3</td>
+<td>rd &lt;- rt &gt;&gt; rs ；(logical)其中rs＝$3，rt=$2, rd=$1</td>
+</tr>
+<tr class="odd">
+<td>srav</td>
+<td>000000</td>
+<td>rs</td>
+<td>rt</td>
+<td>rd</td>
+<td>00000</td>
+<td>000111</td>
+<td>srav $1,$2,$3</td>
+<td>$1=$2&gt;&gt;$3</td>
+<td>rd &lt;- rt &gt;&gt; rs ；(arithmetic) 注意符号位保留
+其中rs＝$3，rt=$2, rd=$1</td>
+</tr>
+<tr class="even">
+<td>jr</td>
+<td>000000</td>
+<td>rs</td>
+<td>00000</td>
+<td>00000</td>
+<td>00000</td>
+<td>001000</td>
+<td>jr $31</td>
+<td>goto $31</td>
+<td>PC &lt;- rs</td>
+</tr>
+<tr class="odd">
+<td>I-type</td>
+<td>op</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>addi</td>
+<td>001000</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>addi $1,$2,100</td>
+<td>$1=$2+100</td>
+<td>rt &lt;- rs + (sign-extend)immediate ；其中rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>addiu</td>
+<td>001001</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>addiu $1,$2,100</td>
+<td>$1=$2+100</td>
+<td>rt &lt;- rs + (zero-extend)immediate ；其中rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>andi</td>
+<td>001100</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>andi $1,$2,10</td>
+<td>$1=$2 &amp; 10</td>
+<td>rt &lt;- rs &amp; (zero-extend)immediate ；其中rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>ori</td>
+<td>001101</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>andi $1,$2,10</td>
+<td>$1=$2 | 10</td>
+<td>rt &lt;- rs | (zero-extend)immediate ；其中rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>xori</td>
+<td>001110</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>andi $1,$2,10</td>
+<td>$1=$2 ^ 10</td>
+<td>rt &lt;- rs xor (zero-extend)immediate ；其中rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>lui</td>
+<td>001111</td>
+<td>00000</td>
+<td>rt</td>
+<td>immediate</td>
+<td>lui $1,100</td>
+<td>$1=100*65536</td>
+<td>rt &lt;- immediate*65536 ；将16位立即数放到目标寄存器高16
+位，目标寄存器的 低16位填0</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>lw</td>
+<td>100011</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>lw $1,10($2)</td>
+<td>$1=memory[$2 +10]</td>
+<td>rt &lt;- memory[rs + (sign-extend)immediate] ；rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>sw</td>
+<td>101011</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>sw $1,10($2)</td>
+<td>memory[$2+10] =$1</td>
+<td>memory[rs + (sign-extend)immediate] &lt;- rt ；rt=$1,rs=$2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>beq</td>
+<td>000100</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>beq $1,$2,10</td>
+<td>if($1==$2) goto PC+4+40</td>
+<td>if (rs == rt) PC &lt;- PC+4 + (sign-extend)immediate&lt;&lt;2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>bne</td>
+<td>000101</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>bne $1,$2,10</td>
+<td>if($1!=$2) goto PC+4+40</td>
+<td>if (rs != rt) PC &lt;- PC+4 + (sign-extend)immediate&lt;&lt;2</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>slti</td>
+<td>001010</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>slti $1,$2,10</td>
+<td>if($2&lt;10) $1=1 else $1=0</td>
+<td>if (rs &lt;(sign-extend)immediate) rt=1 else rt=0 ；
+其中rs＝$2，rt=$1</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>sltiu</td>
+<td>001011</td>
+<td>rs</td>
+<td>rt</td>
+<td>immediate</td>
+<td>sltiu $1,$2,10</td>
+<td>if($2&lt;10) $1=1 else $1=0</td>
+<td>if (rs &lt;(zero-extend)immediate) rt=1 else rt=0 ；
+其中rs＝$2，rt=$1</td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>J-type</td>
+<td>op</td>
+<td>address</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>j</td>
+<td>000010</td>
+<td>address</td>
+<td>j 10000</td>
+<td>goto 10000</td>
+<td>PC &lt;- (PC+4)[31..28],address,0,0 ；address=10000/4</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr class="even">
+<td>jal</td>
+<td>000011</td>
+<td>address</td>
+<td>jal 10000</td>
+<td>$31&lt;-PC+4; goto 10000</td>
+<td>$31&lt;-PC+4；PC &lt;- (PC+4)[31..28],address,0,0
+；address=10000/4</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th>BEQZ</th>
+<th>条件转移指令，当寄存器中内容为0时转移发生</th>
+<th>BEQZ R1,0</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>BENZ</td>
+<td>条件转移指令，当寄存器中内容不为0时转移发生</td>
+<td>BNEZ R1,0</td>
+</tr>
+</tbody>
+</table>
+<h2 id="内存对齐">内存对齐</h2>
+<p><strong>在32位微处理器中，处理器访问内存都是按照32位进行的，即一次读取或写入都是4个字节</strong>，比如，地址0x0
+~
+0xF这16字节的内存，对于微处理器来说，<strong>不是将其看作16个单一字节，而是4个块，每块4个字节</strong></p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002131220203.png" alt="image-20231002131220203">
+<figcaption aria-hidden="true">image-20231002131220203</figcaption>
+</figure>
+<p>假设要求变量的内存空间按照4字节对齐，则内存空间的首地址必须是4的整数倍，满足条件的地址有0x0、0x4、0x8、0xC……</p>
+<h2 id="大尾端和小尾端的字节序问题">大尾端和小尾端的字节序问题</h2>
+<p>big-endian又名<strong>大尾序</strong>，就是数值的尾巴存储在大地址上。尾是相对我们认识的变量值，大是指地址；
+相对应，little-endian又名<strong>小尾序</strong>，数值的尾巴存储在小地址上。
+一句话大小是尾巴的地址，尾巴是数值的尾巴</p>
+<figure>
+<img src="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/image-20231002152257410.png" alt="image-20231002152257410">
+<figcaption aria-hidden="true">image-20231002152257410</figcaption>
+</figure>
+<p>计算机电路先处理低位字节，效率比较高，因为计算都是从低位开始的。所以，计算机的内部处理都是小端字节序。但是，人类还是习惯读写大端字节序。所以，除了计算机的内部处理，其他的场合比如网络传输和文件储存，几乎都是用的大端字节序。正是因为这些原因才有了字节序。</p>
+<p>计算机处理字节序的时候，如果是大端字节序，先读到的就是高位字节，后读到的就是低位字节。小端字节序则正好相反v</p>
+<h2 id="浮点运算问题">浮点运算问题</h2>
+<p>https://gaozhiyuan.net/assembly/mips-floating-point-arithmetic.html</p>
+<p>在MIPS体系结构中，最多支持4个协处理器(Co-Processor)。其中，CP0用作系统控制，CP1和CP3用于FPU，CP2用于特点实现。CP0是必须具备的协处理器，其余三个协处理器是选配的。</p>
+<h3 id="浮点数加载">浮点数加载</h3>
+<p>下面的代码就可以分别将位于内存中的 number1和 number2
+加载到浮点寄存器：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.data</span><br><span class="line">	number1:	.float 2.5</span><br><span class="line">	number2:	.float 3.5</span><br><span class="line">.text</span><br><span class="line">	main:</span><br><span class="line">		lwc1	$f1, number1</span><br><span class="line">		lwc1	$f2, number2</span><br></pre></td></tr></table></figure>
+<h3 id="浮点数运算">浮点数运算</h3>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">.data</span><br><span class="line">	number1:	.float 3.6</span><br><span class="line">	number2:	.float 3.5</span><br><span class="line">.text</span><br><span class="line">	main:</span><br><span class="line">		lwc1	$f1, number1</span><br><span class="line">		lwc1	$f2, number2</span><br><span class="line">		</span><br><span class="line">		# 浮点数相加</span><br><span class="line">		add.s	$f3, $f1, $f2</span><br><span class="line">		# 浮点数相减</span><br><span class="line">		sub.s	$f4, $f1, $f2</span><br><span class="line">		# 浮点数相乘</span><br><span class="line">		mul.s 	$f5, $f1, $f2</span><br><span class="line">		# 浮点数相除</span><br><span class="line">		div.s 	$f6, $f1, $f2</span><br></pre></td></tr></table></figure>
+<h3 id="例子-1">例子：</h3>
+<p>**对于向量运算x(i)=a*X(i)+Y(i),假设X和Y的首地址分别存在定点寄存器R1,R2,a存在浮点寄存器f0中，写出mips代码**,假设数组的长度是n</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">ADDIU     R3,R0,N;    #首先用一个寄存器记录数组的末端地址,这里0寄存器就是0</span><br><span class="line">SLL       R3,R3,2;    #R3左移2位=》R3=R3*4</span><br><span class="line">ADDU      R3,R3,R1;   #基址+偏移</span><br><span class="line">Loop:    </span><br><span class="line">          LWC1 F1,(0)R1;#将X,y加载到浮点寄存器里面</span><br><span class="line">          LWC1 F2,(0)R2;</span><br><span class="line">          MUL.S F3,F1,F0;</span><br><span class="line">          ADD.S F4,F3,F2;</span><br><span class="line">          #数组指针移动</span><br><span class="line">          ADDIU R1,R1,4;</span><br><span class="line">          ADDIU R2,R2,4;</span><br><span class="line">          #判断数组是否已经遍历完了</span><br><span class="line">          BNE R3,R1,Loop；</span><br><span class="line">          #将结果存储,这里利用延迟槽所以会先执行这一句</span><br><span class="line">          SWC1 F4,-4(R1);</span><br><span class="line">          </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MIPS/" rel="tag"># MIPS</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/06/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8/" rel="prev" title="多核处理器">
+                  <i class="fa fa-chevron-left"></i> 多核处理器
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E8%87%AA%E6%97%8B%E9%94%81%E5%9C%A8MIPS%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8%E7%9A%84%E5%AE%9E%E7%8E%B0/" rel="next" title="自旋锁的实现">
+                  自旋锁的实现 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"5638065a545a29c137da86047f2086d7"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

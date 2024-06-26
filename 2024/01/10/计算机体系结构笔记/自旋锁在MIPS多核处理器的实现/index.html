@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="自旋锁的实现 MIPS中LL&#x2F;SC指令介绍 在多线程程序中，为了实现对共享变量的互斥访问，一般都会用spinlock实现，而spinlock需要一个TestAndSet的原子操作。而这种原子操作是需要专门的硬件支持才能完成的，在MIPS中，是通过特殊的Load，Store操作LL（Load Linked，链接加载）以及SC（Store Conditional，条件存储）完成的。  LL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="自旋锁的实现">
+<meta property="og:url" content="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E8%87%AA%E6%97%8B%E9%94%81%E5%9C%A8MIPS%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8%E7%9A%84%E5%AE%9E%E7%8E%B0/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="自旋锁的实现 MIPS中LL&#x2F;SC指令介绍 在多线程程序中，为了实现对共享变量的互斥访问，一般都会用spinlock实现，而spinlock需要一个TestAndSet的原子操作。而这种原子操作是需要专门的硬件支持才能完成的，在MIPS中，是通过特殊的Load，Store操作LL（Load Linked，链接加载）以及SC（Store Conditional，条件存储）完成的。  LL">
+<meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2024-01-10T11:28:24.000Z">
+<meta property="article:modified_time" content="2024-01-14T12:53:17.932Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="期末复习">
+<meta property="article:tag" content="自旋锁">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E8%87%AA%E6%97%8B%E9%94%81%E5%9C%A8MIPS%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8%E7%9A%84%E5%AE%9E%E7%8E%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E8%87%AA%E6%97%8B%E9%94%81%E5%9C%A8MIPS%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8%E7%9A%84%E5%AE%9E%E7%8E%B0/","path":"2024/01/10/计算机体系结构笔记/自旋锁在MIPS多核处理器的实现/","title":"自旋锁的实现"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>自旋锁的实现 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%87%AA%E6%97%8B%E9%94%81%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.</span> <span class="nav-text">自旋锁的实现</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#mips%E4%B8%ADllsc%E6%8C%87%E4%BB%A4%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.1.</span> <span class="nav-text">MIPS中LL&#x2F;SC指令介绍</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cas-%E5%8E%9F%E8%AF%AD"><span class="nav-number">1.2.</span> <span class="nav-text">CAS 原语</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E8%87%AA%E6%97%8B%E9%94%81%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.</span> <span class="nav-text">简单自旋锁实现</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%87%AA%E6%97%8B%E9%94%81"><span class="nav-number">1.3.1.</span> <span class="nav-text">什么是自旋锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#mips%E5%AE%9E%E7%8E%B0%E5%9F%BA%E4%BA%8Ellsc%E5%8E%9F%E8%AF%AD%E5%AE%9E%E7%8E%B0"><span class="nav-number">1.3.2.</span> <span class="nav-text">MIPS实现（基于LL&#x2F;SC原语实现）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E7%9A%84%E8%87%AA%E6%97%8B%E9%94%81"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">简单的自旋锁</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%8E%92%E9%98%9F%E7%9A%84%E5%85%AC%E5%B9%B3%E7%9A%84%E8%87%AA%E6%97%8B%E9%94%81"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">基于排队的公平的自旋锁</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cas-%E5%AE%9E%E7%8E%B0%E8%87%AA%E6%97%8B%E9%94%81"><span class="nav-number">1.4.</span> <span class="nav-text">CAS 实现自旋锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cas-llsc%E5%8E%9F%E8%AF%AD"><span class="nav-number">1.5.</span> <span class="nav-text">CAS&#x2F; LL&#x2F;SC原语</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/%E8%87%AA%E6%97%8B%E9%94%81%E5%9C%A8MIPS%E5%A4%9A%E6%A0%B8%E5%A4%84%E7%90%86%E5%99%A8%E7%9A%84%E5%AE%9E%E7%8E%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="自旋锁的实现 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          自旋锁的实现
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-01-10 19:28:24" itemprop="dateCreated datePublished" datetime="2024-01-10T19:28:24+08:00">2024-01-10</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-01-14 20:53:17" itemprop="dateModified" datetime="2024-01-14T20:53:17+08:00">2024-01-14</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84/" itemprop="url" rel="index"><span itemprop="name">计算机体系结构</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>3.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>3 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="自旋锁的实现">自旋锁的实现</h1>
+<h2 id="mips中llsc指令介绍">MIPS中LL/SC指令介绍</h2>
+<p>在多线程程序中，为了实现对共享变量的互斥访问，一般都会用spinlock实现，而spinlock需要一个TestAndSet的原子操作。而这种原子操作是需要专门的硬件支持才能完成的，在MIPS中，是通过特殊的Load，Store操作LL（Load
+Linked，链接加载）以及SC（Store Conditional，条件存储）完成的。</p>
+<blockquote>
+<p>LL 指令的功能是从内存中读取一个字</p>
+<p>SC 指令的功能是向内存中写入一个字</p>
+</blockquote>
+<p>LL/SC
+指令的独特之处在于，它们不是一个简单的内存读取/写入的函数，当使用 LL
+指令从内存中读取一个字之后，比如 LL d, off(b)，处理器会记住 LL
+指令的这次操作（会在 CPU 的寄存器中设置一个不可见的 bit 位），同时 LL
+指令读取的地址 off(b) 也会保存在处理器的寄存器中。接下来的 SC 指令，比如
+SC t, off(b)，会检查上次 LL 指令执行后的 RMW
+操作是否是原子操作（即不存在其它对这个地址的操作），如果是原子操作，则 t
+的值将会被更新至内存中，同时 t 的值也会变为1，表示操作成功；反之，如果
+RMW 的操作不是原子操作（即存在其它对这个地址的访问冲突），则 t
+的值不会被更新至内存中，且 t 的值也会变为0，表示操作失败。</p>
+<p>SC 指令执行失败的原因有两种：</p>
+<ul>
+<li>在 LL/SC
+操作序列的过程中，发生了一个异常（或中断），这些异常（或中断）可能会打乱
+RMW 操作的原子性。</li>
+<li>在多核处理器中，一个核在进行 RMW
+操作时，别的核试图对同样的地址也进行操作，这会导致 SC
+指令执行的失败。</li>
+</ul>
+<p><strong>简单的应用例子：</strong></p>
+<p>用MIPS
+LL/SC指令实现从内存单元100（R2)取数，把取出来的数加100并存回到100（R2)中的原子操作代码</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">1:  LL R3,100(R2)</span><br><span class="line">     ADDI R3,R3,#100</span><br><span class="line">     SC   R3,100(R2)</span><br><span class="line">     beqz R3,1b</span><br><span class="line">     NOP</span><br></pre></td></tr></table></figure>
+<h2 id="cas-原语">CAS 原语</h2>
+<p>CAS （Compare-And-Swap） LL/SC这对CPU指令没有实现,但是实现了CAS.
+CAS是一组原语指令，用来实现多线程下的变量同步。 在 x86
+下的指令CMPXCHG实现了CAS，前置LOCK既可以达到原子性操作。截止2013，大部分多核处理器均支持CAS。
+CAS原语有三个参数，内存地址，期望值，新值。如果内存地址的值==期望值，表示该值未修改，此时可以修改成新值。否则表示修改失败，返回false，由用户决定后续操作。</p>
+<h2 id="简单自旋锁实现">简单自旋锁实现</h2>
+<h3 id="什么是自旋锁">什么是自旋锁</h3>
+<p>我们没有方法去控制对共享资源访问的有序性，但是我们有能力对共享资源采用锁的保护机制，当某个共享资源被锁住时，只有获取该锁的
+CPU 核能够操作共享资源，其余试图访问共享资源的 CPU
+核只能够等待这个锁的释放，这就是在 Linux 中被称为 Spinlock
+的自旋锁保护机制。</p>
+<p>Spinlock 的设计思想是基于一种被称为 Test-and-Set
+的机制，它的操作分为三部分：</p>
+<p>1）INIT</p>
+<p>初始化 <em>lock</em> 值。示例如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lock := CLEAR;</span><br></pre></td></tr></table></figure>
+<p>2）LOCK</p>
+<p>这个流程包括两部分：首先 CPU 核反复轮询 <em>lock</em>
+值直到它处于空闲状态为止，然后利用 Test-and-Set 方式尝试设置该
+<em>lock</em> 值，Test-and-Set 的操作可以描述成三步：</p>
+<p>（a）读取 <em>lock</em> 值；</p>
+<p>（b）设置 <em>lock</em> 值</p>
+<p>(c）检查 <em>lock</em> 值是否设置成功，如果在步骤 （a）
+之后还存在别的对 <em>lock</em> 值的操作，说明存在有并发访问
+<em>lock</em> 值的情况，则步骤 （b） 的 <em>lock</em>
+值将不能设置成功，还需要回到步骤 （a） 重新执行这个流程。</p>
+<p>示例如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> ((lock == BUSY) || (TestAndSet(lock) == BUSY));</span><br></pre></td></tr></table></figure>
+<p>（3）UNLOCK</p>
+<p>释放 <em>lock</em> 值。示例如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">lock := CLEAR;</span><br></pre></td></tr></table></figure>
+<h3 id="mips实现基于llsc原语实现">MIPS实现（基于LL/SC原语实现）</h3>
+<p>传统的 C 语言是无法实现 Test-and-Set
+的机制的，因为它无法在多核之间建立一个交互的机制，因此 Test-and-Set
+需要处理器给以相应的支持。以 MIPS 为例，它提供了 LL（Load Linked Word）
+和 SC（Store Conditional Word）
+这两个汇编指令来实现对共享资源的保护。</p>
+<h4 id="简单的自旋锁">简单的自旋锁</h4>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Lock： </span><br><span class="line"> 1： LL t0, 0x0(a0) //取回锁值，0 表示未被锁，1 表示有人持有锁 </span><br><span class="line"> BNEZ t0, 1b //如果已经被锁，则自旋等待 </span><br><span class="line"> ADDIU t0, t0, 0x1 //将 t0 改为已持有 </span><br><span class="line"> SC t0, 0x0(a0) //存回 </span><br><span class="line"> BEQZ t0, 1b //检查是否成功，否则重做 </span><br><span class="line"> NOP </span><br></pre></td></tr></table></figure>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Unlock： </span><br><span class="line">//mem fence </span><br><span class="line">SW $0, 0x0(a0) //解锁时写 0 </span><br><span class="line">//mem fence</span><br></pre></td></tr></table></figure>
+<h4 id="基于排队的公平的自旋锁">基于排队的公平的自旋锁</h4>
+<p>简单自旋排队锁 设 a0 为锁的地址。按请求顺序来 service。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">Lock: (锁值为高低各 2 字节组成，高位为 tickets, 低位为 serve) </span><br><span class="line"> 1: LL v0, 0x0(a0) //同时取回高低位 </span><br><span class="line"> LI t0, 0x10000 //将高位 tickets 加一 </span><br><span class="line"> ADDU t0, t0, v0 </span><br><span class="line"> SC t0, 0x0(a0) //存回去 </span><br><span class="line"> BEQZ t0, 1b //检查是否 LLSC 成功，失败则重试 </span><br><span class="line"> NOP </span><br><span class="line"> SRL v0, v0, 16 //取出此时已经确定拿到的 tickets，放到低位 </span><br><span class="line"> 2: LHU t0, 0x0(a0) //检查当前 serve 值 </span><br><span class="line"> BNE t0, v0, 2b //如果当前 serve 不是自己，则循环等待 </span><br><span class="line"> NOP </span><br><span class="line">Unlock： </span><br><span class="line"> //mem fence </span><br><span class="line"> LHU t0, 0x0(a0) //取出当前 serve </span><br><span class="line"> ADDIU t0, t0, 0x1 </span><br><span class="line"> SH t0, 0x0(a0) //加 1 存回去 </span><br><span class="line"> //mem fence</span><br></pre></td></tr></table></figure>
+<p>解释：</p>
+<ul>
+<li><code>LL</code> 指令是 Load
+Linked，用于原子地将内存中的值加载到寄存器 <code>v0</code>。</li>
+<li><code>LI</code> 指令是 Load Immediate，将立即数 <code>0x10000</code>
+加载到寄存器 <code>t0</code>。</li>
+<li><code>ADDU</code> 指令是无符号整数相加。</li>
+<li><code>SC</code> 指令是 Store Conditional，尝试将 <code>t0</code>
+存储回内存，如果存储成功，则返回 1，否则返回 0。</li>
+<li><code>BEQZ</code> 指令是 Branch on Equal to Zero，如果
+<code>t0</code> 为零（存储失败），则跳转到标号
+<code>1b</code>，即重新尝试获取锁。</li>
+<li><code>SRL</code> 指令是 Shift Right Logical，将 <code>v0</code>
+寄存器右移 16 位，得到高位 tickets。</li>
+<li><code>LHU</code> 指令是 Load Halfword
+Unsigned，将内存中的半字加载到寄存器 <code>t0</code>。</li>
+<li><code>BNE</code> 指令是 Branch on Not Equal，如果 <code>t0</code>
+不等于 <code>v0</code>，则跳转到标号
+<code>2b</code>，即循环等待，直到拿到锁。</li>
+<li><code>LHU</code> 指令是 Load Halfword
+Unsigned，将内存中的半字加载到寄存器 <code>t0</code>。</li>
+<li><code>ADDIU</code> 指令是 Add Immediate Unsigned，将 <code>t0</code>
+寄存器的值加 1。</li>
+<li><code>SH</code> 指令是 Store Halfword，将 <code>t0</code>
+寄存器的值存储回内存。</li>
+</ul>
+<h2 id="cas-实现自旋锁">CAS 实现自旋锁</h2>
+<p>CAS：指令定义 cas r1, r2, Mem；r1 存放期望值，r2 存放更新值，</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">获得锁：//锁初始化为 0 </span><br><span class="line">la t0, sem </span><br><span class="line">TryAgain: </span><br><span class="line">li t1, 0 </span><br><span class="line">li t2, 1 </span><br><span class="line">cas t1, t2, 0x0(t0) </span><br><span class="line">bnez t1, TryAgain </span><br><span class="line">nop </span><br><span class="line">relLOCK: </span><br><span class="line">la t0, sem </span><br><span class="line">li t1, 0 </span><br><span class="line">sw t1, 0x0(t0)</span><br></pre></td></tr></table></figure>
+<h2 id="cas-llsc原语">CAS/ LL/SC原语</h2>
+<p>Compare_And_Swap(CAS)和 Load-Linked and
+Store-Conditional(LL/SC)是两种比较常见的 硬件同步原语。例如，Intel、AMD
+的 x86 指令集和 Oracle/SUN 的 Sparc 指令集实现了
+CAS指令；Alpha、PowerPC、MIPS、ARM 均实现了 LL/SC 指令。</p>
+<p>（2）CAS 指令硬件实现比 LL/SC 的硬件实现复杂。使用 CAS 指令会碰到 ABA
+问题，但是 LL/SC指令不会碰到该问题。LL/SC 指令中由于 SC
+是尝试去写，因此在某些情况下，SC 执行成功 率很低，导致用 LL/SC
+实现的锁执行开销变得很大。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%9F%E6%9C%AB%E5%A4%8D%E4%B9%A0/" rel="tag"># 期末复习</a>
+              <a href="/tags/%E8%87%AA%E6%97%8B%E9%94%81/" rel="tag"># 自旋锁</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/01/10/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/MIPS%E6%B1%87%E7%BC%96%E6%8C%87%E4%BB%A4/" rel="prev" title="MIPS 汇编指令">
+                  <i class="fa fa-chevron-left"></i> MIPS 汇编指令
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/01/18/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95/%E5%B7%A6/%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3%E4%B8%8E%E5%8D%95%E8%B0%83%E6%A0%88/" rel="next" title="最短路径算法对比-Dijkstra-bellman-floyd">
+                  最短路径算法对比-Dijkstra-bellman-floyd <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"29058583c59d57c0a17a4b60fd2fdd4a"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

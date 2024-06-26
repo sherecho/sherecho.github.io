@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="SIMD SIMD Processing (Single instruction, multiple data (SIMD)) 它描述了具有多个处理元素(multiple processing elements)的计算机，可以在多个数据点(data points)上同时(simultaneously)完成相同的操作。 不是所有的算法都可以容易地被向量化.   硬件架构  一个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="cpu逼近硬件浮点性能峰值">
+<meta property="og:url" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="SIMD SIMD Processing (Single instruction, multiple data (SIMD)) 它描述了具有多个处理元素(multiple processing elements)的计算机，可以在多个数据点(data points)上同时(simultaneously)完成相同的操作。 不是所有的算法都可以容易地被向量化.   硬件架构  一个">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240315105937082.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240315110026285.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/850px-skylake_server_block_diagram.svg.webp">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318102837627.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318124041897.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318155157099.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318161047875.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318161739250.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318162541925.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318162745525.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318163537064.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318163653715.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318164816119.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318164920583.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318165426134.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318185204470.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318190318876.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318192154625.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318192312211.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318192344901.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318195303969.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318200013605.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318200838390.png">
+<meta property="article:published_time" content="2024-03-15T01:28:24.000Z">
+<meta property="article:modified_time" content="2024-03-18T12:09:29.701Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="并行处理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240315105937082.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/","path":"2024/03/15/并行处理/并行处理笔记lec2/","title":"cpu逼近硬件浮点性能峰值"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>cpu逼近硬件浮点性能峰值 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#simd"><span class="nav-number">1.</span> <span class="nav-text">SIMD</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%A1%AC%E4%BB%B6%E6%9E%B6%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">硬件架构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8A%AA%E5%8A%9B%E4%BD%BFflops%E6%8E%A5%E8%BF%91%E5%B3%B0%E5%80%BC"><span class="nav-number">3.</span> <span class="nav-text">努力使FLOPS接近峰值</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%85%8B%E6%9C%8D%E5%BB%B6%E8%BF%9F"><span class="nav-number">3.0.1.</span> <span class="nav-text">如何克服延迟</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B6%85%E6%A0%87%E9%87%8F%E5%A4%84%E7%90%86%E5%99%A8%E4%B8%8A%E7%9A%84%E6%80%A7%E8%83%BD"><span class="nav-number">3.1.</span> <span class="nav-text">超标量处理器上的性能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E5%90%9E%E5%90%90%E9%87%8F"><span class="nav-number">3.2.</span> <span class="nav-text">分析吞吐量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BD%93%E7%8B%AC%E7%AB%8B%E7%9A%84%E9%93%BE%E6%9D%A1%E6%95%B0%E5%80%BC%E6%98%AF%E4%B8%80%E4%B8%AA%E5%8F%98%E9%87%8F%E4%BC%9A%E5%8F%91%E7%94%9F%E4%BB%80%E4%B9%88"><span class="nav-number">3.2.1.</span> <span class="nav-text">当独立的链条数值是一个变量会发生什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dispatch-ports"><span class="nav-number">3.2.2.</span> <span class="nav-text">Dispatch ports</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#how-to-overcome-the-throughput-limit"><span class="nav-number">3.2.3.</span> <span class="nav-text">How to overcome the
+throughput limit</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="cpu逼近硬件浮点性能峰值 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          cpu逼近硬件浮点性能峰值
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-03-15 09:28:24" itemprop="dateCreated datePublished" datetime="2024-03-15T09:28:24+08:00">2024-03-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-03-18 20:09:29" itemprop="dateModified" datetime="2024-03-18T20:09:29+08:00">2024-03-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">并行处理</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>5 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="simd">SIMD</h1>
+<p>SIMD Processing (<strong>Single instruction, multiple data
+(SIMD)</strong>)</p>
+<p>它描述了具有多个处理元素(multiple processing
+elements)的计算机，可以在多个数据点(data
+points)上同时(simultaneously)完成相同的操作。</p>
+<p>不是所有的算法都可以容易地被向量化.</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240315105937082.png"></p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240315110026285.png"></p>
+<h1 id="硬件架构">硬件架构</h1>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/850px-skylake_server_block_diagram.svg.webp"></p>
+<p>一个cycle有两个FMA单元，一个store单元</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318102837627.png"></p>
+<h1 id="努力使flops接近峰值">努力使FLOPS接近峰值</h1>
+<p>峰值计算公式： <img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318124041897.png"></p>
+<p>实验1：</p>
+<p>计算很简单，但测量时间的部分很重要是linux特有的</p>
+<p>**__rdtsc()**：</p>
+<ul>
+<li><code>__rdtsc()</code>
+是一个内联汇编函数，用于获取当前处理器的时间戳计数（RDTSC）的值。</li>
+<li>RDTSC 是一条 x86 指令，用于读取 CPU 时钟计数器的当前值，它是一个 64
+位的计数器，记录了从 CPU 启动开始到现在的 CPU 时钟周期数。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">uint64_t</span> <span class="title">rdtsc</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> __rdtsc();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>perf_event_open to get CPU clocks</p>
+<p><a target="_blank" rel="noopener" href="https://www.man7.org/linux/man-pages/man2/perf_event_open.2.html">perf_event_open(2)
+- Linux manual page (man7.org)</a></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">static</span> <span class="type">long</span> <span class="title">perf_event_open</span><span class="params">(<span class="keyword">struct</span> perf_event_attr *hw_event, </span></span></span><br><span class="line"><span class="params"><span class="function">  <span class="type">pid_t</span> pid, <span class="type">int</span> cpu, <span class="type">int</span> group_fd, <span class="type">unsigned</span> <span class="type">long</span> flags)</span> </span>&#123;</span><br><span class="line">  <span class="type">int</span> ret;</span><br><span class="line">  ret = <span class="built_in">syscall</span>(SYS_perf_event_open, hw_event, pid, cpu,</span><br><span class="line">                group_fd, flags);</span><br><span class="line">  <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>该代码执行L*n个fma，几乎没有其他操作</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">if</span> __AVX512F__</span></span><br><span class="line">  <span class="type">const</span> <span class="type">int</span> vwidth = <span class="number">64</span>;</span><br><span class="line"><span class="meta">#<span class="keyword">elif</span> __AVX__</span></span><br><span class="line">  <span class="type">const</span> <span class="type">int</span> vwidth = <span class="number">32</span>;</span><br><span class="line"><span class="meta">#<span class="keyword">elif</span> __SSE__ </span></span><br><span class="line">  <span class="type">const</span> <span class="type">int</span> vwidth = <span class="number">16</span></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line">  <span class="type">const</span> <span class="type">int</span> valign = <span class="built_in">sizeof</span>(<span class="type">float</span>);</span><br><span class="line">  <span class="keyword">typedef</span> <span class="type">float</span> floatv __attribute__((<span class="built_in">vector_size</span>(vwidth), <span class="built_in">aligned</span>(valign)));</span><br><span class="line">  <span class="type">const</span> <span class="type">int</span> L = <span class="built_in">sizeof</span>(floatv) / <span class="built_in">sizeof</span>(<span class="type">float</span>);</span><br><span class="line">...</span><br><span class="line">      <span class="comment">//time</span></span><br><span class="line">  <span class="built_in">clock_gettime</span>(CLOCK_MONOTONIC_RAW, &amp;start);</span><br><span class="line">  <span class="comment">//cpu ref clocks</span></span><br><span class="line">  start_cycle = <span class="built_in">rdtsc</span>();</span><br><span class="line">  <span class="comment">//cpu core clocks</span></span><br><span class="line">  <span class="built_in">ioctl</span>(fd, PERF_EVENT_IOC_RESET, <span class="number">0</span>);</span><br><span class="line">  <span class="built_in">ioctl</span>(fd, PERF_EVENT_IOC_ENABLE, <span class="number">0</span>);</span><br><span class="line">  <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(<span class="string">&quot;#simd: ax+c loop begin&quot;</span>)</span></span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">    x = a * x + c;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="function"><span class="keyword">asm</span> <span class="title">volatile</span><span class="params">(<span class="string">&quot;#simd: ax+c loop end&quot;</span>)</span></span>;</span><br><span class="line">  <span class="built_in">ioctl</span>(fd, PERF_EVENT_IOC_DISABLE, <span class="number">0</span>);</span><br><span class="line">  end_cycle = <span class="built_in">rdtsc</span>();</span><br><span class="line">  <span class="built_in">clock_gettime</span>(CLOCK_MONOTONIC_RAW, &amp;end);</span><br><span class="line">  <span class="type">double</span> used_time = <span class="built_in">get_time</span>(&amp;start, &amp;end);</span><br><span class="line">  <span class="type">uint64_t</span> used_cycles = end_cycle - start_cycle;</span><br><span class="line">  <span class="type">double</span> flops = <span class="number">2.0</span> * L * n;</span><br><span class="line">  <span class="keyword">if</span>(<span class="built_in">read</span>(fd, &amp;cpu_clocks, <span class="built_in">sizeof</span>(cpu_clocks)) == <span class="number">-1</span>) &#123;</span><br><span class="line">    cout &lt;&lt; <span class="string">&quot;read cpu clocks error&quot;</span> &lt;&lt; endl;</span><br><span class="line">  &#125;</span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+<ol type="1">
+<li><p><strong><code>const int valign = sizeof(float);</code></strong>：</p>
+<ul>
+<li>这一行定义了一个常量 <code>valign</code>，其值等于
+<code>float</code>
+类型的大小。这个值通常用于向量类型的对齐，以确保向量在内存中按正确的边界对齐。</li>
+</ul></li>
+<li><p><strong><code>typedef float floatv __attribute__((vector_size(vwidth), aligned(valign)));</code></strong>：</p>
+<ul>
+<li><p>这是一个 <code>typedef</code> 语句，用于定义一个名为
+<code>floatv</code> 的新类型，它代表着一个向量类型。</p></li>
+<li><p><code>float</code> 表示向量中的元素类型。</p></li>
+<li><p>``` <strong>attribute</strong>((vector_size(vwidth),
+aligned(valign))) <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">      是 GNU C 扩展语法，用于指定向量的大小和对齐方式。</span><br><span class="line"></span><br><span class="line">     - `vector_size(vwidth)` 表示向量的大小为 `vwidth`，即指定了向量的宽度。</span><br><span class="line">     - `aligned(valign)` 表示向量的对齐方式为 `valign`，即指定了向量在内存中的对齐方式</span><br><span class="line"></span><br><span class="line">理论上，Cascade Lake支持AVx-512，一个cycle有两个FMA部件，理论峰值性能为：</span><br><span class="line"></span><br><span class="line">![](./并行处理笔记lec2/image-20240318132045266.png)</span><br><span class="line"></span><br><span class="line">这里的频率使用的是cycle为单位，而不是秒为单位，因为一般电脑的负载在变换，每个cycle的时间是变化的</span><br><span class="line"></span><br><span class="line">所以这里采用的是reference clocks：</span><br><span class="line"></span><br><span class="line">![](./并行处理笔记lec2/image-20240318134759456.png)</span><br><span class="line"></span><br><span class="line">编译：</span><br><span class="line"></span><br><span class="line">`g++ -D __AVX512F__ -march=native -O3 example1.cpp`</span><br><span class="line"></span><br><span class="line">运行：</span><br><span class="line">![](./并行处理笔记lec2/image-20240318134549327.png)</span><br><span class="line"></span><br><span class="line">性能达到了大概8 flops/core cycle，1/8 of the single core peak 64 flops/cycle</span><br><span class="line"></span><br><span class="line">## 探究为什么没有到达峰值性能</span><br><span class="line"></span><br><span class="line">**首先在程序中放入汇编指令方便定位到循环的位置**</span><br><span class="line"></span><br><span class="line">```cpp</span><br><span class="line">asm volatile (&quot;#simd: ax+c loop begin&quot;);</span><br><span class="line">floatv a, x, c;</span><br><span class="line">for (int i = 0; i &lt; n; i++) &#123;</span><br><span class="line">x = a * x + c;</span><br><span class="line">&#125;</span><br><span class="line">asm volatile (&quot;#simd: ax+c loop end&quot;);</span><br><span class="line"></span><br></pre></td></tr></table></figure></p></li>
+</ul></li>
+</ol>
+<p><strong>将其编译成汇编语言</strong></p>
+<p><code>g++ -D __AVX512F__ -march=native -O3 -S example1.cpp</code></p>
+<p>See example1.s in your editor:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"># 90 &quot;example1.cpp&quot; 1</span><br><span class="line">	#simd: ax+c loop begin</span><br><span class="line"># 0 &quot;&quot; 2</span><br><span class="line">#NO_APP</span><br><span class="line">	vmovaps	-432(%rbp), %zmm1</span><br><span class="line">	movl	$1000000, %eax</span><br><span class="line">	.p2align 4,,10</span><br><span class="line">	.p2align 3</span><br><span class="line">.L13:</span><br><span class="line">	vmovaps	-304(%rbp), %zmm4</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	decl	%eax</span><br><span class="line">	jne	.L13</span><br><span class="line">	vmovaps	%zmm1, -304(%rbp)</span><br><span class="line">#APP</span><br><span class="line"># 94 &quot;example1.cpp&quot; 1</span><br><span class="line">	#simd: ax+c loop end</span><br><span class="line"># 0 &quot;&quot; 2</span><br></pre></td></tr></table></figure>
+<p><strong>分析是否是循环造成的开销</strong></p>
+<p>进行8次循环展开：</p>
+<p>外部循环，用于控制 SIMD 计算的次数。每次循环处理 8 个元素（因为 n /
+8）。</p>
+<p><code>#pragma GCC unroll 8</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">&quot;# axpy simd begin&quot;</span>)</span></span>;</span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; n / <span class="number">8</span>; i++) &#123;</span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> unroll 8</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> j = <span class="number">0</span>; j &lt; <span class="number">8</span>; j++) &#123;</span><br><span class="line">      x = a * x + c;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="function"><span class="keyword">asm</span> <span class="title">volatile</span> <span class="params">(<span class="string">&quot;# axpy simd end&quot;</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+<p>汇编：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">.L13:</span><br><span class="line">	vmovaps	-304(%rbp), %zmm4</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	vfmadd132ps	-368(%rbp), %zmm4, %zmm1</span><br><span class="line">	decl	%eax</span><br><span class="line">	jne	.L13</span><br><span class="line">	vmovaps	%zmm1, -304(%rbp)</span><br></pre></td></tr></table></figure>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318155157099.png"></p>
+<p>可以看出flops per cycle没有增加，说明不是循环的开销造成的</p>
+<p>Cascade Lake内核每个周期可以执行两条vfmadd132ps指令</p>
+<p>但是这并不意味着当前行vfmadd132ps的结果在下一个周期中可用于下一行的vfmadd132ps</p>
+<p>每个周期两个vfmadd132ps表示吞吐量。每个指令有一个特定的延迟(&gt;1个周期)</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318161047875.png"></p>
+<p>上面的指令之间存在相关性会造成阻塞。在我们的代码中，vfmadd使用前面的vfmadd的结果</p>
+<p>软件优化策略： http://www.agner.org/optimize/</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318161739250.png"></p>
+<h3 id="如何克服延迟">如何克服延迟</h3>
+<ul>
+<li><p>增加并行性(没有其他方法)</p></li>
+<li><p>你不能让串行计算链运行得更快(如果你想改变算法)，您只能通过运行多个独立链来提高吞吐量</p></li>
+</ul>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318162541925.png"></p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318162745525.png"></p>
+<p>可以看出case2比case1快了一倍</p>
+<p>之前我们分析过性能是理想性能的1/8所以，这里使用8个独立链条就能逼近峰值浮点性能</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">template</span>&lt;<span class="type">uint32_t</span> nv&gt; </span></span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">axpy_simd</span><span class="params">(floatv *X, floatv a, floatv c)</span></span>&#123;</span><br><span class="line">  <span class="keyword">for</span>(<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> unroll nv</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">uint32_t</span> j = <span class="number">0</span>; j &lt; nv; j++) &#123;</span><br><span class="line">      X[j] = a * X[j] + c;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318163537064.png"></p>
+<p>可以看出逼近了理想的峰值性能</p>
+<p>链条数对flops/cycle的影响：</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318163653715.png"></p>
+<h2 id="超标量处理器上的性能">超标量处理器上的性能</h2>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318164816119.png"></p>
+<p><strong>依赖关系（ dependency)</strong></p>
+<p>依赖关系限制了计算进行的速度，即使存在无限数量的执行资源.</p>
+<p>增加独立计算的数量会增加吞吐量，直到达到执行资源的限制</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318164920583.png"></p>
+<h2 id="分析吞吐量">分析吞吐量</h2>
+<h3 id="当独立的链条数值是一个变量会发生什么">当独立的链条数值是一个变量会发生什么</h3>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318165426134.png"></p>
+<p>对比两个程序的汇编代码：</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318185204470.png"></p>
+<p>多了 vmovaps操作，也就是说：代码现在涉及加载/存储的问题</p>
+<p>由于执行资源的原因，所有指令都有自己的吞吐量限制(就像FMA一样)</p>
+<p>吞吐量=可以按周期执行的指令的数量，“每个周期两个vfmadds”只是其中的一个例子</p>
+<h3 id="dispatch-ports"><strong>Dispatch ports</strong></h3>
+<p>each instruction(u-op)通过分派端口分派到特定的执行单元</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318190318876.png"></p>
+<p>吞吐量的限制</p>
+<p>2个fma /cycle意味着有2个端口可以处理fused
+fma,一条指令的吞吐量受能处理它的端口数量的限制</p>
+<p>Buckets effect</p>
+<p>吞吐量 may be bounded by one type instruction:例如</p>
+<p>▪ Bounded by FMA, good, peak performance</p>
+<p>▪ Bounded by others, e.g., store, may limit the performance</p>
+<p>一个好用的分析throughput的工具：Intel® Architecture Code Analyzer</p>
+<h3 id="how-to-overcome-the-throughput-limit">How to overcome the
+throughput limit</h3>
+<p>我们的目标是实现 two iterations/cycle (throughput limit of
+FMA)（达到FMA的throughput）</p>
+<p>当前的瓶颈是：the bottleneck is a store instruction (1/cycle)</p>
+<p>首先要避免在每一个单独的fmadd操作时进行loading/storing data的工作</p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318192154625.png"></p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318192312211.png"></p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318192344901.png"></p>
+<p>第一种方案是加载一个内层变量然后执行外层循环，执行完一遍再加载下一个内层变量，这样的问题是没有充分利用独立链条，程序收到latency的限制，解决方案是strategy1
+，一次多加载几个内层变量。</p>
+<p>第二种解决方案是一次加载全部的内层变量然后再执行外层循环。这样的限制是访存端的throughoutput</p>
+<p>解决方案是strategy2</p>
+<p><strong>实现strategy1</strong></p>
+<p>我们希望它通过第i循环(第2行)只加载/存储每个变量一次!。这种编码依赖于编译器的聪明程度</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">const</span> <span class="type">int</span> n = <span class="number">1000000</span>;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="type">unsigned</span> <span class="type">int</span> jb&gt;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">axpy_simd</span><span class="params">(floatv *X, floatv a, floatv c, <span class="type">long</span> </span></span></span><br><span class="line"><span class="params"><span class="function">m)</span></span>&#123;</span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint32_t</span> j = <span class="number">0</span>; j &lt; m; j += jb) &#123;</span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> unroll jb</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint32_t</span> jj = j; jj &lt; j + jb; jj++) &#123;</span><br><span class="line">X[jj] = a * X[jj] + c;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318195303969.png"></p>
+<p>我们帮助编译器进行优化：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="type">unsigned</span> <span class="type">int</span> jb&gt;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">axpy_simd_register</span><span class="params">(floatv *X, floatv a, floatv c, <span class="type">long</span> m)</span></span>&#123;</span><br><span class="line">__m512 tmp[jb];</span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint32_t</span> j = <span class="number">0</span>; j &lt; m; j += jb) &#123;</span><br><span class="line"><span class="comment">//load into register</span></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> unroll jb</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint32_t</span> jj = <span class="number">0</span>; jj &lt; jb; jj++) &#123;</span><br><span class="line">tmp[jj] = X[jj + j];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//compute</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint64_t</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> unroll jb</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint32_t</span> jj = <span class="number">0</span>; jj &lt; jb; jj++) &#123;</span><br><span class="line">tmp[jj] = a * tmp[jj] + c;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//write back</span></span><br><span class="line"><span class="keyword">for</span>(<span class="type">uint32_t</span> jj = <span class="number">0</span>; jj &lt; jb; jj++) &#123;</span><br><span class="line">X[jj + j] = tmp[jj];</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318200013605.png"></p>
+<p><strong>Implementing strategy 2</strong></p>
+<p><img src="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/image-20240318200838390.png"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/" rel="tag"># 并行处理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/" rel="prev" title="什么是并行计算">
+                  <i class="fa fa-chevron-left"></i> 什么是并行计算
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/" rel="next" title="CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎">
+                  CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"4dafbb1b306c93cf19403a277937de6a"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

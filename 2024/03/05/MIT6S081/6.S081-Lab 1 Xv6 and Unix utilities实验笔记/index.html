@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="绑定自己的仓库 123git remote -vorigin  git:&#x2F;&#x2F;g.csail.mit.edu&#x2F;xv6-labs-2021 (fetch)origin  git:&#x2F;&#x2F;g.csail.mit.edu&#x2F;xv6-labs-2021 (push) 使用git remote remove命令移除远程仓库的关联。请将&#96;替换为要移除的远程仓库的名称，一般为origin&#96;。 然后绑定自己的仓库：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6.S081-Lab 1 Xv6 and Unix utilities实验笔记">
+<meta property="og:url" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="绑定自己的仓库 123git remote -vorigin  git:&#x2F;&#x2F;g.csail.mit.edu&#x2F;xv6-labs-2021 (fetch)origin  git:&#x2F;&#x2F;g.csail.mit.edu&#x2F;xv6-labs-2021 (push) 使用git remote remove命令移除远程仓库的关联。请将&#96;替换为要移除的远程仓库的名称，一般为origin&#96;。 然后绑定自己的仓库：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/sieve.gif">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307153742049.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307151158784.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307151249290.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307151344237.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307232516874.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240308224226337.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240309001826046.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240309003523368.png">
+<meta property="article:published_time" content="2024-03-05T01:28:24.000Z">
+<meta property="article:modified_time" content="2024-03-27T02:34:38.516Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/sieve.gif">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/","path":"2024/03/05/MIT6S081/6.S081-Lab 1 Xv6 and Unix utilities实验笔记/","title":"6.S081-Lab 1 Xv6 and Unix utilities实验笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>6.S081-Lab 1 Xv6 and Unix utilities实验笔记 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%BB%91%E5%AE%9A%E8%87%AA%E5%B7%B1%E7%9A%84%E4%BB%93%E5%BA%93"><span class="nav-number">1.</span> <span class="nav-text">绑定自己的仓库</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#gdb-%E8%B0%83%E8%AF%95"><span class="nav-number">2.</span> <span class="nav-text">gdb 调试</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#primes"><span class="nav-number">3.</span> <span class="nav-text">primes</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BF%E5%90%8D%E7%AE%A1%E9%81%93%E9%80%9A%E4%BF%A1"><span class="nav-number">3.0.1.</span> <span class="nav-text">匿名管道通信</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%9A%E8%BF%87gdb%E8%B0%83%E8%AF%95%E5%A4%9A%E8%BF%9B%E7%A8%8B%E5%88%86%E6%9E%90%E9%94%99%E8%AF%AF%E5%8E%9F%E5%9B%A0"><span class="nav-number">3.0.2.</span> <span class="nav-text">通过gdb调试多进程分析错误原因</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#find"><span class="nav-number">4.</span> <span class="nav-text">find</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#xargs"><span class="nav-number">5.</span> <span class="nav-text">xargs</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="6.S081-Lab 1 Xv6 and Unix utilities实验笔记 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          6.S081-Lab 1 Xv6 and Unix utilities实验笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-03-05 09:28:24" itemprop="dateCreated datePublished" datetime="2024-03-05T09:28:24+08:00">2024-03-05</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-03-27 10:34:38" itemprop="dateModified" datetime="2024-03-27T10:34:38+08:00">2024-03-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6-S081/" itemprop="url" rel="index"><span itemprop="name">MIT6.S081</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>7.4k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>7 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="绑定自己的仓库">绑定自己的仓库</h1>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">git remote -v</span><br><span class="line">origin  git://g.csail.mit.edu/xv6-labs-2021 (fetch)</span><br><span class="line">origin  git://g.csail.mit.edu/xv6-labs-2021 (push)</span><br></pre></td></tr></table></figure>
+<p>使用<code>git remote remove</code>命令移除远程仓库的关联。请将`<code>替换为要移除的远程仓库的名称，一般为</code>origin`。</p>
+<p>然后绑定自己的仓库：<code>git remote add origin git@github.com:sherecho/MyOS_Prj.git</code></p>
+<h1 id="gdb-调试">gdb 调试</h1>
+<p>设置.gdbinit 文件</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">add-auto-load-safe-path /xv6-labs-2021/.gdbinit</span><br><span class="line">set confirm off</span><br><span class="line">set architecture riscv:rv64</span><br><span class="line">target remote 127.0.0.1:25000</span><br><span class="line">symbol-file kernel/kernel</span><br><span class="line">set disassemble-next-line auto</span><br><span class="line">set riscv use-compressed-breakpoints yes</span><br><span class="line">file user/_primes</span><br><span class="line">layout src</span><br><span class="line">b main</span><br><span class="line">c</span><br></pre></td></tr></table></figure>
+<p>运行<code>make qemu-gdb</code></p>
+<p>在另一个shell里面运行</p>
+<p><code>gdb-multiarch -x .gdbinit</code></p>
+<h1 id="primes">primes</h1>
+<p>创建一系列的进程，父子进程之间通过管道进行通信，以此实现质数过滤的效果。第一个进程将2-35通过管道送入子进程，子进程打印第一个2，然后将管道中剩余数中能被2整除的<strong>丢弃</strong>，剩余的数通过管道送入它自己的子进程，如此递归。</p>
+<figure>
+<img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/sieve.gif" alt="img">
+<figcaption aria-hidden="true">img</figcaption>
+</figure>
+<p>设计思路：</p>
+<p>首先最初始的父进程负责将所有的数字通过管道协调如</p>
+<p>子进程递归调用：每次从传入的管道段读取数值并过滤，然后将剩余的数通过管道传给下一个子进程</p>
+<p>注意：读取管道时要关闭管道的输入端，管道输入端不关闭时，输出端使用
+<code>read</code>读取时会阻塞不返回，程序就死在了某处。</p>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307153742049.png"></p>
+<p>程序代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @file primes.c 创建一系列的管道，用于过滤质数，本题需要注意的是一定将不使用的管道端关闭，不然有些读操作会阻塞</span></span><br><span class="line"><span class="comment"> * @author sherecho (sherecho@163.com)</span></span><br><span class="line"><span class="comment"> * @brief </span></span><br><span class="line"><span class="comment"> * @version 0.1</span></span><br><span class="line"><span class="comment"> * @date 2024-03-07</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * @copyright Copyright (c) 2024</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/types.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;user/user.h&quot;</span></span></span><br><span class="line"><span class="type">void</span> <span class="title function_">childproc</span><span class="params">(<span class="type">int</span> *p)</span>&#123;</span><br><span class="line">     <span class="type">int</span> num;  </span><br><span class="line">     <span class="type">int</span> ret;</span><br><span class="line">     <span class="comment">//没收到数说明过滤完了就退出</span></span><br><span class="line">     <span class="keyword">if</span>((ret=read(p[<span class="number">0</span>],&amp;num,<span class="keyword">sizeof</span>(<span class="type">int</span>)))!=<span class="keyword">sizeof</span>(<span class="type">int</span>))&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;program finished!\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="built_in">printf</span>(<span class="string">&quot;prime %d\n&quot;</span>,num);</span><br><span class="line">     <span class="type">int</span> p1[<span class="number">2</span>];</span><br><span class="line">     <span class="type">int</span> pr=pipe(p1);</span><br><span class="line">     <span class="keyword">if</span>(pr&lt;<span class="number">0</span>)&#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;pipe p1 err\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="comment">//close(p[0]);</span></span><br><span class="line">     <span class="comment">//过滤数并通过管道传输给子进程</span></span><br><span class="line">     <span class="type">int</span> pid;</span><br><span class="line">     <span class="keyword">if</span> ((pid = fork()) &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;fork err\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(pid==<span class="number">0</span>)&#123;</span><br><span class="line">        close(p1[<span class="number">1</span>]);</span><br><span class="line">        close(p[<span class="number">0</span>]);</span><br><span class="line">        childproc(p1);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span>&#123;</span><br><span class="line">        <span class="comment">//close(p[1]); //如果不注释这一句会发生write err1</span></span><br><span class="line">        close(p1[<span class="number">0</span>]);</span><br><span class="line">        <span class="type">int</span> num2;</span><br><span class="line">        <span class="type">int</span> ret;</span><br><span class="line">        <span class="keyword">while</span>((ret=read(p[<span class="number">0</span>],&amp;num2,<span class="keyword">sizeof</span>(<span class="type">int</span>)))==<span class="keyword">sizeof</span>(<span class="type">int</span>))&#123;</span><br><span class="line">            <span class="keyword">if</span>(num2%num!=<span class="number">0</span>)&#123;</span><br><span class="line">                <span class="keyword">if</span>((ret=write(p1[<span class="number">1</span>],&amp;num2,<span class="keyword">sizeof</span>(<span class="type">int</span>)))!=<span class="keyword">sizeof</span>(<span class="type">int</span>))&#123;</span><br><span class="line">                    <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;write err1\n&quot;</span>);</span><br><span class="line">                    <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        close(p1[<span class="number">1</span>]);</span><br><span class="line">        close(p[<span class="number">0</span>]);</span><br><span class="line">        wait(<span class="number">0</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span>* argv[])</span>&#123;</span><br><span class="line">    <span class="type">int</span> p[<span class="number">2</span>];</span><br><span class="line">    pipe(p);</span><br><span class="line">    <span class="type">int</span> pid;</span><br><span class="line">    <span class="keyword">if</span>((pid=fork())&lt;<span class="number">0</span>)&#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="number">2</span>,<span class="string">&quot;fork error\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 子进程</span></span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span>(pid==<span class="number">0</span>)&#123;</span><br><span class="line">        close(p[<span class="number">1</span>]);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;in child: %d\n&quot;</span>,getpid());</span><br><span class="line">        childproc(p);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        close(p[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">2</span>;i&lt;=<span class="number">35</span>;i++)&#123;</span><br><span class="line">           <span class="keyword">if</span>(write(p[<span class="number">1</span>],&amp;i,<span class="keyword">sizeof</span>(<span class="type">int</span>))!=<span class="keyword">sizeof</span>(<span class="type">int</span>))&#123;</span><br><span class="line">             <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;write err\n&quot;</span>);</span><br><span class="line">             <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">           &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        close(p[<span class="number">1</span>]);</span><br><span class="line">        wait(<span class="number">0</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="comment">//exit(0);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="匿名管道通信">匿名管道通信</h3>
+<p>在实验过程中，发现如果加入<code>close(p[1])</code>
+见代码。会导致程序错误无法完成写管道操作。为了仔细分析一下产生这种情况的原因，首先分析管道的原理：</p>
+<p>首先，因为进程之间具有独立性，一个进程是看不到另一个进程的资源的。</p>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307151158784.png"></p>
+<p>一个管道是半双工的，所以一般使用两个管道进行通信 <img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307151249290.png"></p>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307151344237.png"></p>
+<ol type="1">
+<li><p>如果所有指向管道写端的文件描述符都关闭了（管道写端的引用计数等于0），而仍然有进程从管道的读端读数据，那么管道中剩余的数据都被读取后，再次
+read 会返回0，就像读到文件末尾一样。</p></li>
+<li><p>如果有指向管道写端的文件描述符没关闭（管道写端的引用计数大于0），而持有管道写端的进程也没有向管道中写数据，这时有进程从管道读端读数据，那么管道中剩余的数据都被读取后，再次
+read 会阻塞，直到管道中有数据可读了才读取数据并返回。</p></li>
+</ol>
+<h3 id="通过gdb调试多进程分析错误原因">通过gdb调试多进程分析错误原因</h3>
+<p>这里虽然是进程，但是实际上属于一种线程。可以用gdb info threads
+查看线程并调试</p>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240307232516874.png"></p>
+<p>调试的时候发现，不知道为啥p和p1的写管道描述符是一样的，所以关了p的话会存在问题</p>
+<p>但是为啥会是一样的呢？这看起来不太合理。</p>
+<h1 id="find">find</h1>
+<p>这道题是要求实现一个简易版本的find命令，思路也是比较简单，递归的遍历目录中的子文件或子目录，可以参考<code>ls.c</code>文件来实现。需要注意细节问题，也就是关于<code>.</code>和<code>..</code>目录的处理，遍历遇到这两个目录时不要进去，不然会无穷递归。</p>
+<p>首先，通过 <code>kernel/fs.h</code> 中的 <code>fstat</code>
+可以读取路径信息，</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> fd = open(path, <span class="number">0</span>);     <span class="comment">// fd 作为文件标识符</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">stat</span> <span class="title">st</span>;</span>             <span class="comment">// st 用来存储文件信息</span></span><br><span class="line">fstat(fd, &amp;st);             <span class="comment">// 读取文件信息存入 st</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (st.type == T_FILE) &#123;&#125;   <span class="comment">// 打开的是文件（按第一部操作使用当前路径判断）</span></span><br><span class="line"><span class="keyword">if</span> (st.type == T_DIR)  &#123;&#125;   <span class="comment">// 打开的是文件夹</span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>首先看下fmtname是干啥的：</p>
+<p><code>printf("buf:%s, fmtnamr(buf):%s %d %d %d\n", buf,fmtname(buf), st.type, st.ino, st.size);</code></p>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240308224226337.png"></p>
+<p>可以看出，fmtname是把名字打印出来了。考虑修改fmtname是可能实现题目要求的</p>
+<p>注意：<code>memset(buf+strlen(p), ' ', DIRSIZ-strlen(p));</code>
+是用空格填充了字符串，我们可以看出如果字符填充，调用fmtname可能会出现不等的情况如下图所示：</p>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240309001826046.png"></p>
+<p>所以要改成<code>memset(buf+strlen(p), 0, DIRSIZ-strlen(p));</code>用结束符号填充</p>
+<p>实验代码：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @file find.c </span></span><br><span class="line"><span class="comment"> * @author sherecho(sherecho@163.com)</span></span><br><span class="line"><span class="comment"> * @brief </span></span><br><span class="line"><span class="comment"> * @version 0.1</span></span><br><span class="line"><span class="comment"> * @date 2024-03-08</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * @copyright Copyright (c) 2024</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/types.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/stat.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;user/user.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/fs.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">char</span>*</span><br><span class="line"><span class="title function_">fmtname</span><span class="params">(<span class="type">char</span> *path)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">static</span> <span class="type">char</span> buf[DIRSIZ+<span class="number">1</span>];</span><br><span class="line">  <span class="type">char</span> *p;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Find first character after last slash.</span></span><br><span class="line">  <span class="keyword">for</span>(p=path+<span class="built_in">strlen</span>(path); p &gt;= path &amp;&amp; *p != <span class="string">&#x27;/&#x27;</span>; p--)</span><br><span class="line">    ;</span><br><span class="line">  p++;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// Return blank-padded name.</span></span><br><span class="line">  <span class="keyword">if</span>(<span class="built_in">strlen</span>(p) &gt;= DIRSIZ)</span><br><span class="line">    <span class="keyword">return</span> p;</span><br><span class="line">  memmove(buf, p, <span class="built_in">strlen</span>(p));</span><br><span class="line">  <span class="built_in">memset</span>(buf+<span class="built_in">strlen</span>(p), <span class="number">0</span>, DIRSIZ-<span class="built_in">strlen</span>(p));</span><br><span class="line">  <span class="keyword">return</span> buf;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">int</span> <span class="title function_">iffrec</span><span class="params">(<span class="type">char</span> * path)</span>&#123;</span><br><span class="line">  <span class="type">char</span> * buf;</span><br><span class="line">  buf=fmtname(path);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(buf[<span class="number">0</span>]==<span class="string">&#x27;.&#x27;</span>&amp;&amp;buf[<span class="number">1</span>]==<span class="number">0</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(buf[<span class="number">0</span>]==<span class="string">&#x27;.&#x27;</span>&amp;&amp;buf[<span class="number">1</span>]==<span class="string">&#x27;.&#x27;</span>)&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="type">void</span> <span class="title function_">find</span><span class="params">(<span class="type">char</span> *path,<span class="type">char</span> * target)</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">char</span> buf[<span class="number">512</span>], *p;</span><br><span class="line">  <span class="type">int</span> fd;</span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">dirent</span> <span class="title">de</span>;</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">stat</span> <span class="title">st</span>;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>((fd = open(path, <span class="number">0</span>)) &lt; <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;ls: cannot open %s\n&quot;</span>, path);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span>(fstat(fd, &amp;st) &lt; <span class="number">0</span>)&#123;</span><br><span class="line">    <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;ls: cannot stat %s\n&quot;</span>, path);</span><br><span class="line">    close(fd);</span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(<span class="built_in">strcmp</span>(path,target)==<span class="number">0</span>)&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>,path);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">switch</span>(st.type)&#123;</span><br><span class="line">  <span class="comment">// case T_FILE:</span></span><br><span class="line">  <span class="comment">//   //printf(&quot;path :%s ,fmtname(path),%s %d %d %l\n&quot;,path, fmtname(path), st.type, st.ino, st.size);</span></span><br><span class="line">  <span class="comment">//   break;</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">case</span> T_DIR:</span><br><span class="line">    <span class="keyword">if</span>(<span class="built_in">strlen</span>(path) + <span class="number">1</span> + DIRSIZ + <span class="number">1</span> &gt; <span class="keyword">sizeof</span> buf)&#123;</span><br><span class="line">      <span class="built_in">printf</span>(<span class="string">&quot;ls: path too long\n&quot;</span>);</span><br><span class="line">      <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">strcpy</span>(buf, path);</span><br><span class="line">    p = buf+<span class="built_in">strlen</span>(buf);</span><br><span class="line">    *p++ = <span class="string">&#x27;/&#x27;</span>;</span><br><span class="line">    <span class="keyword">while</span>(read(fd, &amp;de, <span class="keyword">sizeof</span>(de)) == <span class="keyword">sizeof</span>(de))&#123;</span><br><span class="line">      <span class="keyword">if</span>(de.inum == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">      memmove(p, de.name, DIRSIZ);</span><br><span class="line">      p[DIRSIZ] = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">if</span>(stat(buf, &amp;st) &lt; <span class="number">0</span>)&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;ls: cannot stat %s\n&quot;</span>, buf);</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">if</span>(<span class="built_in">strcmp</span>(fmtname(buf),target)==<span class="number">0</span>)&#123;</span><br><span class="line">         <span class="built_in">printf</span>(<span class="string">&quot;%s\n&quot;</span>,buf);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">if</span>(iffrec(buf))&#123;</span><br><span class="line">        find(buf,target);</span><br><span class="line">      &#125;</span><br><span class="line">      </span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  close(fd);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span></span><br><span class="line"><span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span> *argv[])</span></span><br><span class="line">&#123;</span><br><span class="line">  </span><br><span class="line">  <span class="keyword">if</span>(argc==<span class="number">1</span>)&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;error wrong input num\n&quot;</span>);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(argc == <span class="number">2</span>)&#123;</span><br><span class="line">    find(<span class="string">&quot;.&quot;</span>, argv[<span class="number">1</span>]);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span>(argc==<span class="number">3</span>)&#123;</span><br><span class="line">    find(argv[<span class="number">1</span>], argv[<span class="number">2</span>]);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/2024/03/05/MIT6S081/6.S081-Lab%201%20Xv6%20and%20Unix%20utilities%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/image-20240309003523368.png"></p>
+<h1 id="xargs">xargs</h1>
+<p>第一个命令的输出会变成第二个命令的输入</p>
+<p>-n 表示遇到一个换行符执行一次命令，所以这里有两行，执行两次命令</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">echo</span> <span class="string">&quot;1\n2&quot;</span> | xargs -n 1 <span class="built_in">echo</span> line</span><br><span class="line">line 1</span><br><span class="line">line 2</span><br><span class="line">$</span><br></pre></td></tr></table></figure>
+<ol type="1">
+<li><p>首先，如何获取前一个命令的标准化输出，如何获取自己的命令后参数。如何使用exec执行命令</p>
+<p>在内部，xv6内核为每一个进程单独维护一个以文件描述符为索引的表，因此每个进程都有一个从0开始的文件描述符私有空间。按照约定，一个进程从文件描述符0(标准输入)读取数据，向文件描述符1(标准输出)写入输出，向文件描述符2(标准错误)写入错误信息。</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> BUFSIZE 16</span></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc,<span class="type">char</span> * argv[])</span>&#123;</span><br><span class="line">    <span class="type">char</span> buf[BUFSIZE];</span><br><span class="line">    read(<span class="number">0</span>,buf,BUFSIZE);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;input:%s\n&quot;</span>,buf);</span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i=<span class="number">0</span>;i&lt;argc;++i)&#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;argv: %c\n&quot;</span>,argv[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    exec(<span class="string">&quot;echo&quot;</span>,argv);</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ol>
+<p>通过将 <code>p</code> 赋值为 <code>buf</code>，<code>p</code>
+就指向了缓冲区 <code>buf</code> 的首地址。这样，通过操作指针
+<code>p</code>，可以对缓冲区进行读取、写入等操作。</p>
+<p>在这段代码中，<code>p</code>
+的作用是用于处理从标准输入读取的一行字符串。通过不断地移动
+<code>p</code>，可以逐个字符地处理输入的字符串，直到遇到换行符，表示读取完一行。在处理完一行后，通过将
+<code>p</code> 重新指向 <code>buf</code>
+的起始位置，准备处理下一行。这样循环处理，达到逐行处理输入的效果。</p>
+<p>解题代码</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * @file xargs.c UNIX xargs 的简易实现</span></span><br><span class="line"><span class="comment"> * @author sherecho (sherecho@163.com)</span></span><br><span class="line"><span class="comment"> * @brief </span></span><br><span class="line"><span class="comment"> * @version 0.1</span></span><br><span class="line"><span class="comment"> * @date 2024-03-09</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * @copyright Copyright (c) 2024</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/types.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/stat.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;user/user.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/param.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> BUF_SIZE 512</span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> &#123;</span><br><span class="line">    <span class="keyword">if</span> (argc &lt; <span class="number">2</span>) &#123;</span><br><span class="line">        <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;Usage: xargs command\n&quot;</span>);</span><br><span class="line">        <span class="built_in">exit</span>(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">char</span>* args[MAXARG+<span class="number">1</span>];</span><br><span class="line">    <span class="type">int</span> index = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">1</span>; i&lt;argc; ++i) &#123;</span><br><span class="line">        args[index++] = argv[i];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="type">char</span> buf[BUF_SIZE];</span><br><span class="line">    <span class="type">char</span> *p = buf;</span><br><span class="line">    <span class="keyword">while</span> (read(<span class="number">0</span>, p, <span class="number">1</span>) == <span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> ((*p) == <span class="string">&#x27;\n&#x27;</span>) &#123;</span><br><span class="line">            *p = <span class="number">0</span>;</span><br><span class="line">            <span class="type">int</span> pid;</span><br><span class="line">            <span class="keyword">if</span> ((pid = fork()) == <span class="number">0</span>) &#123;</span><br><span class="line">                <span class="comment">// child</span></span><br><span class="line">                <span class="comment">// exec only one arg</span></span><br><span class="line">                args[index] = buf;</span><br><span class="line">                exec(argv[<span class="number">1</span>], args);</span><br><span class="line">                <span class="built_in">fprintf</span>(<span class="number">2</span>, <span class="string">&quot;exec %s failed\n&quot;</span>, argv[<span class="number">1</span>]);</span><br><span class="line">                <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// parent</span></span><br><span class="line">            wait(<span class="number">0</span>);</span><br><span class="line">            p = buf;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            ++p;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/02/28/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/%E7%A8%8B%E5%BA%8F%E5%91%98%E7%9A%84%E8%87%AA%E6%88%91%E4%BF%AE%E5%85%BB%E8%AF%BB%E4%B9%A6%E7%AC%94%E8%AE%B0/%E7%BC%96%E8%AF%91%E5%92%8C%E9%93%BE%E6%8E%A5/" rel="prev" title="编译和链接">
+                  <i class="fa fa-chevron-left"></i> 编译和链接
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/03/12/MIT6S081/6.S081-Lab%202%20system%20calls%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/" rel="next" title="6.S081-Lab 2 system calls实验笔记">
+                  6.S081-Lab 2 system calls实验笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"64b128b5832636074cbf71a2969d46a5"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

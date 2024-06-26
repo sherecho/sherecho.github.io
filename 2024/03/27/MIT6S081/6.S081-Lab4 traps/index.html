@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="RISC-V assembly There is a file user&#x2F;call.c in your xv6 repo. make fs.img compiles it and also produces a readable assembly version of the program in user&#x2F;call.asm. 我们启动qemu可以看到有call.c文件，执行make fs">
+<meta property="og:type" content="article">
+<meta property="og:title" content="6.S081-Lab4 traps实验笔记">
+<meta property="og:url" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="RISC-V assembly There is a file user&#x2F;call.c in your xv6 repo. make fs.img compiles it and also produces a readable assembly version of the program in user&#x2F;call.asm. 我们启动qemu可以看到有call.c文件，执行make fs">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329190931704.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240327162636289.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329193740981.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329194628165.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329200031903.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329200423350.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330101304561.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330101849803.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234148613.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234303847.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234417086.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234516532.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234819654.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329235341408.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330104814023.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330143153643.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330161143031.png">
+<meta property="article:published_time" content="2024-03-27T01:28:24.000Z">
+<meta property="article:modified_time" content="2024-03-30T11:51:26.246Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="操作系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329190931704.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/","path":"2024/03/27/MIT6S081/6.S081-Lab4 traps/","title":"6.S081-Lab4 traps实验笔记"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>6.S081-Lab4 traps实验笔记 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#risc-v-assembly"><span class="nav-number">1.</span> <span class="nav-text">RISC-V assembly</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#backtrace"><span class="nav-number">2.</span> <span class="nav-text">Backtrace</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%88%E5%B8%A7"><span class="nav-number">2.1.</span> <span class="nav-text">栈帧</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#hints"><span class="nav-number">2.2.</span> <span class="nav-text">hints</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0-backtrace-%E5%87%BD%E6%95%B0"><span class="nav-number">2.3.</span> <span class="nav-text">实现 backtrace 函数</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#trap-%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">trap 的原理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#alarm"><span class="nav-number">4.</span> <span class="nav-text">Alarm</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#invoke-handler%E8%B0%83%E7%94%A8%E5%A4%84%E7%90%86%E7%A8%8B%E5%BA%8F"><span class="nav-number">4.1.</span> <span class="nav-text">invoke handler(调用处理程序)</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/03/27/MIT6S081/6.S081-Lab4%20traps/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="6.S081-Lab4 traps实验笔记 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          6.S081-Lab4 traps实验笔记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-03-27 09:28:24" itemprop="dateCreated datePublished" datetime="2024-03-27T09:28:24+08:00">2024-03-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-03-30 19:51:26" itemprop="dateModified" datetime="2024-03-30T19:51:26+08:00">2024-03-30</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" itemprop="url" rel="index"><span itemprop="name">操作系统</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/MIT6-S081/" itemprop="url" rel="index"><span itemprop="name">MIT6.S081</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>8.2k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>7 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="risc-v-assembly">RISC-V assembly</h1>
+<p>There is a file <code>user/call.c</code> in your xv6 repo. make
+fs.img compiles it and also produces a readable assembly version of the
+program in <code>user/call.asm</code>.</p>
+<p>我们启动qemu可以看到有call.c文件，执行<code>make fs.img</code>可以生成汇编文件</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329190931704.png"></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/param.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/types.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;kernel/stat.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;user/user.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">g</span><span class="params">(<span class="type">int</span> x)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> x+<span class="number">3</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">f</span><span class="params">(<span class="type">int</span> x)</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> g(x);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">main</span><span class="params">(<span class="type">void</span>)</span> &#123;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;%d %d\n&quot;</span>, f(<span class="number">8</span>)+<span class="number">1</span>, <span class="number">13</span>);</span><br><span class="line">  <span class="built_in">exit</span>(<span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>Which registers contain arguments to functions? For example, which
+register holds 13 in main's call to <code>printf</code>?</p>
+<p>那几个寄存器保存了函数的参数，例如main函数里面那个寄存器保存了printf的入参13这个值</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">void main(void) &#123;</span><br><span class="line">  1c:	1141                	addi	sp,sp,-16</span><br><span class="line">  1e:	e406                	sd	ra,8(sp)</span><br><span class="line">  20:	e022                	sd	s0,0(sp)</span><br><span class="line">  22:	0800                	addi	s0,sp,16</span><br><span class="line">  printf(&quot;%d %d\n&quot;, f(8)+1, 13);</span><br><span class="line">  24:	4635                	li	a2,13</span><br></pre></td></tr></table></figure>
+<p>从上面可以看出li a2,13
+。将13加载到了a2寄存器中，从下图中可以看出，a2寄存器一般是用来传递函数的参数的</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240327162636289.png"></p>
+<blockquote>
+<p>Where is the call to function <code>f</code> in the assembly code for
+main? Where is the call to <code>g</code>? (Hint: the compiler may
+inline functions.)</p>
+<p>没有这样的代码。 g(x) 被内链到 f(x) 中，然后 f(x) 又被进一步内链到
+main() 中</p>
+</blockquote>
+<blockquote>
+<p>At what address is the function <code>printf</code> located?</p>
+</blockquote>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329193740981.png"></p>
+<p>可以看出printf的入口地址是0x630</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">0000000000000630 &lt;printf&gt;:</span><br><span class="line"></span><br><span class="line">void</span><br><span class="line">printf(const char *fmt, ...)</span><br><span class="line">&#123;</span><br><span class="line"> 630:	711d                	addi	sp,sp,-96</span><br><span class="line"> 632:	ec06                	sd	ra,24(sp)</span><br></pre></td></tr></table></figure>
+<blockquote>
+<p>What value is in the register <code>ra</code> just after the
+<code>jalr</code> to <code>printf</code> in <code>main</code>?</p>
+</blockquote>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">34:	600080e7          	jalr	1536(ra) # 630 &lt;printf&gt;</span><br></pre></td></tr></table></figure>
+<p>jalr,参考<a target="_blank" rel="noopener" href="https://msyksphinz-self.github.io/riscv-isadoc/html/rvi.html">riscv指令集</a>发现，其功能是</p>
+<ol type="1">
+<li>把pc + 4 的值记为t</li>
+<li>把pc的值设置成 $ra + 1536</li>
+<li>把ra寄存器的值设置成t</li>
+</ol>
+<p>所以要跳转的位置是ra+1536</p>
+<p>可以看出。ra寄存器里面存的是0x30，1536在16进制下就是0x600.所以最后就是跳转到printf的入口函数地址</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329194628165.png"></p>
+<blockquote>
+<p>Run the following code.</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">unsigned int i = 0x00646c72;</span><br><span class="line">printf(&quot;H%x Wo%s&quot;, 57616, &amp;i);</span><br><span class="line">     </span><br></pre></td></tr></table></figure>
+<p>What is the output? <a target="_blank" rel="noopener" href="http://web.cs.mun.ca/~michael/c/ascii-table.html">Here's an ASCII
+table</a> that maps bytes to characters.</p>
+<p>The output depends on that fact that the RISC-V is little-endian. If
+the RISC-V were instead big-endian what would you set <code>i</code> to
+in order to yield the same output? Would you need to change
+<code>57616</code> to a different value?</p>
+</blockquote>
+<p>执行上述代码的输出是HE110 World</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329200031903.png"></p>
+<p>为了知道ox00646c72是怎么代表字母的：</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329200423350.png"></p>
+<p>大端序：<strong>高位</strong>字节在<strong>低</strong>地址。</p>
+<p>小端序：<strong>低位</strong>字节在<strong>低</strong>地址。</p>
+<p>RSIC-V是小端序的所以高字节在低地址显示出来就是rld</p>
+<p>要是大端序的话需要换一下顺序：ox00726c64</p>
+<h1 id="backtrace">Backtrace</h1>
+<p>在调试的过程中，有一个发生错误的点之上的堆栈上的函数调用列表通常很有用</p>
+<p>Implement a <code>backtrace()</code> function in
+<code>kernel/printf.c</code>. Insert a call to this function in
+<code>sys_sleep</code>, and then run bttest, which calls
+<code>sys_sleep</code>. Your output should be as
+follows。将写好的backtrace函数加入到sys_sleep系统调用里面，方便后面的测试。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">backtrace:</span><br><span class="line">0x0000000080002cda</span><br><span class="line">0x0000000080002bb6</span><br><span class="line">0x0000000080002898</span><br></pre></td></tr></table></figure>
+<p>The compiler puts in each stack frame a frame pointer that holds the
+address of the caller's frame pointer. Your <code>backtrace</code>
+should use these frame pointers to walk up the stack and print the saved
+return address in each stack frame.</p>
+<h2 id="栈帧">栈帧</h2>
+<blockquote>
+<p>The compiler puts in each stack frame a frame pointer that holds the
+address of the caller's frame pointer. Your <code>backtrace</code>
+should use these frame pointers to walk up the stack and print the saved
+return address in each stack frame.</p>
+<p>编译器在每一个栈帧里面存放一个栈的指针,这个栈的指针保存了调用这个栈帧的栈帧的地址</p>
+</blockquote>
+<ul>
+<li>函数调用栈（Stack）</li>
+</ul>
+<ol type="1">
+<li>由高地址往低地址增长</li>
+<li>在xv6里，栈有一页大小（4KB）</li>
+<li>栈指针（stack pointer）保存在sp寄存器里</li>
+</ol>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330101304561.png"></p>
+<p>gdb调试一下理解栈帧的调用</p>
+<ul>
+<li>栈帧（Stack Frame）</li>
+</ul>
+<ol type="1">
+<li>当前栈帧的地址保存在 s0/fp寄存器 里</li>
+<li>当前栈帧的地址也叫栈帧的指针（frame pointer，
+fp），指向该栈帧的最高处</li>
+<li>栈帧指针往下偏移8个字节是函数返回地址 return address</li>
+<li>往下偏移16个字节是上一个栈帧的栈帧指针（previous frame
+pointer）</li>
+</ol>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330101849803.png"></p>
+<blockquote>
+<p>栈从高地址向低地址增长，每个大的box叫一个stack
+frame（栈帧），栈帧由函数调用来分配，每个栈帧大小不一定一样，但是栈帧的最高处一定是return
+address</p>
+<p>sp是stack pointer，用于指向栈顶（低地址），保存在寄存器中</p>
+<p>fp是frame
+pointer，用于指向当前帧底部（高地址），保存在寄存器中，同时每个函数栈帧中保存了调用当前函数的函数（父函数）的fp（保存在to
+prev frame那一栏中）</p>
+<p>这些栈帧都是由编译器编译生成的汇编文件生成的</p>
+</blockquote>
+<p>首先我们在backtrace函数打断点后，启动gdb调试。此时我们<code>info frame</code>可看到当前的栈帧情况：</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234148613.png"></p>
+<p>可以看出现在的栈帧的地址是<img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234303847.png" alt="image-20240329234303847"></p>
+<p>我们可以看出这个栈的上一个栈在<img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234417086.png" alt="image-20240329234417086"></p>
+<p>这个上一栈的地址是存在fp寄存器里面的：</p>
+<figure>
+<img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234516532.png" alt="image-20240329234516532">
+<figcaption aria-hidden="true">image-20240329234516532</figcaption>
+</figure>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329234819654.png"></p>
+<p>比如我们打印栈帧1，可以看出ra里面存的返回寄存器里面存的栈针的内容就是syscall函数的地址</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240329235341408.png"></p>
+<h2 id="hints">hints</h2>
+<ul>
+<li><p>Add the prototype for backtrace to <code>kernel/defs.h</code> so
+that you can invoke <code>backtrace</code> in
+<code>sys_sleep</code>.</p>
+<p>在 defs.h 中添加声明</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="type">void</span>            <span class="title function_">printf</span><span class="params">(<span class="type">char</span>*, ...)</span>;</span><br><span class="line"><span class="type">void</span>            <span class="title function_">panic</span><span class="params">(<span class="type">char</span>*)</span> __<span class="title function_">attribute__</span><span class="params">((<span class="keyword">noreturn</span>))</span>;</span><br><span class="line"><span class="type">void</span>            <span class="title function_">printfinit</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"><span class="type">void</span>            <span class="title function_">backtrace</span><span class="params">(<span class="type">void</span>)</span>; <span class="comment">// new function for backtrace</span></span><br><span class="line"></span><br></pre></td></tr></table></figure></li>
+<li><p>The GCC compiler stores the frame pointer of the currently
+executing function in the register s0.
+GCC编译器把当前执行函数的栈帧指针存储在寄存器s0里面</p></li>
+<li><p>Add the following function to kernel/riscv.h:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">static inline uint64</span><br><span class="line">r_fp()</span><br><span class="line">&#123;</span><br><span class="line">  uint64 x;</span><br><span class="line">  asm volatile(&quot;mv %0, s0&quot; : &quot;=r&quot; (x) );</span><br><span class="line">  return x;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>asm volatile("mv %0, s0" : "=r" (x) );</code>：这是内联汇编的部分。<code>asm volatile</code>
+是内联汇编的开始标记，<code>mv</code> 是 MIPS 汇编指令，用于将寄存器
+<code>s0</code> 的值移动到 <code>%0</code> 中。<code>%0</code>
+是内联汇编语法中的占位符，表示第一个输出操作数（output
+operand）。<code>=</code> 表示这是一个输出操作数。<code>(x)</code>
+表示要将结果存储到变量 <code>x</code> 中。<code>r</code>
+表示使用寄存器约束，告诉编译器将变量 <code>x</code>
+放置在一个通用寄存器中。</p>
+<p>and call this function inbacktrace to read the current frame pointer.
+This function usesin-line assembly to read s0.</p></li>
+</ul>
+<h2 id="实现-backtrace-函数">实现 backtrace 函数</h2>
+<p>小技巧,因为是栈指针往下偏移8个字节是函数返回地址,为了更好偏移8个字节,可以指定为uint_64指针,这样一个就是8个字节,因栈的地址是从高地址向低地址生长的所以是-1</p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330104814023.png"></p>
+<p>Xv6 allocates one page for each stack in the xv6 kernel at
+PAGE-aligned address. You can compute the top and bottom address of the
+stack page by using <code>PGROUNDDOWN(fp)</code> and
+<code>PGROUNDUP(fp)</code> (see <code>kernel/riscv.h</code>. These
+number are helpful for <code>backtrace</code> to terminate its loop.
+可以通过判断是否超过一页的大小判断栈指针是否越界来终止循环</p>
+<p>函数实现:</p>
+<p>Once your backtrace is working, call it from <code>panic</code> in
+<code>kernel/printf.c</code> so that you see the kernel's backtrace when
+it panics.</p>
+<p>实现后,将backtrace函数放到panic里面,当函数出现问题的时候就能看到backtrace</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">void</span></span><br><span class="line"><span class="title function_">panic</span><span class="params">(<span class="type">char</span> *s)</span></span><br><span class="line">&#123;</span><br><span class="line">  pr.locking = <span class="number">0</span>;</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;panic: &quot;</span>);</span><br><span class="line">  <span class="built_in">printf</span>(s);</span><br><span class="line">  <span class="built_in">printf</span>(<span class="string">&quot;\n&quot;</span>);</span><br><span class="line">  panicked = <span class="number">1</span>; <span class="comment">// freeze uart output from other CPUs</span></span><br><span class="line">  backtrace();</span><br><span class="line">  <span class="keyword">for</span>(;;)</span><br><span class="line">    ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="trap-的原理">trap 的原理</h1>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330143153643.png"></p>
+<h1 id="alarm">Alarm</h1>
+<p>In this exercise you'll add a feature to xv6 that periodically alerts
+a process as it uses CPU time.</p>
+<p>给XV6内核增添一个周期性报警的功能来限制进程使用CPU的时间</p>
+<p>This might be useful for compute-bound processes that want to limit
+how much CPU time they chew up, or for processes that want to compute
+but also want to take some periodic action.</p>
+<p>More generally, you'll be implementing a primitive form of user-level
+interrupt/fault handlers; 实现一种更原始的用户级别的中断错误处理接口</p>
+<p>you could use something similar to handle page faults in the
+application可以用相似的方式去处理页错误.</p>
+<ul>
+<li><p>You should add a new <code>sigalarm(interval, handler)</code>
+system
+call.新增一个系统调用,功能:当应用程序调用<code>sigalarm(n, fn)</code></p>
+<p>then after every <code>n</code> "ticks" of CPU time that the program
+consumes, the kernel should cause application function <code>fn</code>
+to be called. (有点类似软中断的定时器功能)</p>
+<p>When <code>fn</code> returns, the application should resume where it
+left off. A tick is a fairly arbitrary unit of time in xv6, determined
+by how often a hardware timer generates interrupts. If an application
+calls <code>sigalarm(0, 0)</code>, the kernel should stop generating
+periodic alarm calls.</p></li>
+<li><p>首先修改<em><strong>Makefile*</strong>以使</em><strong>alarmtest.c*</strong>被编译为xv6用户程序.</p></li>
+<li><p>到<strong>user/user.h</strong>声明</p></li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> <span class="title function_">sigalarm</span><span class="params">(<span class="type">int</span> ticks, <span class="type">void</span> (*handler)())</span>;</span><br><span class="line"><span class="type">int</span> <span class="title function_">sigreturn</span><span class="params">(<span class="type">void</span>)</span>;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>更新user/usys.pl（此文件生成user/usys.S）、kernel/syscall.h和kernel/syscall.c以允许<code>alarmtest</code>调用<code>sigalarm</code>和<code>sigreturn</code>系统调用。然后在sysproc.c里面实现这两个系统调用的函数体</li>
+</ul>
+<h2 id="invoke-handler调用处理程序">invoke handler(调用处理程序)</h2>
+<ul>
+<li>你的<code>sys_sigalarm()</code>应该将报警间隔和指向处理程序函数的指针存储在<code>struct proc</code>的新字段中（位于*<strong>kernel/proc.h*</strong>）。</li>
+<li>你也需要在<code>struct proc</code>新增一个新字段。用于跟踪自上一次调用（或直到下一次调用）到进程的报警处理程序间经历了多少滴答；您可以在*<strong>proc.c*</strong>的<code>allocproc()</code>中初始化<code>proc</code>字段。</li>
+<li>每一个滴答声，硬件时钟就会强制一个中断，这个中断在kernel/trap.c中的<code>usertrap()</code>中处理。</li>
+<li>如果产生了计时器中断，您只想操纵进程的报警滴答；你需要写类似下面的代码</li>
+</ul>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(which_dev == <span class="number">2</span>) ...</span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>仅当进程有未完成的计时器时才调用报警函数。请注意，用户报警函数的地址可能是0（例如，在<strong>user/alarmtest.asm</strong>中，<code>periodic</code>位于地址0）。</p></li>
+<li><p>您需要修改<code>usertrap()</code>，以便当进程的报警间隔期满时，用户进程执行处理程序函数。当RISC-V上的陷阱返回到用户空间时，什么决定了用户空间代码恢复执行的指令地址？</p>
+<p>首先我们知道,32个通用寄存器的值都保存在了proc结构体的trapframe里面<code>struct trapframe *trapframe; // data page for trampoline.S</code></p>
+<p><img src="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/image-20240330161143031.png"></p>
+<p>用户程序的pc指针保存在epc里面.所以我们想让trap恢复后去执行handler的函数只需要把这里的epc指向handler就可以</p>
+<p>注意:如果您告诉qemu只使用一个CPU，那么使用gdb查看陷阱会更容易，这可以通过运行</p></li>
+</ul>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">make CPUS=1 qemu-gdb</span><br></pre></td></tr></table></figure>
+<p>在 proc 结构体的定义中，增加 alarm 相关字段：</p>
+<ul>
+<li>alarm_interval：时钟周期，0 为禁用</li>
+<li>alarm_handler：时钟回调处理函数</li>
+<li>alarm_ticks：下一次时钟响起前还剩下的 ticks 数</li>
+<li>alarm_trapframe：时钟中断时刻的
+trapframe，用于中断处理完成后恢复原程序的正常执行</li>
+<li>alarm_goingoff：是否已经有一个时钟回调正在执行且还未返回（用于防止在
+alarm_handler 中途闹钟到期再次调用 alarm_handler，导致 alarm_trapframe
+被覆盖）</li>
+</ul>
+<p>函数句柄,定义一个函数指针来保存:
+<code>void(*alarm_handler)();</code></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">uint64</span><br><span class="line"><span class="title function_">sys_sigalarm</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">  <span class="type">int</span> ticks;</span><br><span class="line">  uint64 handler;</span><br><span class="line">  <span class="comment">//接收传进来的两个参数</span></span><br><span class="line">  <span class="keyword">if</span>(argint(<span class="number">0</span>, &amp;ticks) &lt; <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">  <span class="keyword">if</span>(argaddr(<span class="number">1</span>, &amp;handler) &lt; <span class="number">0</span>)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">  <span class="comment">//设置proc结构体</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">proc</span> *<span class="title">p</span> =</span> myproc();</span><br><span class="line">  p-&gt;alarm_interval = ticks;</span><br><span class="line">  p-&gt;alarm_handler =(<span class="type">void</span>(*)()) handler;</span><br><span class="line">  p-&gt;alarm_ticks = ticks;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在allocproc的时候进行初始化工作:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Allocate a trapframe page for alarm_trapframe.</span></span><br><span class="line">  <span class="keyword">if</span>((p-&gt;alarm_trapframe = (<span class="keyword">struct</span> trapframe *)kalloc()) == <span class="number">0</span>)&#123;</span><br><span class="line">    release(&amp;p-&gt;lock);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  p-&gt;alarm_interval = <span class="number">0</span>;</span><br><span class="line">  p-&gt;alarm_handler = <span class="number">0</span>;</span><br><span class="line">  p-&gt;alarm_ticks = <span class="number">0</span>;</span><br><span class="line">  p-&gt;alarm_goingoff = <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>freefroc的时候同样要进行操作</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(p-&gt;alarm_trapframe)</span><br><span class="line">  kfree((<span class="type">void</span>*)p-&gt;alarm_trapframe);</span><br><span class="line">p-&gt;alarm_trapframe = <span class="number">0</span>;</span><br><span class="line">p-&gt;alarm_goingoff=<span class="number">0</span>;</span><br><span class="line">p-&gt;alarm_handler=<span class="number">0</span>;</span><br><span class="line">p-&gt;alarm_interval=<span class="number">0</span>;</span><br><span class="line">p-&gt;alarm_ticks=<span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+<p>在 usertrap() 函数中，实现时钟机制:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(which_dev == <span class="number">2</span>)&#123;</span><br><span class="line">     <span class="keyword">if</span>(p-&gt;alarm_interval!=<span class="number">0</span>)&#123;   <span class="comment">//设定了时钟事件</span></span><br><span class="line">       <span class="keyword">if</span>(--p-&gt;alarm_ticks&lt;=<span class="number">0</span>)&#123;<span class="comment">//检查是否到达定时时间</span></span><br><span class="line">       <span class="comment">//确保没有时钟正在运行,如果此时有另一个时钟到期的处理函数在执行，则推迟</span></span><br><span class="line">       <span class="comment">//有可能在一个handler没执行完的时候，用户设置了新的定时且时间刚好到了</span></span><br><span class="line">       <span class="keyword">if</span>(!p-&gt;alarm_goingoff)</span><br><span class="line">           *p-&gt;alarm_trapframe=*p-&gt;trapframe;<span class="comment">//保存以前的内容</span></span><br><span class="line">           <span class="comment">//执行handler 函数句柄</span></span><br><span class="line">           p-&gt;trapframe-&gt;epc=(uint64) p-&gt;alarm_handler;</span><br><span class="line">           p-&gt;alarm_goingoff=<span class="number">1</span>;</span><br><span class="line">       &#125;</span><br><span class="line"></span><br><span class="line">     &#125;</span><br><span class="line">     yield();</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>执行完handel后恢复原来的执行流现场:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">uint64</span><br><span class="line"><span class="title function_">sys_sigreturn</span><span class="params">(<span class="type">void</span>)</span>&#123;</span><br><span class="line">  <span class="comment">//将 trapframe 恢复到时钟中断之前的状态，恢复原本正在执行的程序流</span></span><br><span class="line">  <span class="class"><span class="keyword">struct</span> <span class="title">proc</span> *<span class="title">p</span> =</span>myproc();</span><br><span class="line">  *p-&gt;trapframe=*p-&gt;alarm_trapframe;</span><br><span class="line">  p-&gt;alarm_goingoff=<span class="number">0</span>;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" rel="tag"># 操作系统</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/03/26/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec7/" rel="prev" title="">
+                  <i class="fa fa-chevron-left"></i> 
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/" rel="next" title="openmp">
+                  openmp <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"f6acd9ec09f3cdf82688733e22fd96d4"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

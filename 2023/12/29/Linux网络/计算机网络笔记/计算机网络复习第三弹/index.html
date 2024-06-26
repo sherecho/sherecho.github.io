@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="计算机网络复习网络传输-IP-传输层-DNS TCP&#x2F;IP和OSI网络模型 为什么需要分层网络模型? 网络通信中需要很多很多协议、功能、组件的协作。如果采用模块化的网络体系结构，适应性差，难以维护，对系统实现是场灾难。使用分层模型，如果之分为两层的化，每一种新的应用都需要物理层的每个种类适配，扩展性较差。因此需要引入中间层适配物理层和应用层。 分层的优点：各层相互独立，将建造一个网络的问题">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络复习网络传输-IP-传输层-DNS">
+<meta property="og:url" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="计算机网络复习网络传输-IP-传输层-DNS TCP&#x2F;IP和OSI网络模型 为什么需要分层网络模型? 网络通信中需要很多很多协议、功能、组件的协作。如果采用模块化的网络体系结构，适应性差，难以维护，对系统实现是场灾难。使用分层模型，如果之分为两层的化，每一种新的应用都需要物理层的每个种类适配，扩展性较差。因此需要引入中间层适配物理层和应用层。 分层的优点：各层相互独立，将建造一个网络的问题">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112145545892.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112145749163.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112150328647.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112150946423.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112151022957.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112151701341.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112152131414.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112154747285.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114124215618.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114124409390.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118235929411.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100331113.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100455078.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116101458932.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160208997.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160346488.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160552531.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160625589.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112203935954.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112205141448.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112204956188.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112205543266.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112205716350.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112210411735.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112210757209.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112210931060.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112211854757.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112232837528.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113002919227.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113100019905.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113095140928.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113100132316.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113100221747.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104050673.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104329502.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104611145.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113124401661.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104912659.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113115652244.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113120226744.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113120501430.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113125754437.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113153347400.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113153650521.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113154223791.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113155116478.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113155241307.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113160900158.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113165524035.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113162630453.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113163235956.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113164609516.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113164013875.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113165203074.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113194813823.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113195025306.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113195219643.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113200044022.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113200654946.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113200820619.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113201723235.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113230133743.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114000226068.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001032649.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001157722.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001304661.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001653044.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001954031.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114002115340.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125020175.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125116900.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125216695.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114130654550.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114124903481.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125151092.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114213551639.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114215127378.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114215306726.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114215414783.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116094739116.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116094316803.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100637940.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100939679.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118175410495.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118175547277.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118175841454.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118180057481.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116104234914.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116105318454.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116110103925.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116110604577.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116131037611.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116131234370.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116132025242.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116132201794.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116132356130.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116134146351.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116134034806.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116151104433.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116151504264.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116152344822.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116152938464.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116154030888.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116153835771.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118165130378.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118162151165.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116160023260.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116160907712.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116162137647.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116162745336.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116163305031.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116163612791.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118162755350.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118163221577.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118165328106.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116210737193.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116211158041.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116215738845.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116224911693.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116233529204.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116234555273.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116235611852.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117000713208.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20231119202535382.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117002807890.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20231119204615641.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117003252669.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117082831016.png">
+<meta property="article:published_time" content="2023-12-29T06:28:24.000Z">
+<meta property="article:modified_time" content="2024-01-18T15:59:35.620Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="期末复习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112145545892.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/","path":"2023/12/29/Linux网络/计算机网络笔记/计算机网络复习第三弹/","title":"计算机网络复习网络传输-IP-传输层-DNS"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>计算机网络复习网络传输-IP-传输层-DNS | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%BD%91%E7%BB%9C%E4%BC%A0%E8%BE%93-ip-%E4%BC%A0%E8%BE%93%E5%B1%82-dns"><span class="nav-number">1.</span> <span class="nav-text">计算机网络复习网络传输-IP-传输层-DNS</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#tcpip%E5%92%8Cosi%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.1.</span> <span class="nav-text">TCP&#x2F;IP和OSI网络模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%88%86%E5%B1%82%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="nav-number">1.1.1.</span> <span class="nav-text">为什么需要分层网络模型?</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#osi%E4%B8%83%E5%B1%82%E6%A8%A1%E5%9E%8B%E6%AF%8F%E5%B1%82%E9%83%BD%E6%9C%89%E4%BB%80%E4%B9%88%E5%AF%B9%E5%BA%94%E4%BB%80%E4%B9%88%E5%8A%9F%E8%83%BD"><span class="nav-number">1.1.2.</span> <span class="nav-text">OSI七层模型每层都有什么，对应什么功能</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcpip%E6%A8%A1%E5%9E%8B%E4%B8%8Eosi%E7%9A%84%E5%AF%B9%E5%BA%94%E5%85%B3%E7%B3%BB"><span class="nav-number">1.1.3.</span> <span class="nav-text">TCP&#x2F;IP模型与OSI的对应关系</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%BB%86%E8%85%B0%E6%A8%A1%E5%9E%8B%E7%9A%84%E8%85%B0%E5%9C%A8%E5%93%AA"><span class="nav-number">1.1.4.</span> <span class="nav-text">网络体系结构细腰模型的腰在哪？</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B1%82%E6%A8%A1%E5%9E%8B%E5%B7%A5%E4%BD%9C%E6%9C%BA%E5%88%B6%E5%B0%81%E8%A3%85%E4%B8%8E%E8%A7%A3%E5%B0%81%E8%A3%85"><span class="nav-number">1.2.</span> <span class="nav-text">分层模型工作机制：封装与解封装</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%81%E8%A3%85%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">封装过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%B0%81%E8%BF%87%E7%A8%8B"><span class="nav-number">1.2.2.</span> <span class="nav-text">解封过程</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AF%8F%E4%B8%80%E5%B1%82%E9%83%BD%E6%9C%89%E9%82%A3%E4%BA%9B%E5%B7%AE%E9%94%99%E6%A3%80%E9%94%99%E6%9C%BA%E5%88%B6"><span class="nav-number">1.3.</span> <span class="nav-text">每一层都有那些差错检错机制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%9B%E8%A1%8C%E5%B7%AE%E9%94%99%E6%A3%80%E6%B5%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">为什么要进行差错检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E9%93%BE%E8%B7%AF%E5%B1%82crc"><span class="nav-number">1.3.2.</span> <span class="nav-text">数据链路层CRC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E8%B7%AF%E5%B1%82"><span class="nav-number">1.3.3.</span> <span class="nav-text">网路层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%A0%E8%BE%93%E5%B1%82"><span class="nav-number">1.3.4.</span> <span class="nav-text">传输层</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E5%B1%82"><span class="nav-number">1.3.5.</span> <span class="nav-text">应用层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A0%81%E5%88%86%E5%A4%8D%E7%94%A8"><span class="nav-number">1.4.</span> <span class="nav-text">码分复用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E7%94%A8%E5%AD%98%E5%9C%A8%E7%9A%84%E6%84%8F%E4%B9%89"><span class="nav-number">1.4.1.</span> <span class="nav-text">复用存在的意义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A0%81%E5%88%86%E5%A4%8D%E7%94%A8%E5%8E%9F%E7%90%86"><span class="nav-number">1.4.2.</span> <span class="nav-text">码分复用原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#csmacd%E5%92%8Ccsmaca%E7%9A%84%E7%9B%B8%E5%90%8C%E7%82%B9%E5%92%8C%E4%B8%8D%E5%90%8C%E7%82%B9"><span class="nav-number">1.5.</span> <span class="nav-text">CSMA&#x2F;CD和CSMA&#x2F;CA的相同点和不同点</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#csmacd%E6%98%AF%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.5.1.</span> <span class="nav-text">CSMA&#x2F;CD是的原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81cmsaca"><span class="nav-number">1.5.2.</span> <span class="nav-text">为什么需要CMSA&#x2F;CA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#csmaca%E7%9A%84%E4%B8%BB%E8%A6%81%E6%93%8D%E4%BD%9C"><span class="nav-number">1.5.3.</span> <span class="nav-text">CSMA&#x2F;CA的主要操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#csmaca%E5%92%8Ccsmacd%E7%9A%84%E5%BC%82%E5%90%8C%E5%AF%B9%E6%AF%94"><span class="nav-number">1.5.4.</span> <span class="nav-text">CSMA&#x2F;CA和CSMA&#x2F;CD的异同对比</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%9B%B8%E5%90%8C%E7%82%B9"><span class="nav-number">1.5.4.1.</span> <span class="nav-text">相同点</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B7%AE%E5%BC%82"><span class="nav-number">1.5.4.2.</span> <span class="nav-text">差异</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A5%E5%A4%AA%E7%BD%91%E5%92%8Cwlan-%E5%AF%B9%E6%AF%94"><span class="nav-number">1.6.</span> <span class="nav-text">以太网和WLAN 对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#mac%E5%B1%82%E5%AF%B9%E6%AF%94"><span class="nav-number">1.6.1.</span> <span class="nav-text">MAC层对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%BC%95%E5%85%A5%E4%BA%A4%E6%8D%A2%E6%8A%80%E6%9C%AF"><span class="nav-number">1.6.2.</span> <span class="nav-text">为什么会引入交换技术</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E6%A1%A5%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">1.6.3.</span> <span class="nav-text">网桥工作原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BD%AC%E5%8F%91%E8%A1%A8fdb%E7%94%9F%E6%88%90%E5%8E%9F%E7%90%86"><span class="nav-number">1.6.4.</span> <span class="nav-text">转发表（FDB)生成原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E6%A0%91%E7%AE%97%E6%B3%95"><span class="nav-number">1.6.5.</span> <span class="nav-text">生成树算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ip%E5%8D%8F%E8%AE%AE%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">1.7.</span> <span class="nav-text">IP协议的特点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#rip-%E5%92%8Cospf%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">1.8.</span> <span class="nav-text">RIP 和OSPF的对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#riprouting-information-protocol%E7%9A%84%E5%8E%9F%E7%90%86"><span class="nav-number">1.8.1.</span> <span class="nav-text">RIP(Routing Information
+Protocol)的原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rip-%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="nav-number">1.8.2.</span> <span class="nav-text">RIP 工作流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rip%E5%B1%80%E9%99%90%E6%80%A7"><span class="nav-number">1.8.3.</span> <span class="nav-text">RIP局限性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf-open-shortest-path-first-%E5%8E%9F%E7%90%86"><span class="nav-number">1.8.4.</span> <span class="nav-text">OSPF (Open Shortest Path
+First) 原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf%E6%80%8E%E4%B9%88%E6%9E%84%E5%BB%BA%E7%BD%91%E7%BB%9C%E6%8B%93%E6%89%91"><span class="nav-number">1.8.5.</span> <span class="nav-text">ospf怎么构建网络拓扑</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf%E6%80%8E%E4%B9%88%E8%AE%A1%E7%AE%97%E8%B7%AF%E7%94%B1%E8%A1%A8"><span class="nav-number">1.8.6.</span> <span class="nav-text">ospf怎么计算路由表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf-%E5%8D%8F%E8%AE%AE"><span class="nav-number">1.8.7.</span> <span class="nav-text">OSPF 协议</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ospf%E5%8D%8F%E8%AE%AE%E7%9A%84%E4%BC%98%E7%82%B9"><span class="nav-number">1.8.8.</span> <span class="nav-text">OSPF协议的优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rip%E5%92%8Cospf%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">1.8.9.</span> <span class="nav-text">RIP和OSPF的对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%9F%E5%86%85%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E4%B8%8E%E5%9F%9F%E9%97%B4%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%AF%B9%E6%AF%94"><span class="nav-number">1.9.</span> <span class="nav-text">域内路由协议与域间路由协议的对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%9F%9F%E9%97%B4%E8%B7%AF%E7%94%B1%E5%8D%8F%E8%AE%AE%E8%80%8C%E4%B8%8D%E6%98%AF%E7%9B%B4%E6%8E%A5%E7%94%A8%E5%9F%9F%E5%86%85%E8%B7%AF%E7%94%B1"><span class="nav-number">1.9.1.</span> <span class="nav-text">为什么需要域间路由协议而不是直接用域内路由</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%9F%E9%97%B4%E8%B7%AF%E7%94%B1%E4%B8%BB%E8%A6%81%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.9.2.</span> <span class="nav-text">域间路由主要要解决的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bgp%E5%8E%9F%E7%90%86"><span class="nav-number">1.9.3.</span> <span class="nav-text">BGP原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bgp-%E4%BC%98%E7%82%B9"><span class="nav-number">1.9.4.</span> <span class="nav-text">BGP 优点</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E7%A7%8Dip-%E5%9C%B0%E5%9D%80%E7%BC%96%E5%9D%80%E6%96%B9%E6%A1%88%E4%BB%A5%E5%8F%8A%E8%B7%AF%E7%94%B1%E5%AF%BB%E6%89%BE%E5%AF%B9%E6%AF%94"><span class="nav-number">1.10.</span> <span class="nav-text">三种IP
+地址编址方案以及路由寻找对比</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E7%B1%BB-ip-%E5%9C%B0%E5%9D%80"><span class="nav-number">1.10.1.</span> <span class="nav-text">分类 IP 地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E7%B1%BBip%E5%9C%B0%E5%9D%80%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.10.2.</span> <span class="nav-text">分类IP地址存在的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%90%E7%BD%91%E5%88%92%E5%88%86"><span class="nav-number">1.10.3.</span> <span class="nav-text">子网划分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%A0%E7%B1%BB%E5%9C%B0%E5%9D%80-%E6%9E%84%E9%80%A0%E8%B6%85%E7%BD%91"><span class="nav-number">1.10.4.</span> <span class="nav-text">无类地址 (构造超网)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E9%95%BF%E5%89%8D%E7%BC%80%E5%8C%B9%E9%85%8D"><span class="nav-number">1.10.5.</span> <span class="nav-text">最长前缀匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ip%E5%9C%B0%E5%9D%80%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">1.10.6.</span> <span class="nav-text">IP地址的特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E7%A7%8D%E6%83%85%E5%86%B5%E4%B8%8B%E8%B7%AF%E7%94%B1%E8%BD%AC%E5%8F%91%E5%AF%B9%E6%AF%94"><span class="nav-number">1.10.7.</span> <span class="nav-text">三种情况下路由转发对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9C%B0%E5%9D%80%E8%A7%A3%E6%9E%90%E5%8D%8F%E8%AE%AEarp-address-resolution-protocol%E5%8E%9F%E7%90%86"><span class="nav-number">1.11.</span> <span class="nav-text">地址解析协议ARP
+(Address Resolution Protocol)原理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%B1%82%E7%9A%84%E5%9C%B0%E5%9D%80%E8%A7%A3%E6%9E%90%E8%BF%87%E7%A8%8B"><span class="nav-number">1.11.1.</span> <span class="nav-text">网络层的地址解析过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#arp%E5%8E%9F%E7%90%86"><span class="nav-number">1.11.2.</span> <span class="nav-text">ARP原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#arp%E6%8A%A5%E6%96%87"><span class="nav-number">1.11.3.</span> <span class="nav-text">ARP报文</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E8%BE%93%E5%B1%82%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98"><span class="nav-number">1.12.</span> <span class="nav-text">传输层要解决的核心问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#udp%E5%92%8Ctcp%E5%8D%8F%E8%AE%AE%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.13.</span> <span class="nav-text">UDP和TCP协议的区别</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#udp%E7%89%B9%E7%82%B9"><span class="nav-number">1.13.1.</span> <span class="nav-text">UDP特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcp%E7%89%B9%E7%82%B9"><span class="nav-number">1.13.2.</span> <span class="nav-text">TCP特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#udp-%E5%AF%B9%E6%AF%94-tcp"><span class="nav-number">1.13.3.</span> <span class="nav-text">udp 对比 TCP</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp-%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3"><span class="nav-number">1.14.</span> <span class="nav-text">TCP 滑动窗口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6"><span class="nav-number">1.15.</span> <span class="nav-text">TCP流量控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9C%89%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6"><span class="nav-number">1.15.1.</span> <span class="nav-text">什么是流量控制？为什么有流量控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">1.15.2.</span> <span class="nav-text">流量控制的基本实现原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BE%E4%BE%8B%E8%AF%B4%E6%98%8E%E6%85%A2%E6%8E%A5%E6%94%B6%E8%BF%9B%E7%A8%8B%E5%A6%82%E4%BD%95%E5%AF%B9%E5%BF%AB%E5%8F%91%E9%80%81%E8%BF%9B%E7%A8%8B%E8%BF%9B%E8%A1%8C%E6%B5%81%E6%8E%A7"><span class="nav-number">1.15.3.</span> <span class="nav-text">举例说明，慢接收进程如何对快发送进程进行流控</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%98%E5%9C%A8%E7%9A%84%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98"><span class="nav-number">1.15.4.</span> <span class="nav-text">存在的死锁问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%95%BF%E8%82%A5%E7%AE%A1%E9%81%93%E7%8E%B0%E8%B1%A1"><span class="nav-number">1.15.5.</span> <span class="nav-text">长肥管道现象</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6"><span class="nav-number">1.16.</span> <span class="nav-text">拥塞控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E5%92%8C%E6%B5%81%E9%87%8F%E6%8E%A7%E5%88%B6%E7%9A%84%E5%8C%BA%E5%88%AB%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E9%9C%80%E8%A6%81%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6"><span class="nav-number">1.16.1.</span> <span class="nav-text">拥塞控制和流量控制的区别，为什么还需要拥塞控制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E7%AD%96%E7%95%A5"><span class="nav-number">1.16.2.</span> <span class="nav-text">拥塞控制策略</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6"><span class="nav-number">1.17.</span> <span class="nav-text">TCP拥塞控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%A3%80%E6%B5%8B"><span class="nav-number">1.17.1.</span> <span class="nav-text">拥塞检测</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E7%AA%97%E5%8F%A3-cwnd-%E6%80%8E%E4%B9%88%E8%B0%83%E6%95%B4%E7%9A%84"><span class="nav-number">1.17.2.</span> <span class="nav-text">拥塞窗口 cwnd 怎么调整的</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%85%A2%E5%90%AF%E5%8A%A8slow-start"><span class="nav-number">1.17.2.1.</span> <span class="nav-text">慢启动(slow-start)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E7%AA%97%E5%8F%A3%E7%9A%84%E5%A2%9E%E5%87%8F%E7%AD%96%E7%95%A5"><span class="nav-number">1.17.2.2.</span> <span class="nav-text">拥塞窗口的增减策略</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tcp-%E6%8B%A5%E5%A1%9E%E9%81%BF%E5%85%8Daimd"><span class="nav-number">1.17.2.3.</span> <span class="nav-text">TCP 拥塞避免(AIMD)</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%BF%AB%E9%87%8D%E4%BC%A0%E5%BF%AB%E6%81%A2%E5%A4%8D"><span class="nav-number">1.17.2.4.</span> <span class="nav-text">快重传+快恢复</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E6%80%BB%E7%BB%93"><span class="nav-number">1.17.3.</span> <span class="nav-text">拥塞控制总结</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp%E6%8B%A5%E5%A1%9E%E6%8E%A7%E5%88%B6%E7%9A%84%E4%BC%98%E5%8C%96"><span class="nav-number">1.18.</span> <span class="nav-text">TCP拥塞控制的优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BF%AB%E9%80%9F%E9%87%8D%E4%BC%A0%E4%B8%8E%E6%95%B0%E6%8D%AE%E4%B9%B1%E5%BA%8F"><span class="nav-number">1.18.1.</span> <span class="nav-text">快速重传与数据乱序</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#tcp-%E8%BF%9E%E6%8E%A5"><span class="nav-number">1.19.</span> <span class="nav-text">TCP 连接</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E7%9A%84%E7%9B%AE%E7%9A%84"><span class="nav-number">1.19.1.</span> <span class="nav-text">连接的目的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9E%E6%8E%A5%E7%9A%84%E7%89%B9%E7%82%B9"><span class="nav-number">1.19.2.</span> <span class="nav-text">连接的特点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E6%AC%A1%E6%8F%A1%E6%89%8B"><span class="nav-number">1.19.3.</span> <span class="nav-text">三次握手</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tcp-%E8%BF%9E%E6%8E%A5%E9%87%8A%E6%94%BE"><span class="nav-number">1.19.4.</span> <span class="nav-text">TCP 连接释放</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dns"><span class="nav-number">1.20.</span> <span class="nav-text">DNS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%92%E5%BD%92%E6%9F%A5%E8%AF%A2%E5%92%8C%E8%BF%AD%E4%BB%A3%E6%9F%A5%E8%AF%A2%E7%9A%84%E5%B7%AE%E5%88%AB%E5%92%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">1.20.1.</span> <span class="nav-text">递归查询和迭代查询的差别和流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dns-%E7%BC%93%E5%AD%98"><span class="nav-number">1.20.2.</span> <span class="nav-text">DNS 缓存</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="nav-number">1.20.3.</span> <span class="nav-text">负载均衡</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E7%BB%86%E8%85%B0%E7%BB%93%E6%9E%84%E5%86%8D%E9%82%A3%E4%B8%80%E5%B1%82%E6%9C%80%E5%90%88%E9%80%82"><span class="nav-number">1.21.</span> <span class="nav-text">网络细腰结构再那一层最合适</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%8D%A2%E7%BB%86%E8%85%B0"><span class="nav-number">1.21.1.</span> <span class="nav-text">为什么要换细腰</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%86%E8%85%B0%E6%8D%A2%E6%88%90%E4%BB%80%E4%B9%88"><span class="nav-number">1.21.2.</span> <span class="nav-text">细腰换成什么</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="计算机网络复习网络传输-IP-传输层-DNS | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          计算机网络复习网络传输-IP-传输层-DNS
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-12-29 14:28:24" itemprop="dateCreated datePublished" datetime="2023-12-29T14:28:24+08:00">2023-12-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-01-18 23:59:35" itemprop="dateModified" datetime="2024-01-18T23:59:35+08:00">2024-01-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>12k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>11 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="计算机网络复习网络传输-ip-传输层-dns">计算机网络复习网络传输-IP-传输层-DNS</h1>
+<h2 id="tcpip和osi网络模型">TCP/IP和OSI网络模型</h2>
+<h3 id="为什么需要分层网络模型">为什么需要分层网络模型?</h3>
+<p>网络通信中需要很多很多协议、功能、组件的协作。如果采用模块化的网络体系结构，适应性差，难以维护，对系统实现是场灾难。使用分层模型，如果之分为两层的化，每一种新的应用都需要物理层的每个种类适配，扩展性较差。因此需要引入中间层适配物理层和应用层。</p>
+<p>分层的优点：各层相互独立，将建造一个网络的问题分解为多个可处理的部分，一层解决一部分问题。灵活性好：任何层发生变化时，只要接口不变，上下层不受影响。结构上可分割开：各层都可以采用最合适的技术实现易于实现和维护能促进标准化工作。</p>
+<h3 id="osi七层模型每层都有什么对应什么功能">OSI七层模型每层都有什么，对应什么功能</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112145545892.png" alt="osi模型">
+<figcaption aria-hidden="true">osi模型</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112145749163.png" alt="功能">
+<figcaption aria-hidden="true">功能</figcaption>
+</figure>
+<h3 id="tcpip模型与osi的对应关系">TCP/IP模型与OSI的对应关系</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112150328647.png" alt="TCP/IP">
+<figcaption aria-hidden="true">TCP/IP</figcaption>
+</figure>
+<h3 id="网络体系结构细腰模型的腰在哪">网络体系结构细腰模型的腰在哪？</h3>
+<p>研究表明，分层的体系结构最终会演化成细腰模型</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112150946423.png"></p>
+<p>未来的发展趋势： <img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112151022957.png"></p>
+<h2 id="分层模型工作机制封装与解封装">分层模型工作机制：封装与解封装</h2>
+<p>数据发送：由上层传到下层（逐层封装），接收由下层到上层（逐层解封）</p>
+<p>层间是虚通信，最下层为实际通信</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112151701341.png"></p>
+<h3 id="封装过程">封装过程</h3>
+<p>应用进程(Web)，应用进程数据先传送到应用层。加上应用层头部，成为<strong>应用层Data</strong>，再传送到传输层。</p>
+<p>在传输层加上传输层头部，成为<strong>传输层报文(message)</strong>,再传送到网络层。</p>
+<p>在网络层加上网络层头部，成为<strong>IP分组(packet)</strong>，再传送到数据链路层</p>
+<p>在数据链路层加上链路层头部和尾部，成为<strong>数据链路层帧(frame)</strong>，再传送到物理层</p>
+<p>在物理层把<strong>比特流</strong>进行编码、调制，传送到物理媒体电信号（或光信号）在物理媒体中传播从发送端物理层传送到接收端物理层。</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112152131414.png" alt="封装过程">
+<figcaption aria-hidden="true">封装过程</figcaption>
+</figure>
+<h3 id="解封过程">解封过程</h3>
+<p>主机2受到主机1的数据，在物理层解调、解码，将比特流，上交给数据链路层。数据链路层剥去<strong>帧头部</strong>和<strong>帧尾部</strong>取出数据部分，上交给网络层。网络层剥去头部，取出数据部分，上交给传输层。输层剥去头部，取出数据部分，上交给应用层。应用层剥去首部，取出应用程序数据上交给应用进程。</p>
+<h2 id="每一层都有那些差错检错机制">每一层都有那些差错检错机制</h2>
+<h3 id="为什么要进行差错检测">为什么要进行差错检测</h3>
+<p>数据在传输过程中可能会产生比特差错。</p>
+<p>差错检测的基本思想在数据帧中加入冗余信息来确定是否存在差错</p>
+<p>可以通知对方数据有差错，使其重传数据副本（重传机制）通过加入的冗余信息，重新构造正确的数据（纠错码）</p>
+<h3 id="数据链路层crc">数据链路层CRC</h3>
+<p>数据链路层会对物理层（只负责传输，不做任何改动的传输机器）传输过来的数据进行差错检测（数据链路层的职责之一：差错控制）。增加数据可靠性，将物理层传输过来的数据无差错地传递给上层（网络层）。</p>
+<p>差错检测常见三种方法： <img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112154747285.png"></p>
+<p>数据链路层广泛使用了 <strong>循环冗余检测CRC</strong>
+的比特差错检测技术。使用检测能力更强的CRC</p>
+<p>为什么：</p>
+<p>使用最少的冗余比特检测最多的错误。</p>
+<ul>
+<li>数据链路层的差错检测的目的是做到"无比特差错"。使用循环冗余检验CRC差错检测技术</li>
+<li>无法管帧丢失、失序、重复，它只负责一个帧要是传对了，就是对的。</li>
+</ul>
+<h3 id="网路层">网路层</h3>
+<p>网络层的校验只用于针对网络层的头部 IP:</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114124215618.png" alt="Ip报文里面的checksum字段">
+<figcaption aria-hidden="true">Ip报文里面的checksum字段</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114124409390.png" alt="实现过程">
+<figcaption aria-hidden="true">实现过程</figcaption>
+</figure>
+<p>校验和的计算方式：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118235929411.png"></p>
+<h3 id="传输层">传输层</h3>
+<p>运输层的差错检测的目的是做到"无传输差错"。即弥补帧丢失、帧重复、帧失序。</p>
+<p>udp采用校验和检测在传输过程中是否出错</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100331113.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100455078.png"></p>
+<p>TCP校验和</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116101458932.png"></p>
+<h3 id="应用层">应用层</h3>
+<h2 id="码分复用">码分复用</h2>
+<h3 id="复用存在的意义">复用存在的意义</h3>
+<p>实现媒体共享：</p>
+<p>静态划分信道信道复用技术
+(Multiplexing)，为多个用户静态划分逻辑信道，相互不冲突：频分复用、时分复用、波分复用、码分复用。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160208997.png"></p>
+<h3 id="码分复用原理">码分复用原理</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160346488.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160552531.png" alt="正交关系">
+<figcaption aria-hidden="true">正交关系</figcaption>
+</figure>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112160625589.png"></p>
+<h2 id="csmacd和csmaca的相同点和不同点">CSMA/CD和CSMA/CA的相同点和不同点</h2>
+<h3 id="csmacd是的原理">CSMA/CD是的原理</h3>
+<p><strong>核心思想</strong> ：1-坚持CSMA + 碰撞检测</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112203935954.png"></p>
+<p><strong>碰撞检测：</strong>检测结点边发送数据边检测信道上的信号电压大小、当几个结点同时发送数据时，当结点检测到的信号电压摆动值超过一定的门限值时，认为总线上至少有两个结点同时在发送数据，表明产生了碰撞。发生碰撞时，需立即停止发送，避免继续浪费网络资源，然后等待一段随机时间后再次发送。</p>
+<p>在侦听/发送发送数据时</p>
+<ul>
+<li>侦听链路中是否有其它数据在传输，如果信道忙，则继续侦听等待</li>
+<li><strong>如果检测信道空闲</strong>，等待一个<strong>最小帧间间隔</strong>时间，则传输数据帧。（以太网最小帧间间隔9.6𝜇𝑠，为了使刚刚接收帧的节点能清理接收缓存)</li>
+</ul>
+<p>在传输过程中如果遇到碰撞，执行碰撞处理操作：</p>
+<ul>
+<li>碰撞处理立即停止发送数据帧，并发送特殊阻塞信息，人为的干扰信号(jamming
+signal)，通告其它设备有碰撞发生</li>
+<li>根据发生碰撞的次数，计算<strong>指数退避时间</strong>，在时间范围内
+<strong>随机选择一个</strong>，进行等待后重发数据帧</li>
+<li>在尝试给定次数之后将放弃尝试，并向上层报告传输出错</li>
+</ul>
+<p><strong>碰撞窗口/争用期</strong></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112205141448.png" alt="碰撞窗口">
+<figcaption aria-hidden="true">碰撞窗口</figcaption>
+</figure>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112204956188.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112205543266.png" alt="强化碰撞">
+<figcaption aria-hidden="true">强化碰撞</figcaption>
+</figure>
+<p><strong>CMSA/CD:发送边侦听</strong></p>
+<h3 id="为什么需要cmsaca">为什么需要CMSA/CA</h3>
+<ul>
+<li>碰撞检测的能力要求结点同时具有发送(自己的信号)
+和接收(检测其它结点是否在发送)的能力无线网络适配器上，接收信号强度远小于发送信号，制造具有碰撞检测能力的硬件代价过大即使硬件支持</li>
+<li>无线网络特有的隐藏终端等问题也使得很多碰撞难以检测</li>
+<li>不使用碰撞检测结点一旦开始发送数据帧，即使碰撞仍继续，因此需尽量避免碰撞发生</li>
+</ul>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112205716350.png" alt="隐藏终端问题">
+<figcaption aria-hidden="true">隐藏终端问题</figcaption>
+</figure>
+<h3 id="csmaca的主要操作">CSMA/CA的主要操作</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112210411735.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112210757209.png" alt="碰撞避免">
+<figcaption aria-hidden="true">碰撞避免</figcaption>
+</figure>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112210931060.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112211854757.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240112232837528.png"></p>
+<h3 id="csmaca和csmacd的异同对比">CSMA/CA和CSMA/CD的异同对比</h3>
+<h4 id="相同点">相同点</h4>
+<p>都是基于载波侦听多点接入(CSMA)涉及以下两方面：</p>
+<p>多点接入：</p>
+<p>总线型网络，多个结点以多点接入的方式连接在一根总线上，同一冲突域</p>
+<p>载波侦听：</p>
+<p>结点在发送前先检测信道，是否有其它结点也在发送，若有，则暂时不要发送数据，以免发生碰撞总线上并没有“载波”</p>
+<h4 id="差异">差异</h4>
+<p>由于适用场景不同CSMA/CD主要适用以太网。CSMA/CA主要适用无线局域网。</p>
+<p>针对无线局域网，CSMA/CD存在以下问题</p>
+<ul>
+<li>碰撞检测的能力要求结点同时具有发送(自己的信号)
+和接收(检测其它结点是否在发送)的能力无线网络适配器上，接收信号强度远小于发送信号，制造具有碰撞检测能力的硬件代价过大即使硬件支持</li>
+<li>无线网络特有的隐藏终端等问题也使得很多碰撞难以检测</li>
+<li>不使用碰撞检测结点一旦开始发送数据帧，即使碰撞仍继续，因此需尽量避免碰撞发生</li>
+</ul>
+<ol type="1">
+<li>csma/cd在发送前先侦听信道，检测是否有其它节点正在发送。而CSMA/CA是通过虚拟载波监听技术进行检测信道是否空闲。</li>
+<li>CSMA/CD中退避只在碰撞发生后，而CSMA/CA中信道由忙变闲后，各发送结点都要执行退避(第一次尝试发送的帧除外)。这样是为了更好的避免冲突。</li>
+<li>CSMD/CA在发送、接收结点时通过RTS/CTS短帧预约信道，避免碰撞。CSMA/CD没有这个步骤</li>
+<li>CSMA/CA会通过虚拟载波监听(Virtual Carrier
+Sense)机制预留信道，避免碰撞发送结点将它要占用信道的时间，通过RTS/CTS中的NAV及数据帧MAC头部广播，告知其它结点在此期间停止发送。</li>
+<li>CSMA/CA有不同的帧间间隔（任意站点在发现信道空闲后都必须等待一段时间才能发送下一帧，这段等待的时间通称为
+IFS）发送不同类型的帧之前需要等待的IFS长度不同，高优先级帧需要等待的IFS较短，因此可优先获得发送权若低优先级帧还没来得及发送而其他站的高优先级帧已发送到媒体，则媒体变为忙状态，因而低优先级帧就只能再推迟发送了，这样就减少了发生碰撞的机会
+，并区分出不同类型帧的优先级。</li>
+</ol>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113002919227.png"></p>
+<h2 id="以太网和wlan-对比">以太网和WLAN 对比</h2>
+<p>以太网使用总线型拓扑（星型以太网逻辑上仍为总线型拓扑）</p>
+<p>WLAN星型拓扑：中心:接入点（AP)</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113100019905.png"></p>
+<h3 id="mac层对比">MAC层对比</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113095140928.png" alt="以太网帧结构">
+<figcaption aria-hidden="true">以太网帧结构</figcaption>
+</figure>
+<p>wlan：</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113100132316.png" alt="802.11 MAC">
+<figcaption aria-hidden="true">802.11 MAC</figcaption>
+</figure>
+<p>WIFI 帧结构：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113100221747.png"></p>
+<p>## 交换技术与生成树算法</p>
+<h3 id="为什么会引入交换技术">为什么会引入交换技术</h3>
+<p>直连网络本质上是一种广播网络，带宽利用率低、可扩展性很差。在有环路的拓扑中，数据包会在网络中一直被广播下去。</p>
+<p>为了提升网络的可扩展性，引入交换技术</p>
+<h3 id="网桥工作原理">网桥工作原理</h3>
+<p>功能：<strong>在数据链路层扩展局域网</strong></p>
+<p>工作方式：</p>
+<ul>
+<li>过滤</li>
+<li>转发</li>
+</ul>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104050673.png"></p>
+<p>转发表/转发数据库(Forwarding DataBase,
+FDB)存储目的MAC地址到（出）端口的映射关系：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104329502.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104611145.png" alt="网桥对数据帧的处理流程">
+<figcaption aria-hidden="true">网桥对数据帧的处理流程</figcaption>
+</figure>
+<h3 id="转发表fdb生成原理">转发表（FDB)生成原理</h3>
+<p>每收一个新的数据帧，记录其源MAC地址和入端口，将该映射关系写入FDB表。FDB格式如下所示，FDB表中MAC地址通过老化机制
+(Aging)来更新。在端口收到无差错帧以后，如果源地址在FDB中需要更新方向和定时器，如果不在则将源地址加入FDB中并设置定时器。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113124401661.png"></p>
+<h3 id="生成树算法">生成树算法</h3>
+<p><strong>why：这个算法的目的是解决什么问题？</strong></p>
+<p>由于网络中存在冗余链路，当网络拓扑由树状结构变成图状结构，在数据转发过程中，形成环路，造成广播风暴。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113104912659.png"></p>
+<p>解决办法：</p>
+<p>为网络中每对(源--目的)
+结点分配唯一确定的一条路径，这些路径构成构成了一棵树 (生成树，Spanning
+Tree)</p>
+<p><strong>how：生成树算法的实现过程</strong></p>
+<ul>
+<li>选择一个网桥作为生成树的根（如选一个最小序号的网桥根网桥总在它所有端口上转发分组）</li>
+<li>其它结点确定根端口：每个网桥计算到根的最短路径，并记下路径经过它自己的的哪个端口，即根端口，将根端口作为到根的优先路径</li>
+<li>为每个局域网(网段)选定指派网桥：指派网桥负责位该网段向根网桥转发帧</li>
+</ul>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113115652244.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113120226744.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113120501430.png"></p>
+<h2 id="ip协议的特点">IP协议的特点</h2>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113125754437.png"></p>
+<h2 id="rip-和ospf的对比">RIP 和OSPF的对比</h2>
+<h3 id="riprouting-information-protocol的原理">RIP(Routing Information
+Protocol)的原理</h3>
+<p>RIP:基于
+<strong>距离向量(DV)算法</strong>的<strong>分布式</strong>动态路由选择协议</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113153347400.png" alt="基本思想">
+<figcaption aria-hidden="true">基本思想</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113153650521.png" alt="向量表">
+<figcaption aria-hidden="true">向量表</figcaption>
+</figure>
+<p>在RIP中，跳数(hop count)，每条链路的开销为
+1（即每经过一个路由器，距离加 1）</p>
+<p>RIP 允许距离的最大值为16，一条路径最多只能包含 15
+个路由器RIP适用的网络规模有限：网络直径（最大跳数）小于15，跳数大于16，即为不可达</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113154223791.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113155116478.png" alt="例子">
+<figcaption aria-hidden="true">例子</figcaption>
+</figure>
+<p><strong>RIP存在的问题</strong></p>
+<p>Count-to-Infinity (计数到无穷)问题</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113155241307.png" alt="image-20240113155241307">
+<figcaption aria-hidden="true">image-20240113155241307</figcaption>
+</figure>
+<h3 id="rip-工作流程">RIP 工作流程</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113160900158.png"></p>
+<h3 id="rip局限性">RIP局限性</h3>
+<ol type="1">
+<li><p><strong>可扩展性差</strong>（16作为无穷大(不可达)，它不能在“直径”大于15的网络上使用）</p></li>
+<li><p><strong>不能在丢失率高的网络中使用</strong>（受限于RIP更新和超时机制）</p></li>
+<li><p><strong>不能动态地使用时延、负载等为依据选择路由</strong>
+（RIP在传播路由时使用固定的费用值，距离，在RIP中，每条链路的开销为
+1）</p></li>
+<li><p><strong>开销较大</strong>
+（每30秒信息交换占用网络资源路由器之间交换的路由信息是路由器中的完整路由表，因而随着网络规模的扩大，开销也就增加）</p></li>
+<li><p><strong>收敛速度慢</strong>
+：网络出故障时往往需要较长的时间(例如数分钟)</p></li>
+</ol>
+<h3 id="ospf-open-shortest-path-first-原理">OSPF (Open Shortest Path
+First) 原理</h3>
+<p>使用最广泛的分布式<strong>链路状态 (Link State, LS)
+</strong>路由协议</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113165524035.png" alt="open 与shortest path first">
+<figcaption aria-hidden="true">open 与shortest path first</figcaption>
+</figure>
+<p>什么是链路状态：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113162630453.png"></p>
+<p><strong>基本思想</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113163235956.png"></p>
+<h3 id="ospf怎么构建网络拓扑">ospf怎么构建网络拓扑</h3>
+<ol type="1">
+<li><p>传播LSP:通过传播链路状态分组（LSP），LSP携带了结点标识，链路开销以及序号生存期等内容。</p></li>
+<li><p>更新信息：结点x收到结点y的LSP信息副本后判断之前又没有保存过对应ID的LSP，如果没保存过则保存。如果保存过，则由于新副本的<strong>序列号更大</strong>，更新内容（此时TTL也一并更新了）。</p></li>
+<li><p>扩散信息:继续向除y之外的所有节点扩散y的LSP副本</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113164609516.png"></p></li>
+</ol>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113164013875.png"></p>
+<h3 id="ospf怎么计算路由表">ospf怎么计算路由表</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113165203074.png"></p>
+<h3 id="ospf-协议">OSPF 协议</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113194813823.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113195025306.png"></p>
+<h3 id="ospf协议的优点">OSPF协议的优点</h3>
+<p>克服RIP的缺点：</p>
+<ul>
+<li>收敛速度更快</li>
+<li>使用区域(area)概念，可支撑更大规模的网络路由</li>
+<li>链路度量可自定义，表示费用、距离、时延、带宽</li>
+</ul>
+<h3 id="rip和ospf的对比">RIP和OSPF的对比</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113195219643.png"></p>
+<h2 id="域内路由协议与域间路由协议的对比">域内路由协议与域间路由协议的对比</h2>
+<h3 id="为什么需要域间路由协议而不是直接用域内路由">为什么需要域间路由协议而不是直接用域内路由</h3>
+<ul>
+<li><p>域内路由是性能目标导向的，全域有统一目标：根据最小化某种链路度量值(开销)，找到一条最有路径</p></li>
+<li><p>域间路由是策略和经济目标导向的，每个AS有自己的策略</p>
+<p>寻找最好的策略兼容路径：找到一条无环的通往预定目的地的路径，路径必须兼容沿着路径的不同AS的策略</p></li>
+</ul>
+<h3 id="域间路由主要要解决的问题">域间路由主要要解决的问题</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113200044022.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113200654946.png"></p>
+<h3 id="bgp原理">BGP原理</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113200820619.png"></p>
+<p>AS的管理员要选择至少一个路由器作为“ BGP 代言人” 。一般是 BGP
+边界路由器。</p>
+<p>不同AS的 BGP 代言人建立 TCP 连接，在此连接上交换 BGP 报文以建立 BGP
+会话(session)，利用 BGP 会话交换路由信息</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113201723235.png"></p>
+<h3 id="bgp-优点">BGP 优点</h3>
+<ul>
+<li>BGP是基于TCP的路由协议，只要能够建立TCP就能够建立BGP；</li>
+<li>BGP只传递路由信息，不计算路由，不会暴露AS内部的网络拓扑；</li>
+<li>BGP的路由更新是触发更新，不是周期性更新；</li>
+</ul>
+<h2 id="三种ip-地址编址方案以及路由寻找对比">三种IP
+地址编址方案以及路由寻找对比</h2>
+<h3 id="分类-ip-地址">分类 IP 地址</h3>
+<p>IP地址的层次结构：IP地址 = 网络号+主机号</p>
+<p>分为A,BC,D,E类地址</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240113230133743.png"></p>
+<h3 id="分类ip地址存在的问题">分类IP地址存在的问题</h3>
+<ol type="1">
+<li>IP地址的利用率低，网络号和主机号位数固定，导致网络规模不可调，造成分配的不合理,分配的是网络号而不是40亿个独立的IP地址，耗尽的速度快</li>
+<li>每个物理网络分配一个网络号使得路由表过大。大转发表增加路由器开销，增大路由查找延迟，减低路由器性能。</li>
+<li>使用不灵活。同一组织在不同地方开通新的物理网络，需要申请新的网络地址不易于扩展、管理</li>
+</ol>
+<h3 id="子网划分">子网划分</h3>
+<p>针对分类IP地址存在的问题做了一定的改进</p>
+<p><strong>基本思想</strong></p>
+<p>通过划分子网 (subnetting)，在IP
+地址中又增加了一个“子网号字段”，将两级的 IP
+地址变成为三级。实现多个物理网络共享一个网络号减少分配网络号总数，实现<strong>路由聚合
+(aggregation)</strong></p>
+<p><strong>路由聚合
+(aggregation)</strong>：互联网络不同部分看到不同的路由，远端只看到单一网络</p>
+<p>划分子网纯属一个单位内部的事情，对外仍表现为未划分子网的网络</p>
+<p><strong>优点</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114000226068.png"></p>
+<h3 id="无类地址-构造超网">无类地址 (构造超网)</h3>
+<p>为了解决地址空间的效率和可扩展性问题，（见下面的例子），提出CIDR</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001032649.png"></p>
+<p>CIDR地址块：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001157722.png"></p>
+<p><strong>路由聚合和超网</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001304661.png"></p>
+<h3 id="最长前缀匹配">最长前缀匹配</h3>
+<p><strong>为什么需要最长前缀匹配</strong></p>
+<p>使用 CIDR ，在查找路由表时可能会得到不止一个匹配结果</p>
+<p><strong>怎么匹配</strong></p>
+<p>从匹配结果中选择具有最长网络前缀的路由，网络前缀越长，其地址块就越小，因而路由就越具体(more
+specific)</p>
+<p>匹配例子：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001653044.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114001954031.png"></p>
+<h3 id="ip地址的特点">IP地址的特点</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114002115340.png"></p>
+<h3 id="三种情况下路由转发对比">三种情况下路由转发对比</h3>
+<p><strong>没划分子网</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125020175.png"></p>
+<p><strong>划分子网</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125116900.png"></p>
+<p><strong>CIDR</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125216695.png"></p>
+<p><strong>总结三种方法的异同：</strong></p>
+<ol type="1">
+<li><p>首先都需要从IP分组的头部提取目的主机的IP地址D，得到目的网络地址N.</p></li>
+<li><p>然后三种方法在判断是否是直接交付的时候存在差异，未划分子网的方法是判断N与路由器直接相连的某个网络地址是否相同，若是则直接交付。而划分子网的方法，需要将路由器结点的各个网络子网掩码与目的主机IP地址D逐位相与后，再查看是否与路由器的本地ip相匹配。CIDR则和之前类似，也是直接判断D和路由器是否在同一个网络内判断是否直接交付。</p></li>
+<li><p>从精确到模糊进行匹配：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114130654550.png"></p>
+<ol start="6" type="1">
+<li>如果出现了问题都需要报告转发分组出错（发ICMP 目的不可达报文）</li>
+</ol></li>
+</ol>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114124903481.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114125151092.png"></p>
+<h2 id="地址解析协议arp-address-resolution-protocol原理">地址解析协议ARP
+(Address Resolution Protocol)原理</h2>
+<p><strong>为什么有ARP</strong></p>
+<p>主机或路由器的物理接口硬件在转发数据时，只能理解特定网络的编制方案如
+MAC地址 。</p>
+<h3 id="网络层的地址解析过程"><strong>网络层的地址解析过程</strong></h3>
+<p>地址解析：IP地址-&gt;硬件地址</p>
+<p>IP数据报在逐跳转发过程中，每一个结点需要根据本次传输的目的结点IP,找到对应的目的结点的硬件地址,(仅仅是本跳传输的直接接收结点)
+随后，网络适配器把IP数据报封装在 目的地址为该硬件地址的的帧中
+，发往本次传输的目的结点（可能是最终目的地，也可能是到达最终目的地的中间路由器
+，网络适配器，也就是数据链路层的处理并不用关心）</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114213551639.png"></p>
+<h3 id="arp原理">ARP原理</h3>
+<p>每个结点保留一张对照表：IP地址-&gt;硬件地址</p>
+<p><strong>ARP
+Cache</strong>：每个三层结点中都有一个ARP高速缓存，存储结点所在局域网内各结点的
+IP 地址到其硬件地址的映射。</p>
+<p>结点A向局域网内另一结点B发送IP报文时，首先在其 ARP Cache 中查看有无B
+的 IP 地址，有则查出其对应的硬件地址，将此硬件地址写入 MAC
+帧，通过局域网将该 MAC
+帧发往此硬件地址。否则，A向局域网内广播ARP请求，询问B的IP地址对应的硬件地址，B收到该请求后，单播回复自己的硬件地址A和B都会将对方地址的映射关系写入ARP
+Cache。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114215127378.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114215306726.png"></p>
+<h3 id="arp报文">ARP报文</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240114215414783.png"></p>
+<h2 id="传输层要解决的核心问题">传输层要解决的核心问题</h2>
+<p>网络层及其下层技术实现了<strong>主机到主机</strong>的通信。</p>
+<p>网络层实现了：无连接的、尽最大努力交付的数据报传输服务。</p>
+<p>为了支持网络应用间的数据传输，主机端还需要实现很多功能：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116094739116.png"></p>
+<p>传输层实现端系统上运行的<strong>应用进程间</strong>的逻辑通信，即端到端传输</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116094316803.png"></p>
+<h2 id="udp和tcp协议的区别">UDP和TCP协议的区别</h2>
+<p>用户数据报协议 UDP (User Datagram Protocol)</p>
+<ul>
+<li><strong>最简单的传输协议</strong>把下层网络的主机到主机的传递服务扩展到进程到进程的通信服务，提供端到端的<strong>尽力而为</strong>的数据报传输服务</li>
+<li>IP 的数据报服务之上增加了很少一点的功能
+<ul>
+<li>多路分解/多路复用，即端口的功能</li>
+<li>差错检测的功能</li>
+</ul></li>
+</ul>
+<h3 id="udp特点">UDP特点</h3>
+<ul>
+<li><p>无连接的，无需建立连接，无需维护状态减小开销和启动延迟，例如DNS就是基于UDP的</p></li>
+<li><p>尽最大努力交付，不保证可靠传输，主机不需维持复杂的状态</p></li>
+<li><p>没有拥塞控制</p>
+<ul>
+<li>网络的拥塞不影响源主机的发送速率</li>
+<li>以上两点适用于IP电话、视频直播等应用要求恒定发送速率，允许丢包，但是时延敏感应用。</li>
+</ul></li>
+<li><p>UDP
+支持一对一、一对多、多对一和多对多的交互通信需要组播的应用都建立在UDP之上</p></li>
+<li><p>面向报文的，在IP的功能上简单扩展到端到端</p>
+<ul>
+<li>发送方 UDP 对应用交付下来的报文，添加 UDP 头部后，直接交付IP层
+<ul>
+<li>不合并，不拆分，保留报文的边界，应用层付多长的报文，UDP
+就发多长，一次交付发送一个报文</li>
+</ul></li>
+<li>接收方 UDP 对 IP 层交付上来的 UDP
+用户数据报，去除首部后就原封不动地交付上层的应用进程
+<ul>
+<li>一次交付一个完整的报文</li>
+</ul></li>
+<li>应用程序必须选择合适大小的报文
+<ul>
+<li>报文太长，IP层需要分片，降低IP层效率；报文太短，头部相对太长，也降低效率</li>
+</ul></li>
+</ul></li>
+<li><p>作为最基本的传输层协议，上层应用可实现更多功能、按需定制</p>
+<ul>
+<li>例如：UDT (UDP-based Data Transfer Protocol)，基于UDP的数据传输协议
+<ul>
+<li>面向连接的应用层协议，在UDP的基础上增加拥塞控制和数据可靠传输控制机制</li>
+<li>主要支持高速广域网上的海量数据传输
+<ul>
+<li>TCP在高带宽长距离网络上性能很差</li>
+</ul></li>
+</ul></li>
+</ul></li>
+</ul>
+<h3 id="tcp特点">TCP特点</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100637940.png"></p>
+<h3 id="udp-对比-tcp">udp 对比 TCP</h3>
+<ol type="1">
+<li><strong>TCP 是面向连接的协议，UDP 是无连接协议</strong></li>
+</ol>
+<p>​ TCP 发送数据前使用三次握手建立连接，UDP
+发送数据前不需要建立连接。</p>
+<ol start="2" type="1">
+<li><strong>TCP 可靠，UDP 不可靠</strong></li>
+</ol>
+<p>​ TCP 丢包会自动重传，UDP 不会(任何必需的可靠性必须由应用层来提供)。
+TCP 可靠性由三个机制保证：1. 序号（TCP 报文的序 号）2. 确认（ACK
+机制）3. 重传（超时或者冗余的 ACK）</p>
+<ol start="3" type="1">
+<li><strong>TCP 有序，UDP 无序</strong></li>
+</ol>
+<p>消息在传输过程中可能会乱序，后发送的消息可能会先到达，TCP
+会对其进行重新排序，UDP 不会。</p>
+<ol start="4" type="1">
+<li><strong>TCP 无界，UDP 有界</strong></li>
+</ol>
+<p>TCP 通过字节流传输，UDP 中每一个包都是单独的。</p>
+<ol start="5" type="1">
+<li><strong>TCP 有流量控制（拥塞控制），UDP 没有</strong></li>
+</ol>
+<p>TCP 协议的流量控制是基于滑窗协议实现的。
+拥塞控制和流量控制不同，流量控制是点对点的通信量抑制，抑制发送端发送速率，使得接收端来得及接收。</p>
+<ol start="6" type="1">
+<li><strong>TCP 传输慢，UDP 传输快</strong></li>
+</ol>
+<p>因为 TCP 需要建立连接、保证可靠性和有序性，所以比较耗时。
+这就是为什么视频流、广播电视、在线多媒体游戏等选择使用 UDP。</p>
+<ol start="7" type="1">
+<li><strong>TCP 是重量级的，UDP 是轻量级的</strong></li>
+</ol>
+<p>TCP 要建立连接、保证可靠性和有序性，就会传输更多的信息，如 TCP
+的包头比较大。</p>
+<ol start="8" type="1">
+<li><strong>TCP 的 头部比 UDP 大</strong></li>
+</ol>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116100939679.png"></p>
+<h2 id="tcp-滑动窗口">TCP 滑动窗口</h2>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118175410495.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118175547277.png"></p>
+<p>A 收到确认后，移动指针。有效窗口增大</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118175841454.png"></p>
+<p>选择确认方法：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118180057481.png"></p>
+<h2 id="tcp流量控制">TCP流量控制</h2>
+<h3 id="什么是流量控制为什么有流量控制">什么是流量控制？为什么有流量控制</h3>
+<p>防止快发送方给慢接收方发数据造成接收崩溃，缓冲区溢出</p>
+<ul>
+<li>窗口大小变化，受“流量控制”、“拥塞控制”的影响发送FIN报文段，表示己方不再发送数据</li>
+</ul>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116104234914.png"></p>
+<h3 id="流量控制的基本实现原理">流量控制的基本实现原理</h3>
+<ol type="1">
+<li><p><strong>首先，接收方确定 AdvertisedWindow 大小</strong></p>
+<p><strong>AdvertisedWindow = MaxRcvBuffer – ( (NextByteExpected – 1) -
+LastByteRead)</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116105318454.png"></p></li>
+</ol>
+<p>AdertisedWindow
+代表缓存区中剩余的空间数量，新的数据到达，NextByteExpected
+指针右移，窗口大小可能变小。可以看出，窗口是否缩小依赖于<strong>应用进程读取数据的速度与数据到达的速度的相对快慢</strong>。</p>
+<ol start="2" type="1">
+<li><p>发送方根据 AdvertisedWindow 值确定有效窗口，限制发送速率</p>
+<p>有效窗口(EffectiveWindow) = AdvertisedWindow – (LastByteSent -
+LastByteAcked)</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116110103925.png"></p></li>
+</ol>
+<p>​</p>
+<ol start="3" type="1">
+<li><p>发送方只有在有效窗口大于0的情况下，才能发送更多数据。</p>
+<p>可能的情况：发送方有效窗口已为 0。</p>
+<p>此时一个报文段到达而确认x字节，因此LastByteAcked右移x字节，发送窗口减小。然而接收方应用进程未读取任何数据，因此AdvertisedWindow比之前小了x字节。发送方尽管释放了发送缓冲区空间，但仍不能再发送任何数据。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116110604577.png"></p></li>
+<li><p>发送方还必须同时保证发送缓存区不溢出：LastByteWritten –
+LastByteAcked ≤ MaxSendBuffer</p>
+<p>可能的情况：发送进程试图向 TCP 写入 y 字节，但是 LastByteWritten –
+LastByteAcked + y &gt; MaxSendBufferTCP
+会<strong>阻塞发送进程</strong>，不让它再产生数据</p></li>
+</ol>
+<h3 id="举例说明慢接收进程如何对快发送进程进行流控">举例说明，慢接收进程如何对快发送进程进行流控</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116131037611.png"></p>
+<h3 id="存在的死锁问题"><strong>存在的死锁问题</strong></h3>
+<p>某些情况下，发送方 A 无法知道 AdvertisedWindow 不再为 0</p>
+<ul>
+<li><p>当 B 没有数据需要向 A 发送时</p></li>
+<li><p>原因：TCP
+仅在它有数据或者有确认需要向对端发送时才会发送报文段</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116131234370.png"></p></li>
+</ul>
+<p><strong>解决方案</strong></p>
+<p>TCP 为每个 TCP 连接设置一个<strong>持续计时器</strong> (persistence
+timer)，只要 TCP 连接的一方收到对方的 0 窗口通知，就启动该计时器。</p>
+<p>计时器到期，发送零窗口探测报文 (仅携带1字节数据)。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116132025242.png"></p>
+<h3 id="长肥管道现象">长肥管道现象</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116132201794.png"></p>
+<p>通知窗口字段允许的最大值，需要足够大以使得发送方能够保持管道满载</p>
+<p><strong>网络的时延带宽积</strong>决定 AdvertisedWindow
+字段应有的大小</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116132356130.png"></p>
+<h2 id="拥塞控制">拥塞控制</h2>
+<h3 id="拥塞控制和流量控制的区别为什么还需要拥塞控制">拥塞控制和流量控制的区别，为什么还需要拥塞控制</h3>
+<p>流量控制：确保接收方能否承受。防止发送方发出的数据超出接收方的接收能力。</p>
+<p>拥塞控制：确保网络能够承受。防止过多数据注入网络造成网络节点或链路超载。</p>
+<p><strong>网络拥塞可能带来的代价</strong></p>
+<ul>
+<li>分组到达速率接近链路容量时，分组将经历巨大的排队时延</li>
+<li>发送方必须执行重传以补偿因为缓存溢出而丢弃的分组</li>
+<li>发送方在遇到大时延时所进行的不必要重传会引起路由器及其链路浪费资源转发不必要的分组拷贝</li>
+<li>当一个分组沿一条路径传输过程中被丢弃时，每个上游路由器用于转发该分组而使用的传输容量最终被浪费掉了</li>
+</ul>
+<p>网络拥塞后果：</p>
+<p>丢包率升高、时延增大、甚至网络崩溃 (Network Collapse)</p>
+<p><strong>拥塞控制的目标</strong></p>
+<ul>
+<li>保证发送速率适应网络瓶颈</li>
+<li>发送速率适应网络处理能力的变化</li>
+<li>多条流<strong>公平</strong>地共享资源</li>
+</ul>
+<h3 id="拥塞控制策略">拥塞控制策略</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116134146351.png"></p>
+<p>TCP采用<strong>端到端</strong>的拥塞控制策略,TCP/IP
+系统设计倾向端到端原则，将<strong>可扩展性</strong>放到第一位</p>
+<p><strong>如何判断是否拥塞</strong></p>
+<p>不需要网络设备的拥塞提醒。端设备通过丢包、延迟变化等推测网络拥塞状况。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116134034806.png"></p>
+<h2 id="tcp拥塞控制">TCP拥塞控制</h2>
+<p>四种基本算法 (RFC 5681)</p>
+<ul>
+<li>慢启动 (slow start)</li>
+<li>拥塞避免 (AIMD)</li>
+<li>快重传 (fast transmit)</li>
+<li>快恢复 (fast recovery)</li>
+</ul>
+<h3 id="拥塞检测">拥塞检测</h3>
+<p>可通过丢包进行隐式的拥塞反馈。通过ACK判断是否丢包。</p>
+<p><strong>TCP判断拥塞的两个依据</strong></p>
+<p>报文段超时</p>
+<ul>
+<li>现在通信线路的传输质量一般都很好，因传输出差错而丢弃分组的概率是很小的（远小于
+1 %），出现超时，就可以猜想网络可能出现了拥塞</li>
+</ul>
+<p>收到多个重复ACK</p>
+<ul>
+<li>收到一个重复ACK，就知道接收方必定收到乱序到达的报文段，表明其前面的分组可能丢失</li>
+</ul>
+<h3 id="拥塞窗口-cwnd-怎么调整的">拥塞窗口 cwnd 怎么调整的</h3>
+<p><strong>窗口调整的基本策略</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116151104433.png"></p>
+<h4 id="慢启动slow-start"><strong>慢启动(slow-start)</strong></h4>
+<p>基本思想</p>
+<ul>
+<li>主机开始发送数据 (连接刚建立)
+或判断拥塞发生时，不确定网络状况，应避免注入大量数据而引起拥塞拥塞窗口大小<strong>从很小的初始值开始</strong>，发送成功则<strong>快速增大</strong>，以探测网络的负载能力。</li>
+</ul>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116151504264.png"></p>
+<h4 id="拥塞窗口的增减策略"><strong>拥塞窗口的增减策略</strong></h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116152344822.png"></p>
+<p>怎么选？？</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116152938464.png" alt="对比">
+<figcaption aria-hidden="true">对比</figcaption>
+</figure>
+<h4 id="tcp-拥塞避免aimd"><strong>TCP 拥塞避免(AIMD)</strong></h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116154030888.png"></p>
+<p>使用慢启动门限 ssthresh (变量)</p>
+<ul>
+<li>当 cwnd &lt; ssthresh 时，使用慢启动</li>
+<li>当 cwnd &gt; ssthresh 时，停止使用慢启动而改用AIMD</li>
+</ul>
+<p><strong>慢启动+拥塞避免</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116153835771.png"></p>
+<h4 id="快重传快恢复"><strong>快重传+快恢复</strong></h4>
+<p>快重传 (Fast Retransmits)：收到 3 个重复 ACK
+立即触发重传（阈值减半，开始快恢复）</p>
+<p>快速重传不能代替常规超时机制，仅是增强功能并非取消超时重传定时器，而是在某些情况下可更早地触发重传丢失的报文段：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118165130378.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118162151165.png" alt="快重传">
+<figcaption aria-hidden="true">快重传</figcaption>
+</figure>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116160023260.png"></p>
+<p>快速恢复 (Fast Recovery) 阶段 起始于快速重传后，结束于RecoveryPoint
+数据被连续确认。RecoveryPoint 为进入快速恢复阶段时发送的最大序列号。</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116160907712.png" alt="差异对比">
+<figcaption aria-hidden="true">差异对比</figcaption>
+</figure>
+<p>快重传+快恢复的优点：</p>
+<ul>
+<li><p>减少了慢启动 <strong>（快恢复）</strong></p></li>
+<li><p>减少了由于等待超时引起的连接无效 (cwnd不变且无数据发送) 时间
+<strong>（快重传）</strong></p></li>
+<li><p>可以达到稳态，且稳态时 cwnd 会在最优值附近摆动</p></li>
+</ul>
+<p><strong>快重传+快恢复的一些现象</strong></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116162137647.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116162745336.png"></p>
+<h3 id="拥塞控制总结">拥塞控制总结</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116163305031.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116163612791.png"></p>
+<h2 id="tcp拥塞控制的优化">TCP拥塞控制的优化</h2>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118162755350.png"></p>
+<h3 id="快速重传与数据乱序">快速重传与数据乱序</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118163221577.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240118165328106.png"></p>
+<h2 id="tcp-连接">TCP 连接</h2>
+<h3 id="连接的目的">连接的目的</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116210737193.png"></p>
+<h3 id="连接的特点">连接的特点</h3>
+<p>TCP 连接的建立采用 客户-服务器 方式</p>
+<p>连接的建立是非对称的：</p>
+<p>服务器已预先被动打开创建传输控制块，进入LISTEN状态，表示服务程序已准备好，等待客户的连接请求。连接建立由客户端主动打开开始</p>
+<h3 id="三次握手">三次握手</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116211158041.png"></p>
+<p><strong>两次握手为啥不行？</strong>（为什么 A
+需要向B应答最后一个确认报文段 ？）</p>
+<ul>
+<li>为防止“已失效的连接请求报文段”突然又传送到B而产生错误。若不采用三次握手，B则单方面建立起了连接，但A并没有建立，因此也不会向B发送数据，B却一直等待，B的资源被浪费</li>
+</ul>
+<p>“已失效的连接请求报文段”如何产生？</p>
+<p>A发出第一个连接请求未丢失，只是在某些网络结点滞留了，以致延误到连接释放后的某个时间才到达B；B收到这个早已失效的请求后，误以为A发起了一次新的连接请求，向A发送确认报文段，同意建立连接。</p>
+<h3 id="tcp-连接释放">TCP 连接释放</h3>
+<p><strong>特点</strong></p>
+<p>连接的任何一方都可以主动关闭连接</p>
+<ul>
+<li>发送FIN报文段，表示己方不再发送数据</li>
+</ul>
+<p>另一端可以继续发送数据</p>
+<ul>
+<li>TCP是一个全双工传输协议，双向的字节流传输，两个方向的数据传输可能不会同时结束。</li>
+<li>单向的数据传输仍需要得到接收方的确认</li>
+</ul>
+<p>报文段异常情况下，任何一方都可以发送 RST 报文段关闭连接</p>
+<p><strong>四次挥手释放过程</strong></p>
+<p>A、B 都处于 ESTABLISED 状态，假设 A 先传输完数据，主动关闭 TCP
+连接。A 向 B 发送连接释放报文段，进入 FIN-WAIT-1 (终止等待1)状态。</p>
+<p>B 收到 A 的连接释放报文段后，应答确认，进入 CLOSE-WAIT
+(关闭等待)状态。TCP 服务器进程此时应通知高层应用进程，从 A 到 B
+的连接就释放了，TCP 连接处于半关闭 (half-close) 状态。</p>
+<p>A收到B的确认后，进入FIN-WAIT-2 (终止等待2)
+。状态B到A方向的连接未关闭，B若发送数据，A仍要接收</p>
+<p>若 B 已没有向 A 的数据，其应用进程通知 TCP 释放连接。B 向 A
+发送连接释放报文段后，进入 LAST-ACK (最后确认) 状态</p>
+<p>A 必须经过时间等待计时器 (TIME-WAIT timer) 设置的时间 2MSL 后，进入
+CLOSED 状态。MSL (Maximum Segment Lifetime,
+最长报文段寿命)，RFC793设为2分钟，允许设为更小值。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116215738845.png"></p>
+<p><strong>为什么 A 在 TIME-WAIT 状态必须等待 2MSL
+的时间呢？</strong></p>
+<p>确保 A 发送的最后一个 ACK 报文段能够到达 B。</p>
+<ul>
+<li>若这个ACK报文段丢失，处在 LAST-ACK 状态的 B 收不到对已发送的
+FIN+ACK报文段的确认，会超时重传该FIN+ACK。A能在 2MSL
+时间能收到这个重传的 FIN+ACK
+报文段，重新启动2MSL计时器；最后A和B都能正常进入CLOSED状态。否则，A
+无法收到 B 重传的 FIN+ACK，因此不会再次发送确认，B
+会因收不到确认而无法进入 CLOSED 状态。</li>
+</ul>
+<p>防止“已失效的连接请求报文段”出现在本连接中</p>
+<ul>
+<li>A 发送完最后一个 ACK 报文段后，再经过
+2MSL，可以使本连接持续时间内产生的所有报文段都从网络中消失，从而使得下个新连接中不会出现这种旧的连接请求报文段</li>
+<li>发送FIN报文段，表示己方不再发送数据</li>
+</ul>
+<h2 id="dns">DNS</h2>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116224911693.png"></p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116233529204.png" alt="域名的层次化空间">
+<figcaption aria-hidden="true">域名的层次化空间</figcaption>
+</figure>
+<p>一个 DNS 服务器所负责管辖的 (或有权限的) 范围叫做区 (zone)</p>
+<p>DNS 服务器的管辖范围不是以“域”为单位，而是以“区”为单位</p>
+<p>各单位根据具体情况来划分自己管辖范围的区，但在一个区中的所有节点必须是能够连通的</p>
+<p>每一个区设置相应的权威域名服务器，用来保存该区中的所有主机的域名到 IP
+地址的映射</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116234555273.png"></p>
+<p><strong>根域名服务器</strong></p>
+<p>根域名服务器是最高层次的域名服务器，也是最重要的域名服务器，所有的<strong>根域名服务器</strong>都知道所有的<strong>顶级域名服务器的</strong>域名和
+IP
+地址不管是哪一个本地域名服务器，若要对互联网上任何一个域名进行解析，只要自己无法解析，就求助于根域名服务器</p>
+<p><strong>顶级域名 (Global Top-level domain, gTLD) 服务器</strong></p>
+<p>一般性域名 (e.g. .com, .org, .info)</p>
+<p>国家地区域名 (e.g. .cn, .hk, .uk)</p>
+<p>一般由专业机构来维护管理 (e.g. VeriSign 管理 .com和 .net域名)</p>
+<p><strong>权威 (Authoritative) 域名服务器</strong></p>
+<p>负责一个区的域名服务器，提供一个组织内的域名与主机映射关系通常是该组织提供的服务，一般由组织自己维护管理</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240116235611852.png"></p>
+<h3 id="递归查询和迭代查询的差别和流程">递归查询和迭代查询的差别和流程</h3>
+<p><strong>递归查询</strong></p>
+<p>主机向<strong>本地域名服务器</strong>的查询一般都是采用递归查询.若主机所询问的本地域名服务器不知道被查询域名的
+IP 地址，那么本地域名服务器就以 DNS
+客户的身份，向<strong>其他根域名服务器</strong>继续发出查询请求</p>
+<p><strong>报文迭代查询</strong></p>
+<p>本地域名服务器向根域名服务器的查询通常是采用迭代查询,当根域名服务器收到本地域名服务器的迭代查询请求报文时，要么给出所要查询的
+IP
+地址，要么告诉本地域名服务器：“你下一步应当向哪一个域名服务器进行查询”，再让本地域名服务器进行后续的查询</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117000713208.png"></p>
+<p>对比：</p>
+<p>递归查询：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20231119202535382.png"></p>
+<p>迭代查询：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117002807890.png"></p>
+<h3 id="dns-缓存">DNS 缓存</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20231119204615641.png"></p>
+<h3 id="负载均衡">负载均衡</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117003252669.png"></p>
+<h2 id="网络细腰结构再那一层最合适">网络细腰结构再那一层最合适</h2>
+<h3 id="为什么要换细腰">为什么要换细腰</h3>
+<p>网络发生了翻天覆地的变化： 求及挑战一：”更快”</p>
+<p>需求及挑战二：”更灵活”：复杂的网络协议与系统无法支持简单、快速组网</p>
+<p>需求及挑战三：”更安全”：TCP/IP 对安全性考虑不够</p>
+<h3 id="细腰换成什么">细腰换成什么</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/image-20240117082831016.png"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%9F%E6%9C%AB%E5%A4%8D%E4%B9%A0/" rel="tag"># 期末复习</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/" rel="prev" title="计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链">
+                  <i class="fa fa-chevron-left"></i> 计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/12/30/%E8%AE%A1%E7%AE%97%E6%9C%BA%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E7%AC%94%E8%AE%B0/cache%E7%B4%A2%E5%BC%95%E6%A0%BC%E5%BC%8F%E4%B8%8E%E9%A1%B5%E7%9D%80%E8%89%B2/" rel="next" title="cache索引格式与页着色">
+                  cache索引格式与页着色 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"33799cec3501592674c8a6aac97664c4"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

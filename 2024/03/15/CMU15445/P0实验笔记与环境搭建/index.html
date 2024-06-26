@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="写在前面： 因为对C++ 17的特性不太了解，写的很痛苦,感觉对C++的智能指针，模板等新特性有了更深入的了解，收获颇多。 实验官网链接 task1：Copy-On-Write Trie 一开始的树节结构是一个前缀树的结构（详见数据结构与算法前缀树的笔记） 修改 trie.h 和 trie.cpp来实现copy-on-write trie. 什么是 copy-on-write tri">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎">
+<meta property="og:url" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="写在前面： 因为对C++ 17的特性不太了解，写的很痛苦,感觉对C++的智能指针，模板等新特性有了更深入的了解，收获颇多。 实验官网链接 task1：Copy-On-Write Trie 一开始的树节结构是一个前缀树的结构（详见数据结构与算法前缀树的笔记） 修改 trie.h 和 trie.cpp来实现copy-on-write trie. 什么是 copy-on-write tri">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240312094244170.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240312094918327.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/717692-20201122130119748-831461214.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240317233737992.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240320155327510.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240320152245658.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319092535961.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319093030543.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319093122540.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319093214306.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319094007913.png">
+<meta property="article:published_time" content="2024-03-15T07:28:24.000Z">
+<meta property="article:modified_time" content="2024-03-27T01:43:06.712Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="c++,数据库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240312094244170.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/","path":"2024/03/15/CMU15445/P0实验笔记与环境搭建/","title":"CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#task1copy-on-write-trie"><span class="nav-number">1.</span> <span class="nav-text">task1：Copy-On-Write Trie</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0"><span class="nav-number">1.1.</span> <span class="nav-text">实现过程中的学习笔记</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#move"><span class="nav-number">1.1.1.</span> <span class="nav-text">move</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%99%BA%E8%83%BD%E6%8C%87%E9%92%88%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">1.1.2.</span> <span class="nav-text">智能指针的使用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#shared_ptr%E5%92%8Cunique_ptr"><span class="nav-number">1.1.3.</span> <span class="nav-text">shared_ptr和unique_ptr</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stdshared_ptr"><span class="nav-number">1.1.4.</span> <span class="nav-text">std::shared_ptr：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stdunique_ptr"><span class="nav-number">1.1.5.</span> <span class="nav-text">std::unique_ptr：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#stdstring_view"><span class="nav-number">1.1.6.</span> <span class="nav-text">std::string_view</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E6%9E%90%E4%B8%80%E4%B8%8Btree.h%E9%87%8C%E9%9D%A2%E7%9A%84%E5%90%84%E7%A7%8D%E7%B1%BB"><span class="nav-number">1.1.7.</span> <span class="nav-text">分析一下tree.h里面的各种类</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E5%87%BD%E6%95%B0"><span class="nav-number">1.2.</span> <span class="nav-text">模板函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#get"><span class="nav-number">1.3.</span> <span class="nav-text">get</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#put"><span class="nav-number">1.4.</span> <span class="nav-text">put</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#remove"><span class="nav-number">1.5.</span> <span class="nav-text">remove</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#bugs"><span class="nav-number">1.6.</span> <span class="nav-text">bugs</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bug1"><span class="nav-number">1.6.1.</span> <span class="nav-text">bug1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bug2"><span class="nav-number">1.6.2.</span> <span class="nav-text">bug2</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#task2concurrent-key-value-store"><span class="nav-number">2.</span> <span class="nav-text">Task2：Concurrent Key-Value
+Store</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#get-1"><span class="nav-number">2.1.</span> <span class="nav-text">get</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#vscodegdb-debug"><span class="nav-number">3.</span> <span class="nav-text">VSCODE+gdb debug</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          CMU15445P0实验笔记:实现基于copy on write tree的k-v存储引擎
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-03-15 15:28:24" itemprop="dateCreated datePublished" datetime="2024-03-15T15:28:24+08:00">2024-03-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-03-27 09:43:06" itemprop="dateModified" datetime="2024-03-27T09:43:06+08:00">2024-03-27</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/" itemprop="url" rel="index"><span itemprop="name">数据库</span></a>
+        </span>
+          ，
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/CMU15445/" itemprop="url" rel="index"><span itemprop="name">CMU15445</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>13k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>12 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>写在前面： 因为对C++
+17的特性不太了解，写的很痛苦,感觉对C++的智能指针，模板等新特性有了更深入的了解，收获颇多。</p>
+<p><a target="_blank" rel="noopener" href="https://15445.courses.cs.cmu.edu/spring2023/project0/">实验官网链接</a></p>
+<h1 id="task1copy-on-write-trie">task1：Copy-On-Write Trie</h1>
+<p>一开始的树节结构是一个前缀树的结构（详见数据结构与算法前缀树的笔记）</p>
+<p>修改 <code>trie.h</code> 和 <code>trie.cpp</code>来实现copy-on-write
+trie. 什么是 copy-on-write
+trie？对树的操作不需要直接修改原来的树节点，而是创建新的节点并返回新的root节点。例如插入：<code>("ad", 2)</code>
+，先创建一个新的节点： <code>Node2</code>
+，NODE2会重用原来树的孩子节点，返回新的根节点</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240312094244170.png"></p>
+<p>插入 <code>("a", "abc")</code> 并且移除<code>("ab", 1)</code>：</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240312094918327.png"></p>
+<p>尝试完成三种操作</p>
+<ul>
+<li><p><code>Get(key)</code>: 获取key对应的value值</p></li>
+<li><p><code>Put(key, value)</code>:
+设置key对应的value值.如果key值已经存在则覆盖. Note that the type of the
+value might be non-copyable (i.e.,
+<code>std::unique_ptr&lt;int&gt;</code>). This method returns a new
+trie.</p>
+<p>在 C++
+中，有一些类型是不允许直接进行复制的，而是通过移动或者转移所有权的方式来操作。<code>std::unique_ptr</code>
+就是这样的一个例子。它表示一个独占所有权的指针，意味着同一时刻只有一个指针可以拥有它所指向的资源。由于其独占性质，它不允许直接进行复制，而是通过移动（move）操作来传递所有权。</p></li>
+<li><p><code>Delete(key)</code>: Delete the value for the key. This
+method returns a new trie.</p></li>
+</ul>
+<p>创建新的node节点,应该使用 <code>TrieNode</code>
+class里面的<code>Clone</code> 函数. To reuse an existing node in the new
+trie, you can copy <code>std::shared_ptr&lt;TrieNode&gt;</code>: copying
+a shared pointer doesn’t copy the underlying data.</p>
+<p>不能通过new和delete人工的分配内存 <code>std::shared_ptr</code> will
+deallocate the object when no one has a reference to the underlying
+object.</p>
+<h2 id="实现过程中的学习笔记">实现过程中的学习笔记</h2>
+<p>tree
+class中根节点的定义：<code>std::shared_ptr&lt;const TrieNode&gt; root_&#123;nullptr&#125;;</code></p>
+<p>这行代码是在 C++ 中声明了一个类成员变量 <code>root_</code>，它是一个
+<code>std::shared_ptr</code> 智能指针，指向 <code>const TrieNode</code>
+类型的对象，初始值为 <code>nullptr</code>。</p>
+<ol type="1">
+<li><strong><code>std::shared_ptr</code></strong>：<code>std::shared_ptr</code>
+是 C++
+标准库提供的一个智能指针类，用于管理动态分配的内存。它提供了自动内存管理，可以确保在不再需要时正确释放内存，以避免内存泄漏。<code>std::shared_ptr</code>
+允许多个指针共享对同一对象的所有权，并且会在所有指向对象的
+<code>std::shared_ptr</code> 都被销毁时自动释放内存。</li>
+<li><strong><code>root_&#123;nullptr&#125;</code></strong>：这是成员变量
+<code>root_</code> 的初始化方式，使用了 C++11
+中的成员初始化列表。<code>nullptr</code> 表示空指针，即初始时
+<code>root_</code> 不指向任何有效对象。</li>
+</ol>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Create a new trie with the given root.</span></span><br><span class="line"><span class="function"><span class="keyword">explicit</span> <span class="title">Trie</span><span class="params">(std::shared_ptr&lt;<span class="type">const</span> TrieNode&gt; root)</span> : root_(std::move(root)) &#123;</span>&#125;</span><br></pre></td></tr></table></figure>
+<ol type="1">
+<li><p><strong><code>explicit Trie(std::shared_ptr&lt;const TrieNode&gt; root)</code></strong>：这是一个类
+<code>Trie</code> 的构造函数的声明。它接受一个
+<code>std::shared_ptr&lt;const TrieNode&gt;</code> 类型的参数
+<code>root</code>。构造函数前面的 <code>explicit</code>
+关键字指示该构造函数是显式的，即不允许隐式转换调用。</p>
+<p><code>explicit</code>
+这个关键字用来说明这个类的构造不支持隐式类型转换。举个例子：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">CPP</span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Person</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="type">int</span> age;</span><br><span class="line">    std::string name;</span><br><span class="line">    <span class="function"><span class="keyword">explicit</span> <span class="title">Person</span><span class="params">(<span class="type">const</span> std::string &amp;name_)</span> : name(name_) &#123;</span>&#125;</span><br><span class="line">    <span class="built_in">Person</span>(<span class="type">int</span> age_) : <span class="built_in">age</span>(age_) &#123;&#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line">Person a = <span class="number">22</span>; <span class="comment">// 隐式构造，存在这样的构造函数</span></span><br><span class="line"><span class="comment">// Person b = std::string(&quot;ceyewan&quot;); wrong，明确了不能使用隐式构造</span></span><br><span class="line"><span class="function">Person <span class="title">b</span><span class="params">(<span class="string">&quot;ceyewan&quot;</span>)</span></span>; <span class="comment">// 只能这样构造</span></span><br><span class="line">std::cout &lt;&lt; a.age &lt;&lt; <span class="string">&quot;\n&quot;</span> &lt;&lt; b.name &lt;&lt; std::endl;</span><br></pre></td></tr></table></figure>
+<p>同样，这样初始化不仅代码风格简单，而且可以避免性能浪费，如果不这样的话，<code>“ceyewan“</code>（<code>const char*</code>
+类型）会调用 <code>string</code> 的构造函数得到
+<code>name_</code>，然后再次调用 <code>string</code> 的构造函数得到
+<code>name</code>。</p></li>
+<li><p><strong><code>: root_(std::move(root))</code></strong>：这是成员初始化列表，用于初始化
+<code>Trie</code> 类的成员变量
+<code>root_</code>。在这里，<code>std::move(root)</code> 使用了 C++11
+中的 <code>std::move</code> 函数，将参数 <code>root</code>
+转移（move）为右值引用，以便进行移动构造。移动构造可以避免不必要的内存拷贝，提高效率。</p>
+<p>移动构造函数：C++的移动构造函数是一种特殊的构造函数，用于将资源从一个对象转移到另一个对象而不进行深拷贝。移动构造函数通常用于支持移动语义，以提高代码的效率和性能。</p></li>
+</ol>
+<h3 id="move">move</h3>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/shadow-lr/p/Introduce_Std-move.html">参考博客连接</a></p>
+<p><strong>左值和右值</strong></p>
+<p>首先区分左值和右值</p>
+<p>左值是表达式结束后依然存在的持久对象(代表一个在内存中占有确定位置的对象)</p>
+<p>右值是表达式结束时不再存在的临时对象(不在内存中占有确定位置的表达式）</p>
+<p>便携方法：对表达式取地址，如果能，则为左值，否则为右值</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">int</span> val;</span><br><span class="line">val = <span class="number">4</span>; <span class="comment">// 正确 ①</span></span><br><span class="line"><span class="number">4</span> = val; <span class="comment">// 错误 ②</span></span><br></pre></td></tr></table></figure>
+<p>上述例子中，由于在之前已经对变量val进行了定义，故在栈上会给val分配内存地址，运算符=要求等号左边是可修改的左值，4是临时参与运算的值，一般在寄存器上暂存，运算结束后在寄存器上移除该值，故①是对的，②是错的</p>
+<ul>
+<li>std::move作用主要可以将一个左值转换成右值引用，从而可以调用C++11右值引用的拷贝构造函数</li>
+</ul>
+<h3 id="智能指针的使用">智能指针的使用</h3>
+<p>智能指针可以像普通指针那样使用：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 定义智能指针</span></span><br><span class="line"><span class="function">auto_ptr&lt;Test&gt; <span class="title">test</span><span class="params">(<span class="keyword">new</span> Test)</span></span>;</span><br><span class="line"></span><br><span class="line">cout &lt;&lt; <span class="string">&quot;test-&gt;debug：&quot;</span> &lt;&lt; test-&gt;<span class="built_in">getDebug</span>() &lt;&lt; endl;</span><br><span class="line">cout &lt;&lt; <span class="string">&quot;(*test).debug：&quot;</span> &lt;&lt; (*test).<span class="built_in">getDebug</span>() &lt;&lt; endl;</span><br></pre></td></tr></table></figure>
+<p>智能指针的常用函数：</p>
+<p>get() 获取智能指针托管的指针地址</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">auto_ptr&lt;Test&gt; <span class="title">test</span><span class="params">(<span class="keyword">new</span> Test)</span></span>;</span><br><span class="line"></span><br><span class="line">Test *tmp = test.<span class="built_in">get</span>();		<span class="comment">// 获取指针返回</span></span><br><span class="line">cout &lt;&lt; <span class="string">&quot;tmp-&gt;debug：&quot;</span> &lt;&lt; tmp-&gt;<span class="built_in">getDebug</span>() &lt;&lt; endl;</span><br></pre></td></tr></table></figure>
+<p>但我们一般不会这样使用，因为都可以直接使用智能指针去操作，除非有一些特殊情况。</p>
+<h3 id="shared_ptr和unique_ptr">shared_ptr和unique_ptr</h3>
+<p><code>std::auto_ptr</code> 是 C++98
+中引入的智能指针，用于管理动态分配的内存，但它已经在 C++11
+中被标记为废弃（deprecated），并且在 C++17 中被完全移除。</p>
+<p><code>std::shared_ptr</code> 和 <code>std::unique_ptr</code> 是 C++11
+引入的两种智能指针，它们都位于 <code>&lt;memory&gt;</code>
+头文件中，用于管理动态分配的内存。虽然它们都提供了自动内存管理，但它们之间有一些关键的区别。</p>
+<h3 id="stdshared_ptr">std::shared_ptr：</h3>
+<ul>
+<li><code>std::shared_ptr</code>
+允许多个指针共享对同一对象的所有权。它会维护一个引用计数，记录指向对象的共享指针数量，直到所有的
+<code>std::shared_ptr</code> 都被销毁时才会释放对象。</li>
+<li>可以通过 <code>std::make_shared</code> 来创建
+<code>std::shared_ptr</code>，这会将对象和引用计数放在同一个分配的内存块中，提高效率。</li>
+<li><code>std::shared_ptr</code>
+的拷贝构造和拷贝赋值是线程安全的，因为引用计数的增减是原子操作。</li>
+<li>使用 <code>std::shared_ptr</code>
+时要小心循环引用的问题，即两个或多个 <code>std::shared_ptr</code>
+相互持有对方的指针，导致引用计数无法降为零，造成内存泄漏。</li>
+</ul>
+<h3 id="stdunique_ptr">std::unique_ptr：</h3>
+<ul>
+<li><code>std::unique_ptr</code>
+代表对唯一对象的所有权，即同一时刻只有一个 <code>std::unique_ptr</code>
+可以拥有一个对象。它提供了移动语义，支持转移所有权而不需要拷贝。</li>
+<li>由于它的独占性质，<code>std::unique_ptr</code>
+没有引用计数的开销，因此更加轻量级，且无需担心循环引用问题。</li>
+<li>不能直接拷贝构造或拷贝赋值
+<code>std::unique_ptr</code>，但可以通过移动构造和移动赋值来转移所有权。</li>
+<li>可以使用 <code>std::make_unique</code> 来创建
+<code>std::unique_ptr</code>。</li>
+</ul>
+<p>if you want to convert <code>unique_ptr</code> into
+<code>shared_ptr</code>, you can use
+<code>std::shared_ptr&lt;T&gt;(std::move(ptr))</code></p>
+<h3 id="stdstring_view">std::string_view</h3>
+<p>C++17中我们可以使用std::string_view来获取一个字符串的视图，字符串视图并不真正的创建或者拷贝字符串，而只是拥有一个字符串的查看功能。std::string_view比std::string的性能要高很多，因为每个std::string都独自拥有一份字符串的拷贝，而std::string_view只是记录了自己对应的字符串的指针和偏移位置。当我们在只是查看字符串的函数中可以直接使用std::string_view来代替std::string。</p>
+<p>创建过程：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> </span><br><span class="line">    <span class="type">const</span> <span class="type">char</span>* cstr = <span class="string">&quot;yangxunwu&quot;</span>;</span><br><span class="line">    <span class="function">std::string_view <span class="title">stringView1</span><span class="params">(cstr)</span></span>;</span><br><span class="line">    <span class="function">std::string_view <span class="title">stringView2</span><span class="params">(cstr, <span class="number">4</span>)</span></span>;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;stringView1: &quot;</span> &lt;&lt; stringView1 &lt;&lt; <span class="string">&quot;, stringView2: &quot;</span> &lt;&lt; stringView2 &lt;&lt; std::endl;</span><br><span class="line"> </span><br><span class="line">    std::string str = <span class="string">&quot;yangxunwu&quot;</span>;</span><br><span class="line">    <span class="function">std::string_view <span class="title">stringView3</span><span class="params">(str.c_str())</span></span>;</span><br><span class="line">    <span class="function">std::string_view <span class="title">stringView4</span><span class="params">(str.c_str(), <span class="number">4</span>)</span></span>;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;stringView3: &quot;</span> &lt;&lt; stringView1 &lt;&lt; <span class="string">&quot;, stringView4: &quot;</span> &lt;&lt; stringView2 &lt;&lt; std::endl;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/717692-20201122130119748-831461214.png"></p>
+<h3 id="分析一下tree.h里面的各种类">分析一下tree.h里面的各种类</h3>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240317233737992.png"></p>
+<h2 id="模板函数">模板函数</h2>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">Get</span><span class="params">(std::string_view key)</span> <span class="type">const</span> -&gt; <span class="type">const</span> T *</span>;</span><br></pre></td></tr></table></figure>
+<p>这行代码定义了一个模板成员函数 <code>Get</code>，它接受一个
+<code>std::string_view</code> 类型的参数
+<code>key</code>，并返回一个指向类型 <code>T</code> 的常量指针。</p>
+<ol type="1">
+<li><strong><code>template &lt;class T&gt;</code></strong>：这是一个模板声明，声明了一个模板函数，其中
+<code>&lt;class T&gt;</code> 表示 <code>T</code>
+是一个模板参数，可以在函数内部作为一种类型来使用。</li>
+<li><strong><code>auto Get(std::string_view key) const -&gt; const T \*;</code></strong>：这是函数的声明部分。
+<ul>
+<li><code>auto</code>：返回类型的占位符类型，表示编译器将根据函数体中的返回语句的表达式推断返回类型。</li>
+<li><code>Get</code>：函数名。</li>
+<li><code>(std::string_view key)</code>：函数参数列表，接受一个类型为
+<code>std::string_view</code> 的参数
+<code>key</code>，它是一个轻量级的字符串视图，用于传递字符串的引用和长度。</li>
+<li><code>const</code>：表示该函数是一个常量成员函数，即在函数内部不能修改对象的成员变量。</li>
+<li><code>-&gt; const T *</code>：箭头符号 <code>-&gt;</code>
+用于指定函数的返回类型，这里返回一个指向类型 <code>T</code>
+的常量指针。</li>
+</ul></li>
+</ol>
+<h2 id="get">get</h2>
+<p>如果trie为空，则直接返回nullptr。</p>
+<p>如果key为空，先找根节点，如果根节点是一个存储value的节点，则返回value。</p>
+<p>如果key不为空，让cur指向根节点。遍历key的字符，如果当前字符在cur的子节点map中，则让cur等于当前字符在cur的子节点中的映射节点继续遍历；否则不存在该key，直接返回nullptr即可。最后把找到的value指针返回。</p>
+<p><code>auto pointer= dynamic_cast&lt;const bustub::TrieNodeWithValue&lt;T&gt; *&gt;(root_.get());</code></p>
+<p>沿着字符串找到最后的值节点。然后使用dynamic_cast转换。dynamic_cast允许指针安全地向下转换（即由基类转为派生类指针），失败则返回
+nullptr 。但这里的问题是智能指针不支持这个转换，故我们使用智能指针的
+get( ) 方法取得裸指针，然后再进行转换。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//B是A的派生类</span></span><br><span class="line"><span class="comment">//b是B类型的对象</span></span><br><span class="line">std::shared_ptr&lt;A&gt; a = std::<span class="built_in">make_shared</span>&lt;A&gt;(b);</span><br></pre></td></tr></table></figure>
+<p>make_shared不会保留多态性质生成一个指向b的基类指针。make_shared会先截断b，只留下A部分的值，然后生成指针。在本题中就是TrieNodeWithValue会被截断为TrieNode。
+正确做法是</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">std::shared_ptr&lt;A&gt; a = std::<span class="built_in">make_shared</span>&lt;B&gt;(b);</span><br></pre></td></tr></table></figure>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">Trie::Get</span><span class="params">(std::string_view key)</span> <span class="type">const</span> -&gt; <span class="type">const</span> T * </span>&#123;</span><br><span class="line">  <span class="comment">//throw NotImplementedException(&quot;Trie::Get is not implemented.&quot;);</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// You should walk through the trie to find the node corresponding to the key. If the node doesn&#x27;t exist, return</span></span><br><span class="line">  <span class="comment">// nullptr. After you find the node, you should use `dynamic_cast` to cast it to `const TrieNodeWithValue&lt;T&gt; *`. If</span></span><br><span class="line">  <span class="comment">// dynamic_cast returns `nullptr`, it means the type of the value is mismatched, and you should return nullptr.</span></span><br><span class="line">  <span class="comment">// Otherwise, return the value.</span></span><br><span class="line">  <span class="comment">//如果树为空则返回空</span></span><br><span class="line">  <span class="keyword">if</span>(<span class="keyword">this</span>-&gt;root_==<span class="literal">nullptr</span>)&#123;</span><br><span class="line">     <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//如果key为空pointerpointer</span></span><br><span class="line">  <span class="keyword">if</span>(key.<span class="built_in">empty</span>())&#123;</span><br><span class="line">    <span class="comment">//判断根节点是否为value节点</span></span><br><span class="line">    <span class="keyword">if</span>(root_-&gt;is_value_node_)&#123;</span><br><span class="line">      <span class="comment">//转为子类指针</span></span><br><span class="line">      <span class="keyword">auto</span> pointer= <span class="keyword">dynamic_cast</span>&lt;<span class="type">const</span> bustub::TrieNodeWithValue&lt;T&gt; *&gt;(root_.<span class="built_in">get</span>());</span><br><span class="line">      <span class="keyword">return</span>  pointer==<span class="literal">nullptr</span>?<span class="literal">nullptr</span>:pointer-&gt;value_.<span class="built_in">get</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span>(!root_-&gt;is_value_node_) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">    &#125;    </span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span>&#123;</span><br><span class="line">    std:: shared_ptr&lt;<span class="type">const</span> bustub :: TrieNode&gt; cur=<span class="keyword">this</span>-&gt;root_;</span><br><span class="line">    <span class="comment">//遍历字符串</span></span><br><span class="line">    <span class="keyword">for</span>( <span class="type">char</span> ch: key)&#123;</span><br><span class="line">       <span class="comment">//使用map映射找到字符串对应的节点</span></span><br><span class="line">       <span class="keyword">auto</span> node=cur-&gt;children_.<span class="built_in">find</span>(ch);</span><br><span class="line">       <span class="comment">//没找到</span></span><br><span class="line">       <span class="keyword">if</span>(node==cur-&gt;children_.<span class="built_in">end</span>())&#123;</span><br><span class="line">         <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">       &#125;</span><br><span class="line">       cur=node-&gt;second;</span><br><span class="line">    &#125;   </span><br><span class="line">    <span class="keyword">if</span>(cur-&gt;is_value_node_)&#123;</span><br><span class="line">          std::shared_ptr&lt;<span class="type">const</span> bustub::TrieNodeWithValue&lt;T&gt;&gt; pointer =std::dynamic_pointer_cast&lt;<span class="type">const</span> bustub::TrieNodeWithValue&lt;T&gt;&gt;(cur); <span class="comment">// 父类智能指针转子类    </span></span><br><span class="line">         <span class="keyword">return</span>  pointer==<span class="literal">nullptr</span>?<span class="literal">nullptr</span>:pointer-&gt;value_.<span class="built_in">get</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="put">put</h2>
+<p>设置键对应的值。如果键已经存在，则覆盖现有值。注意，值的类型可能是不可复制的（即，
+<code>std::unique_ptr&lt;int&gt;</code>
+因此需要使用移动语义）。这个方法返回一个新的trie，也就是说，实现写时拷贝</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="function"><span class="type">void</span> <span class="title">SubPut</span><span class="params">(std::shared_ptr&lt;bustub::TrieNode&gt; &amp;root,std::shared_ptr&lt;T&gt;&amp; valptr,std::string_view key)</span></span>&#123;</span><br><span class="line">    <span class="type">char</span> ch=key.<span class="built_in">at</span>(<span class="number">0</span>);  </span><br><span class="line">    <span class="keyword">auto</span> it = root-&gt;children_.<span class="built_in">find</span>(ch);</span><br><span class="line">    <span class="keyword">if</span> (it != root-&gt;children_.<span class="built_in">end</span>()) &#123;</span><br><span class="line">        <span class="comment">//找到了</span></span><br><span class="line">        <span class="comment">//判断是否为叶子节点</span></span><br><span class="line">        <span class="keyword">if</span>(key.<span class="built_in">size</span>()&lt;=<span class="number">1</span>)&#123;</span><br><span class="line">          <span class="comment">//覆盖原来的数据</span></span><br><span class="line">          it-&gt;second=std::make_shared&lt;bustub::TrieNodeWithValue&lt;T&gt;&gt;(it-&gt;second-&gt;children_,valptr);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//否则复制该节点，并复用下面的节点</span></span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">         std::shared_ptr&lt;bustub::TrieNode&gt; newnode=it-&gt;second-&gt;<span class="built_in">Clone</span>();</span><br><span class="line">         <span class="comment">//递归写入</span></span><br><span class="line">         <span class="built_in">SubPut</span>(newnode,valptr,key.<span class="built_in">substr</span>(<span class="number">1</span>,key.<span class="built_in">size</span>()<span class="number">-1</span>));</span><br><span class="line">         it-&gt;second=std::<span class="built_in">move</span>(newnode);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">       <span class="comment">//没找到</span></span><br><span class="line">       <span class="type">char</span> ch=key.<span class="built_in">at</span>(<span class="number">0</span>);</span><br><span class="line">       <span class="comment">//新建节点</span></span><br><span class="line">       <span class="keyword">if</span>(key.<span class="built_in">size</span>()&lt;=<span class="number">1</span>)&#123;</span><br><span class="line">         root-&gt;children_.<span class="built_in">insert</span>(&#123;ch,std::make_shared&lt;bustub::TrieNodeWithValue&lt;T&gt;&gt;(valptr)&#125;) ;   </span><br><span class="line">        &#125;</span><br><span class="line">       <span class="keyword">else</span>&#123;</span><br><span class="line">        std::shared_ptr tmpptr=std::<span class="built_in">make_shared</span>&lt;bustub::TrieNode&gt;();</span><br><span class="line">        <span class="comment">//递归插入</span></span><br><span class="line">        <span class="built_in">SubPut</span>(tmpptr,valptr,key.<span class="built_in">substr</span>(<span class="number">1</span>,key.<span class="built_in">size</span>()<span class="number">-1</span>));</span><br><span class="line">        root-&gt;children_.<span class="built_in">insert</span>(&#123;ch,std::<span class="built_in">move</span>(tmpptr)&#125;);</span><br><span class="line">       &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">class</span> <span class="title class_">T</span>&gt;</span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">Trie::Put</span><span class="params">(std::string_view key, T value)</span> <span class="type">const</span> -&gt; Trie </span>&#123;</span><br><span class="line">  <span class="comment">// Note that `T` might be a non-copyable type. Always use `std::move` when creating `shared_ptr` on that value.</span></span><br><span class="line">  <span class="comment">//throw NotImplementedException(&quot;Trie::Put is not implemented.&quot;);</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// You should walk through the trie and create new nodes if necessary. If the node corresponding to the key already</span></span><br><span class="line">  <span class="comment">// exists, you should create a new `TrieNodeWithValue`.</span></span><br><span class="line">  <span class="comment">//key为空在根节点插入</span></span><br><span class="line">  std::shared_ptr&lt;T&gt; val_ptr=std::<span class="built_in">make_shared</span>&lt;T&gt;(std::<span class="built_in">move</span>(value));</span><br><span class="line">  <span class="keyword">if</span>(key.<span class="built_in">empty</span>())&#123;</span><br><span class="line">    std::shared_ptr&lt;bustub::TrieNodeWithValue&lt;T&gt;&gt; newroot=<span class="literal">nullptr</span>;</span><br><span class="line">    </span><br><span class="line">   <span class="comment">//如果根节点没有孩子直接插入</span></span><br><span class="line">   <span class="keyword">if</span>(<span class="keyword">this</span>-&gt;root_-&gt;children_.<span class="built_in">empty</span>())&#123;</span><br><span class="line">    newroot=std::make_shared&lt;bustub::TrieNodeWithValue&lt;T&gt;&gt;(val_ptr);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//如果根节点有孩子复制完再插入</span></span><br><span class="line">   <span class="keyword">else</span>&#123;</span><br><span class="line">    newroot=std::make_shared&lt;bustub::TrieNodeWithValue&lt;T&gt;&gt;(<span class="keyword">this</span>-&gt;root_-&gt;children_,std::<span class="built_in">move</span>(val_ptr));</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="comment">//返回树</span></span><br><span class="line">   <span class="keyword">return</span> <span class="built_in">Trie</span>(newroot);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//key不为空，首先复制树然后递归插入</span></span><br><span class="line">  std::shared_ptr&lt;bustub::TrieNode&gt; newroot=<span class="literal">nullptr</span>;</span><br><span class="line">  <span class="keyword">if</span>(<span class="keyword">this</span>-&gt;root_!=<span class="literal">nullptr</span>)&#123;</span><br><span class="line">     newroot=<span class="keyword">this</span>-&gt;root_-&gt;<span class="built_in">Clone</span>();</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span>&#123;</span><br><span class="line">    newroot=std::<span class="built_in">make_shared</span>&lt;TrieNode&gt;(<span class="built_in">TrieNode</span>());</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//递归插入</span></span><br><span class="line">  <span class="built_in">SubPut</span>(newroot,val_ptr,key);</span><br><span class="line">  <span class="keyword">return</span> <span class="built_in">Trie</span>(newroot);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="remove">remove</h2>
+<p>Delete the value for the key. This method returns a new trie</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">subremove</span><span class="params">(std::shared_ptr&lt;TrieNode&gt; &amp;root,std::string_view key)</span>-&gt;<span class="type">bool</span></span>&#123;</span><br><span class="line">     <span class="type">char</span> ch=key.<span class="built_in">at</span>(<span class="number">0</span>);</span><br><span class="line">     <span class="keyword">auto</span> it =root-&gt;children_.<span class="built_in">find</span>(ch);</span><br><span class="line">     <span class="keyword">if</span>(it!=root-&gt;children_.<span class="built_in">end</span>())&#123;</span><br><span class="line">      <span class="comment">//找到了</span></span><br><span class="line">      <span class="comment">//是否为最后一个节点</span></span><br><span class="line">      <span class="keyword">if</span>(key.<span class="built_in">size</span>()==<span class="number">1</span>)&#123;</span><br><span class="line">        <span class="keyword">if</span>(!it-&gt;second-&gt;is_value_node_)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">            <span class="keyword">if</span>(it-&gt;second-&gt;children_.<span class="built_in">empty</span>())&#123;</span><br><span class="line">                root-&gt;children_.<span class="built_in">erase</span>(it-&gt;first);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span>&#123;</span><br><span class="line">                it-&gt;second=std::<span class="built_in">make_shared</span>&lt;TrieNode&gt;(<span class="built_in">TrieNode</span>(it-&gt;second-&gt;children_));</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">else</span>&#123;</span><br><span class="line">        std::shared_ptr ptr=it-&gt;second-&gt;<span class="built_in">Clone</span>();<span class="comment">//克隆，因为原来是常量指针</span></span><br><span class="line">        <span class="type">bool</span> ret=<span class="built_in">subremove</span>(ptr,key.<span class="built_in">substr</span>(<span class="number">1</span>,key.<span class="built_in">size</span>()<span class="number">-1</span>));</span><br><span class="line">        <span class="keyword">if</span>(!ret)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(ptr-&gt;children_.<span class="built_in">empty</span>()&amp;&amp;!ptr-&gt;is_value_node_)&#123;</span><br><span class="line">          root-&gt;children_.<span class="built_in">erase</span>(it-&gt;first);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span>&#123;</span><br><span class="line">            <span class="comment">//转为常量指针</span></span><br><span class="line">            it-&gt;second=std::<span class="built_in">shared_ptr</span>&lt;<span class="type">const</span> TrieNode&gt;(ptr);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">     &#125;</span><br><span class="line">     <span class="keyword">else</span>&#123;</span><br><span class="line">     <span class="comment">//没找到</span></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">     &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">auto</span> <span class="title">Trie::Remove</span><span class="params">(std::string_view key)</span> <span class="type">const</span> -&gt; Trie </span>&#123;</span><br><span class="line">  <span class="comment">//throw NotImplementedException(&quot;Trie::Remove is not implemented.&quot;);</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">// You should walk through the trie and remove nodes if necessary. If the node doesn&#x27;t contain a value any more,</span></span><br><span class="line">  <span class="comment">// you should convert it to `TrieNode`. If a node doesn&#x27;t have children any more, you should remove it.</span></span><br><span class="line">  <span class="keyword">if</span>(key.<span class="built_in">empty</span>())&#123;</span><br><span class="line">    <span class="comment">//如果根节点没有孩子</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="keyword">this</span>-&gt;root_-&gt;children_.<span class="built_in">empty</span>())&#123;</span><br><span class="line">        <span class="keyword">return</span> &#123;&#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span>&#123;</span><br><span class="line">          std::shared_ptr&lt;TrieNode&gt; newroot=std::<span class="built_in">make_shared</span>&lt;TrieNode&gt;(<span class="built_in">TrieNode</span>(<span class="keyword">this</span>-&gt;root_-&gt;children_));</span><br><span class="line">          <span class="keyword">return</span> <span class="built_in">Trie</span>(newroot);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">else</span>&#123;</span><br><span class="line">        std::shared_ptr newroot=<span class="keyword">this</span>-&gt;root_-&gt;<span class="built_in">Clone</span>();<span class="comment">//拷贝转为非常量</span></span><br><span class="line">        <span class="type">bool</span> flag=<span class="built_in">subremove</span>(newroot,key);</span><br><span class="line">        <span class="keyword">if</span>(!flag)&#123;</span><br><span class="line">            <span class="keyword">return</span> *<span class="keyword">this</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">//判断根节点是否需要删除</span></span><br><span class="line">        <span class="keyword">if</span>(newroot-&gt;children_.<span class="built_in">empty</span>()&amp;&amp;!newroot-&gt;is_value_node_)&#123;</span><br><span class="line">           newroot=<span class="literal">nullptr</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(flag)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">Trie</span>(newroot);</span><br><span class="line">        &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> &#123;&#125;;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>通过本地测试：</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240320155327510.png"></p>
+<h2 id="bugs">bugs</h2>
+<h3 id="bug1">bug1</h3>
+<p><code>auto it = root-&gt;children_.find(ch);</code>
+这句会发生错误。</p>
+<p>错误发生在 <code>std::_Rb_tree</code> 的内部，具体是在
+<code>std::_Rb_tree::_M_begin()</code>
+函数内部，这个函数是红黑树（<code>std::map</code>）的成员函数，用于获取树的起始位置迭代器报错信息中指出错误发生在读取内存地址的操作（READ
+memory access），并且地址指向未知的地址（unknown
+address），提示地址指向了零页（zero page）。发现主要是指针没初始化</p>
+<p>父类智能指针转换为子类智能指针：</p>
+<p><code>std::shared_ptr&lt;const bustub::TrieNodeWithValue&lt;T&gt;&gt; pointer =std::dynamic_pointer_cast&lt;const bustub::TrieNodeWithValue&lt;T&gt;&gt;(cur); // 父类智能指针转子类</code></p>
+<h3 id="bug2">bug2</h3>
+<p>没法通过CopyOnWriteTest1</p>
+<p>定位主要是在这一句出问题：</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240320152245658.png"></p>
+<p>初步判断原因是<code>ASSERT_EQ(*trie3.Get&lt;uint32_t&gt;("test"), 2333);</code>
+在删除test的时候把est节点都删掉了导致的问题</p>
+<p>定位到错误：<code>if(ptr-&gt;children_.empty()&amp;&amp;ptr-&gt;is_value_node_)</code>应该是<code>if(ptr-&gt;children_.empty()&amp;&amp;!ptr-&gt;is_value_node_)</code></p>
+<h1 id="task2concurrent-key-value-store">Task2：Concurrent Key-Value
+Store</h1>
+<p>完成copy-on-write trie 后，这个树可以在单一线程的环境使用,
+这个实验是implement a concurrent key-value store for a multithreaded
+environment. 修改 <code>trie_store.h</code>和
+<code>trie_store.cpp</code>完成实验</p>
+<p>对于传统的 Trie class, 每次我们修改trie的时候, we need to get the new
+root to access the new content.但是对于现在的 key-value store来说, the
+<code>put</code> and <code>delete</code> methods 不需要返回值. This
+requires you to use concurrency primitives（并发原语） to synchronize
+（同步）reads and writes so that no data is lost through the
+process.</p>
+<p>需求： concurrent key-value store可以并发的服务多个读和单个写。
+也就是说, when someone is modifying the trie, reads can still be
+performed on the old root. When someone is reading, writes can still be
+performed without waiting for reads.</p>
+<p>如果我们要获得一个树节点的引用值,我们应该无论是否现在正在修改这个节点我们都能得到他。
+get函数只返回一个指针。如果存储此值的trie节点已被删除，则指针将悬空。因此，在TrieStore中，我们返回一个ValueGuard，它存储对该值的引用和与trie结构的根对应的TrieNode，以便在存储ValueGuard时可以访问该值。</p>
+<h2 id="get-1">get</h2>
+<p>对于Get操作，先获取访问控制锁，防止此时其他写进程修改trie。得到当前时间节点的trie并释放访问控制锁。</p>
+<p>由于实现了写时拷贝，因此只需要加锁得到了当前时刻的trie，之后就不需要管写进程了。</p>
+<h1 id="vscodegdb-debug">VSCODE+gdb debug</h1>
+<p>同时按住 shift + Ctrl + p 出现搜索框，在搜索框中输入 C/C++，选择
+“编辑配置文件(JSON)” 下面也有对应的英文版的显示。按下图设置：</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319092535961.png"></p>
+<p>配置gdb调试文件：</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319093030543.png"></p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319093122540.png"></p>
+<p>配置要调试的文件后就可以开始断点调试了</p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319093214306.png"></p>
+<p><img src="/2024/03/15/CMU15445/P0%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0%E4%B8%8E%E7%8E%AF%E5%A2%83%E6%90%AD%E5%BB%BA/image-20240319094007913.png"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/c-%E6%95%B0%E6%8D%AE%E5%BA%93/" rel="tag"># c++,数据库</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/" rel="prev" title="cpu逼近硬件浮点性能峰值">
+                  <i class="fa fa-chevron-left"></i> cpu逼近硬件浮点性能峰值
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/03/21/MIT6S081/6.S081-Lab3%20page%20tables/" rel="next" title="6.S081-Lab 3 PAGE TABLES实验笔记">
+                  6.S081-Lab 3 PAGE TABLES实验笔记 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"04de666cbb01511b9a073dd72922b5e6"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

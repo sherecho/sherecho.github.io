@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="并行并发 并行和并发的区别   并行 (Parallelism):  并行指的是同时执行多个操作，它们在同一时刻发生，可以是在多个处理单元（如多核处理器）上同时执行，也可以是在多台计算机上同时执行。 在并行中，多个任务被同时处理，它们的执行时间是重叠的。这意味着这些任务同时在不同的处理单元上进行，可以显著地提高整体性能。 典型的例子包括多线程并行执行、多进程并行执行以及分布式系统中">
+<meta property="og:type" content="article">
+<meta property="og:title" content="什么是并行计算">
+<meta property="og:url" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="并行并发 并行和并发的区别   并行 (Parallelism):  并行指的是同时执行多个操作，它们在同一时刻发生，可以是在多个处理单元（如多核处理器）上同时执行，也可以是在多台计算机上同时执行。 在并行中，多个任务被同时处理，它们的执行时间是重叠的。这意味着这些任务同时在不同的处理单元上进行，可以显著地提高整体性能。 典型的例子包括多线程并行执行、多进程并行执行以及分布式系统中">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315090639192.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315091006734.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315091235831.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315091621694.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315093419606.png">
+<meta property="og:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315093734079.png">
+<meta property="article:published_time" content="2024-03-13T01:28:24.000Z">
+<meta property="article:modified_time" content="2024-03-18T04:40:29.132Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="并行处理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315090639192.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/","path":"2024/03/13/并行处理/并行处理笔记/","title":"什么是并行计算"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>什么是并行计算 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E5%B9%B6%E5%8F%91"><span class="nav-number">1.</span> <span class="nav-text">并行并发</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E5%92%8C%E5%B9%B6%E5%8F%91%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.1.</span> <span class="nav-text">并行和并发的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#type-of-parallelism"><span class="nav-number">1.2.</span> <span class="nav-text">Type of Parallelism</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#job-level-parallelism"><span class="nav-number">1.2.1.</span> <span class="nav-text">Job Level Parallelism</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#task-level"><span class="nav-number">1.2.2.</span> <span class="nav-text">task level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#thread-level"><span class="nav-number">1.2.3.</span> <span class="nav-text">thread level</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#instruction-level"><span class="nav-number">1.2.4.</span> <span class="nav-text">instruction level</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%B6%E8%A1%8C%E8%AE%A1%E7%AE%97%E7%9A%84%E5%8E%9F%E5%88%99"><span class="nav-number">1.3.</span> <span class="nav-text">并行计算的原则</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="什么是并行计算 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          什么是并行计算
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-03-13 09:28:24" itemprop="dateCreated datePublished" datetime="2024-03-13T09:28:24+08:00">2024-03-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-03-18 12:40:29" itemprop="dateModified" datetime="2024-03-18T12:40:29+08:00">2024-03-18</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">并行处理</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>1.1k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>1 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="并行并发">并行并发</h1>
+<h2 id="并行和并发的区别">并行和并发的区别</h2>
+<p><img src="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315090639192.png"></p>
+<ol type="1">
+<li><strong>并行 (Parallelism)</strong>:
+<ul>
+<li>并行指的是同时执行多个操作，它们在同一时刻发生，可以是在多个处理单元（如多核处理器）上同时执行，也可以是在多台计算机上同时执行。</li>
+<li>在并行中，多个任务被同时处理，它们的执行时间是重叠的。这意味着这些任务同时在不同的处理单元上进行，可以显著地提高整体性能。</li>
+<li>典型的例子包括多线程并行执行、多进程并行执行以及分布式系统中的并行计算。</li>
+</ul></li>
+<li><strong>并发 (Concurrency)</strong>:
+<ul>
+<li>并发指的是在同一时间段内处理多个任务，但并不一定是同时执行。任务可能交替执行，每个任务在一段时间内执行一部分，然后切换到另一个任务继续执行。</li>
+<li>在并发中，任务可能通过时间片轮转或事件驱动等方式交替执行，以便利用系统资源，同时让多个任务看起来好像是同时在运行。</li>
+<li>典型的例子包括操作系统中的多任务处理、网络服务器同时处理多个客户端请求以及图形用户界面(GUI)程序中的事件处理。</li>
+</ul></li>
+</ol>
+<h2 id="type-of-parallelism">Type of Parallelism</h2>
+<h3 id="job-level-parallelism">Job Level Parallelism</h3>
+<ol type="1">
+<li><strong>Inter-Job Parallelism（任务间并行性）</strong>:
+<ul>
+<li>Inter-Job Parallelism 涉及多个独立任务或作业之间的并行执行。</li>
+<li>在这种并行性中，每个任务都是独立的，彼此之间没有直接的依赖关系，因此可以同时执行。</li>
+<li>典型的例子包括批处理系统中的并行作业，或者在云计算环境中同时运行的多个虚拟机实例。</li>
+</ul></li>
+<li><strong>Intra-Job Parallelism（任务内部并行性）</strong>:
+<ul>
+<li>Intra-Job Parallelism 指的是在单个任务或作业内部的并行执行。</li>
+<li>在这种并行性中，一个单独的任务被分解为多个子任务，这些子任务可以并行执行以提高整体性能。</li>
+<li>典型的例子包括在一个大型计算任务中使用多线程或多进程并行处理数据，或者使用向量化指令集来加速数值计算。</li>
+</ul></li>
+</ol>
+<p><img src="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315091006734.png"></p>
+<h3 id="task-level">task level</h3>
+<p>程序级别的并行</p>
+<h3 id="thread-level">thread level</h3>
+<p><img src="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315091235831.png"></p>
+<h3 id="instruction-level">instruction level</h3>
+<ul>
+<li>独立的指令运行在硬件上</li>
+<li>假设：有多个硬件资源（ALU,Adder，MUltiplier，Loader,MAC
+unit等）</li>
+<li>例如指令流水线</li>
+</ul>
+<p><img src="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315091621694.png"></p>
+<h2 id="并行计算的原则">并行计算的原则</h2>
+<ul>
+<li>找到足够多的并行（Amdahl 定律）</li>
+<li>粒度：每一个并行的任务应该有多大</li>
+<li>Locality： 移动数据的开销比计算要大</li>
+<li>负载均衡：不能让1k个处理器等一个慢的处理器</li>
+<li>协调和同步：安全的共享数据</li>
+</ul>
+<p><img src="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315093419606.png"></p>
+<p>即使并行部分完全加速，性能也会受到串行部分的限制</p>
+<p><img src="/2024/03/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0/image-20240315093734079.png"></p>
+<ul>
+<li><p>大的内存很慢，快的内存很小</p></li>
+<li><p>平均而言，存储层次结构大且快</p></li>
+<li><p>并行处理器总体上具有大而快的cache</p></li>
+<li><p>对“远程”数据的缓慢访问，我们称之为“通信”。</p></li>
+</ul>
+<p>​ 算法应该在本地数据上做大部分工作</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/" rel="tag"># 并行处理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/03/12/MIT6S081/6.S081-Lab%202%20system%20calls%E5%AE%9E%E9%AA%8C%E7%AC%94%E8%AE%B0/" rel="prev" title="6.S081-Lab 2 system calls实验笔记">
+                  <i class="fa fa-chevron-left"></i> 6.S081-Lab 2 system calls实验笔记
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2024/03/15/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86%E7%AC%94%E8%AE%B0lec2/" rel="next" title="cpu逼近硬件浮点性能峰值">
+                  cpu逼近硬件浮点性能峰值 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"16878195900826fbe86525d8e2dfde85"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

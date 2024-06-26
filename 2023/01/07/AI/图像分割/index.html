@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="图像分割分类   image-20230107225200305  语义分割：每一个像素必须且只能属于一类，预测结果为掩膜 实例分割：只预测前景目标的类别属性以及边框，个体ID，每一个像素可以属于多个ID   image-20230107225809249  比如上面所示因为有遮挡所以每一个像素可以属于多个ID 全景分割（panoptic segmentation）每个像">
+<meta property="og:type" content="article">
+<meta property="og:title" content="图像分割">
+<meta property="og:url" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="图像分割分类   image-20230107225200305  语义分割：每一个像素必须且只能属于一类，预测结果为掩膜 实例分割：只预测前景目标的类别属性以及边框，个体ID，每一个像素可以属于多个ID   image-20230107225809249  比如上面所示因为有遮挡所以每一个像素可以属于多个ID 全景分割（panoptic segmentation）每个像">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225809249.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230213794.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230323009.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230434354.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230635130.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234531078.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107231727165.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232016372.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232104818.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234628180.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235043023.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235716530.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235903668.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000042897.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000312306.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000539139.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000906883.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108001411621.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093010812.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093215937.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108094522966.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108095705398.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100135509.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100537739.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108101943717.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102332153.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102446730.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102517972.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103114866.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103236667.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103655080.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103953333.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108112014166.png">
+<meta property="og:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108111922640.png">
+<meta property="article:published_time" content="2023-01-07T14:46:56.000Z">
+<meta property="article:modified_time" content="2023-01-08T03:54:25.795Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="图像分割">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/","path":"2023/01/07/AI/图像分割/","title":"图像分割"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>图像分割 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2%E5%88%86%E7%B1%BB"><span class="nav-number">1.</span> <span class="nav-text">图像分割分类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%8F%E5%85%B8%E6%95%B0%E6%8D%AE%E9%9B%86"><span class="nav-number">2.</span> <span class="nav-text">经典数据集</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#pascal-voc"><span class="nav-number">2.1.</span> <span class="nav-text">pascal VOC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cityscape"><span class="nav-number">2.2.</span> <span class="nav-text">Cityscape</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#coco"><span class="nav-number">2.3.</span> <span class="nav-text">COCO</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%84%E4%BC%B0%E6%8C%87%E6%A0%87%E4%B8%8E%E4%BC%98%E5%8C%96%E6%A0%87%E5%87%86"><span class="nav-number">3.</span> <span class="nav-text">评估指标与优化标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8A%E9%87%87%E6%A0%B7%E6%96%B9%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">上采样方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E9%87%87%E6%A0%B7%E5%AE%9E%E7%8E%B0%E4%B8%80%E6%8F%92%E5%80%BC%E6%B3%95"><span class="nav-number">4.1.</span> <span class="nav-text">上采样实现一插值法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8A%E9%87%87%E6%A0%B7%E5%AE%9E%E7%8E%B0%E4%B8%80%E8%BD%AC%E7%BD%AE%E5%8D%B7%E7%A7%AF"><span class="nav-number">4.2.</span> <span class="nav-text">上采样实现一转置卷积</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E7%BB%8F%E5%85%B8%E6%A8%A1%E5%9E%8B"><span class="nav-number">5.</span> <span class="nav-text">语义分割经典模型</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#fcn-fully-convolutional-network"><span class="nav-number">5.1.</span> <span class="nav-text">FCN (Fully convolutional
+network)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#segnet"><span class="nav-number">5.2.</span> <span class="nav-text">SegNet</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#segnet%E7%BD%91%E7%BB%9C%E7%BB%93%E6%9E%84"><span class="nav-number">5.2.1.</span> <span class="nav-text">SEGNET网络结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#segnet%E7%BD%91%E7%BB%9C%E7%BB%86%E8%8A%82"><span class="nav-number">5.2.2.</span> <span class="nav-text">SEGNET网络细节</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#unet"><span class="nav-number">5.3.</span> <span class="nav-text">UNet</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E6%A8%A1%E5%9E%8B%E6%94%B9%E8%BF%9B"><span class="nav-number">6.</span> <span class="nav-text">语义分割模型改进</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%AD%E4%B9%89%E5%88%86%E5%89%B2%E9%9A%BE%E9%A2%98"><span class="nav-number">6.1.</span> <span class="nav-text">语义分割难题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%86%A8%E8%83%80%E5%8D%B7%E7%A7%AF%E7%A9%BA%E6%B4%9E%E5%8D%B7%E7%A7%AF"><span class="nav-number">6.2.</span> <span class="nav-text">膨胀卷积（空洞卷积）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%86%A8%E8%83%80%E5%8D%B7%E7%A7%AF%E7%BB%93%E6%9E%84%E8%AE%BE%E8%AE%A1"><span class="nav-number">6.2.1.</span> <span class="nav-text">膨胀卷积结构设计</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E5%8F%98%E5%BD%A2%E5%8D%B7%E7%A7%AFdeformable-conv"><span class="nav-number">6.3.</span> <span class="nav-text">可变形卷积（deformable conv）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%9A%E5%B0%BA%E5%BA%A6%E7%89%B9%E5%BE%81%E8%9E%8D%E5%90%88%E6%A1%86%E6%9E%B6"><span class="nav-number">6.4.</span> <span class="nav-text">多尺度特征融合框架</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#parsenet"><span class="nav-number">6.4.1.</span> <span class="nav-text">parseNet</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#pspnet%E9%87%91%E5%AD%97%E5%A1%94%E6%B1%A0%E5%8C%96"><span class="nav-number">6.4.2.</span> <span class="nav-text">PSPNet（金字塔池化）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#refinenet"><span class="nav-number">6.4.3.</span> <span class="nav-text">RefineNet</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#crf"><span class="nav-number">6.5.</span> <span class="nav-text">CRF</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#cnn%E7%9A%84%E7%BC%BA%E9%99%B7"><span class="nav-number">6.5.1.</span> <span class="nav-text">cnn的缺陷</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#crf-%E5%8E%9F%E7%90%86"><span class="nav-number">6.5.2.</span> <span class="nav-text">CRF 原理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#crf%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">6.5.3.</span> <span class="nav-text">CRF的使用</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="图像分割 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          图像分割
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-01-07 22:46:56" itemprop="dateCreated datePublished" datetime="2023-01-07T22:46:56+08:00">2023-01-07</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2023-01-08 11:54:25" itemprop="dateModified" datetime="2023-01-08T11:54:25+08:00">2023-01-08</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/AI/" itemprop="url" rel="index"><span itemprop="name">AI</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>2.6k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>2 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="图像分割分类">图像分割分类</h2>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225200305.png" alt="image-20230107225200305">
+<figcaption aria-hidden="true">image-20230107225200305</figcaption>
+</figure>
+<p>语义分割：每一个像素必须且只能属于一类，预测结果为掩膜</p>
+<p>实例分割：只预测前景目标的类别属性以及边框，个体ID，每一个像素可以属于多个ID</p>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107225809249.png" alt="image-20230107225809249">
+<figcaption aria-hidden="true">image-20230107225809249</figcaption>
+</figure>
+<p>比如上面所示因为有遮挡所以每一个像素可以属于多个ID</p>
+<p>全景分割（panoptic
+segmentation）每个像素点分配一个语义类别和一个<strong>唯一</strong>的实例ID</p>
+<ul>
+<li><p>如果所有的类别都是stuff那么全景分割除了度
+量，与语义分割相同。</p></li>
+<li><p>全景分割中不允许重叠，但实例分割可以；实例分割需要每个分割的置信概率，但全景分割不需要。</p></li>
+</ul>
+<h2 id="经典数据集">经典数据集</h2>
+<h3 id="pascal-voc">pascal VOC</h3>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230213794.png" alt="image-20230107230213794">
+<figcaption aria-hidden="true">image-20230107230213794</figcaption>
+</figure>
+<p>一共2913张图，1464张训练图片，1449张验证图片</p>
+<h3 id="cityscape">Cityscape</h3>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230323009.png" alt="image-20230107230323009">
+<figcaption aria-hidden="true">image-20230107230323009</figcaption>
+</figure>
+<p>5000张精细标注的图像（2975张训练图,立硏长验证图和1525张测试图）、20000
+张粗略标注图像</p>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230434354.png" alt="image-20230107230434354">
+<figcaption aria-hidden="true">image-20230107230434354</figcaption>
+</figure>
+<h3 id="coco">COCO</h3>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107230635130.png" alt="image-20230107230635130">
+<figcaption aria-hidden="true">image-20230107230635130</figcaption>
+</figure>
+<p>共 91 类，以人类 4 岁小孩能够辨识为基准，其中 82 类有超过 5 000 个
+instance。</p>
+<h2 id="评估指标与优化标准">评估指标与优化标准</h2>
+<p>评估指标</p>
+<ul>
+<li><p>Pixel Accuracy 逐像素分类精度</p>
+<p><span class="math inline">\(\mathrm{PA}=\frac{\sum_{\mathrm{i}=0}^k
+p_{i i}}{\sum_{i=0}^k \sum_{j=0}^k p_{i j}}\)</span></p></li>
+<li><p>Mean Pixel Accuracy 每个类内被正确分类像素数的比例</p></li>
+<li><p>IOU ：前景目标交并比。</p>
+<p><span class="math inline">\(I o U_0=\frac{\mathrm{A} \cap
+\mathrm{B}}{\mathrm{A} \cup \mathrm{B}}\)</span></p>
+<figure>
+<img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234531078.png" alt="image-20230107234531078">
+<figcaption aria-hidden="true">image-20230107234531078</figcaption>
+</figure></li>
+<li><p>FWIOU 每个类的 foU 平均值：根据每个类出现的频率给 mioU
+计算权重</p></li>
+</ul>
+<p>优化目标</p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107231727165.png"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232016372.png" alt="image-20230107232016372" style="zoom:80%;"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107232104818.png"></p>
+<h2 id="上采样方法">上采样方法</h2>
+<p>上采样：得到语义分割的掩膜</p>
+<p>图像分割网络的两个模块卷积模块：</p>
+<ul>
+<li><p>提取特征反卷积模块</p></li>
+<li><p>上采样恢复到原图尺度</p></li>
+</ul>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107234628180.png"></p>
+<h3 id="上采样实现一插值法">上采样实现一插值法</h3>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235043023.png"></p>
+<h3 id="上采样实现一转置卷积">上采样实现一转置卷积</h3>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235716530.png"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230107235903668.png"></p>
+<p><strong>典型图像分割网络</strong></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000042897.png"></p>
+<h2 id="语义分割经典模型">语义分割经典模型</h2>
+<h3 id="fcn-fully-convolutional-network">FCN (Fully convolutional
+network)</h3>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000312306.png"></p>
+<p>类似 VGG+双线性上采样</p>
+<p>随着网络加深特征图越来越小，特征越来越抽象</p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000539139.png"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108000906883.png"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108001411621.png"></p>
+<ul>
+<li><p>FCN32x：对conv7的预测结果进行32倍上采样（对应步长pool5）</p></li>
+<li><p>FCN16x·对conv7的预测结果上采样2倍，与poo14+conv预测结果相加，然后进行16倍上采样</p></li>
+<li><p>FCN8x：对FCN16x预测结果上采样2倍，poo13+conv预测结果相加，然后进行8倍上采样</p></li>
+<li><p>中间两个上采样使用双线性插值初始化并进行学习，最后一个上采样不学习</p></li>
+</ul>
+<h3 id="segnet">SegNet</h3>
+<h4 id="segnet网络结构">SEGNET网络结构</h4>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093010812.png"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108093215937.png"></p>
+<h4 id="segnet网络细节">SEGNET网络细节</h4>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108094522966.png"></p>
+<h3 id="unet">UNet</h3>
+<p>Unet结构：</p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108095705398.png"></p>
+<h2 id="语义分割模型改进">语义分割模型改进</h2>
+<h3 id="语义分割难题">语义分割难题</h3>
+<ol type="1">
+<li>分辨率问题</li>
+</ol>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100135509.png"></p>
+<p>空间不变性：CNN分类的时候换一个位置分类还是相同的，但是分割问题要求不同位置的像素分类是不同的（比如两个人）</p>
+<ol start="2" type="1">
+<li>分类错误问题</li>
+</ol>
+<p>相似形状与复杂纹理带来的分类错误</p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108100537739.png"></p>
+<p>合理的先验关系（Mismatched
+Relationship）（如上图第一行，车在水里不符合先验关系）
+混淆的类别（Confusion Categories） 不容易区分的类别（lnconspicuous
+Classes）</p>
+<p>解决思路：</p>
+<p>从更高分辨率的特征图开始恢复
+利用充足的上下文信息（Cntext，感受野）</p>
+<h3 id="膨胀卷积空洞卷积">膨胀卷积（空洞卷积）</h3>
+<p>原来的<span class="math inline">\(3\times3\)</span>卷积只能覆盖边界为3的区域，膨胀后覆盖的区域变大</p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108101943717.png"></p>
+<p>与其他曾加感受野的方法相比，膨胀卷积优势明显：
+与使用更大的卷积核比较：有更少的卷积参数
+与池化相比：保留了更大的卷积特征图
+与增加网络深度比较：有更少的网络层和计算量</p>
+<h4 id="膨胀卷积结构设计">膨胀卷积结构设计</h4>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102332153.png"></p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102446730.png"></p>
+<p>应用：</p>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108102517972.png"></p>
+<h3 id="可变形卷积deformable-conv">可变形卷积（deformable conv）</h3>
+<p>!(./图像分割/image-20230108102615922.png)</p>
+<h3 id="多尺度特征融合框架">多尺度特征融合框架</h3>
+<h4 id="parsenet">parseNet</h4>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103114866.png"></p>
+<p>全局特征与局部特征融合</p>
+<h4 id="pspnet金字塔池化">PSPNet（金字塔池化）</h4>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103236667.png"></p>
+<h4 id="refinenet">RefineNet</h4>
+<p>逐层进行多种分辨率的特征图融合</p>
+<ul>
+<li>首先用卷积层获得尺寸不变的特征</li>
+<li>然后使用上采样操做将所有特征图扩展为尺寸相同的特征图</li>
+<li>最后使用求和操作融合所有的特征图</li>
+</ul>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103655080.png"></p>
+<h3 id="crf">CRF</h3>
+<h4 id="cnn的缺陷">cnn的缺陷</h4>
+<p>CNN是对每一个像素单独进行预测，没有更好的考虑像素间的关系。</p>
+<p>经典的cnn是局部的方法，即感受野是局部而不个图像
+cnn具有空间变换不变性，这也了降低了分割的边缘定位精度</p>
+<h4 id="crf-原理">CRF 原理</h4>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108103953333.png"></p>
+<p>区域能量项：picewise</p>
+<p>相同区域的像素分到一起（类似聚类）</p>
+<p>一般使用直方图或混合高斯模型：</p>
+<p>属于同一个目标的，颜色一般会比较一致</p>
+<p>$U(, , )=_n-h(z_n ; _n) $</p>
+<p><span class="math inline">\(\quad D\left(\alpha_n, k_n,
+\underline{\theta}, z_n\right)=-\log \pi\left(\alpha_n,
+k_n\right)+\frac{1}{2} \log \operatorname{det} \Sigma\left(\alpha_n,
+k_n\right)\)</span> <span class="math inline">\(+\frac{1}{2}\left[z_n-\mu\left(\alpha_n,
+k_n\right)\right]^{\top} \Sigma\left(\alpha_n,
+k_n\right)^{-1}\left[z_n-\mu\left(\alpha_n,
+k_n\right)\right]\)</span></p>
+<p>边缘能量项：pairwise</p>
+<p>衡量两个不相同区域的相似性的</p>
+<p>平滑能量项（如果是不同目标，就应该取不同的标签，如果取了相同的标签，就给一个惩罚：</p>
+<p><span class="math inline">\(\exp
+-\beta\left(z_m-z_n\right)^2\)</span></p>
+<p><span class="math inline">\(V(\underline{\alpha}, \mathbf{z})=\gamma
+\sum_{(m, n) \in \mathbf{C}} \operatorname{dis}(m, n)^{-1}\left[\alpha_n
+\neq \alpha_m\right] \exp -\beta\left(z_m-z_n\right)^2\)</span></p>
+<h4 id="crf的使用">CRF的使用</h4>
+<ol type="1">
+<li>直接分步后处理。将其用于处理cnn网络的输出。例如：</li>
+</ol>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108112014166.png"></p>
+<ol start="2" type="1">
+<li>直接融合进cnn的框架。如牛津大学Torr-Vision提出的crf as
+Cnn在边缘定位精度取得很大提升</li>
+</ol>
+<p><img src="/2023/01/07/AI/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/image-20230108111922640.png"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%9B%BE%E5%83%8F%E5%88%86%E5%89%B2/" rel="tag"># 图像分割</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/01/07/AI/%E5%8D%B7%E7%A7%AF%E9%9B%86%E9%94%A6/" rel="prev" title="卷积集锦">
+                  <i class="fa fa-chevron-left"></i> 卷积集锦
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/01/08/AI/%E7%9B%AE%E6%A0%87%E6%A3%80%E6%B5%8B/" rel="next" title="目标检测">
+                  目标检测 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"e833d4be1fbc0804774a455e65679bcb"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

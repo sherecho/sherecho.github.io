@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="计算机网络知识总结：网安，QOS,P2P,CDN,网络测量，区块链 网络安全 什么是网络安全 网络安全的一个通用定义指网络信息系统的&#x3D;&#x3D;硬件、软件及其系统中的数据受到保护&#x3D;&#x3D;，不因偶然的或者恶意的&#x3D;&#x3D;&#x3D;破坏、更改、泄露&#x3D;&#x3D;， 系统能连续、可靠、正常地运行，服务不中断 网络安全的五大要素  网络安全机制位于协议的那一层 没有一个单独的位置，因为安全性与每一层都有关  物理层：传输">
+<meta property="og:type" content="article">
+<meta property="og:title" content="计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链">
+<meta property="og:url" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="计算机网络知识总结：网安，QOS,P2P,CDN,网络测量，区块链 网络安全 什么是网络安全 网络安全的一个通用定义指网络信息系统的&#x3D;&#x3D;硬件、软件及其系统中的数据受到保护&#x3D;&#x3D;，不因偶然的或者恶意的&#x3D;&#x3D;&#x3D;破坏、更改、泄露&#x3D;&#x3D;， 系统能连续、可靠、正常地运行，服务不中断 网络安全的五大要素  网络安全机制位于协议的那一层 没有一个单独的位置，因为安全性与每一层都有关  物理层：传输">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107102612537.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107103512007.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107121024191.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107104111875.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107134311030.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107115331288.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107122440635.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107134146481.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107144754168.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107145023004.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107135122582.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107135221047.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107135333998.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/RSA.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107143132663.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107150154522.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/单项校验和.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107152236824.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107152738053.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107153038734.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107153632261.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107154112817.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107154221547.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107155747519.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107160931053.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107161507287.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163533680.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163326918.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163350249.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163656215.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163822550.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107170111372.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107170022079.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107170225634.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107171024284.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107171245965.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107172057092.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107172329578.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107173036744.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107173412873.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107172742923.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107211247115.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107211511926.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107211851230.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107213510784.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107214053096.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212224454.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212253846.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212727616.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212859495.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107213356598.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107221848718.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107223522312.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107223756821.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107223817902.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155208673.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155220933.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155615910.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155801545.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108160009131.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108160313664.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108160421526.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108161304014.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108212742091.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108213925839.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108214258060.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108214737343.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220047404.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220311428.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220531357.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220754179.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108221021107.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108221214209.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108221618584.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108222411293.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108223041277.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108225124562.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108230305132.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108230454029.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108234847210.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108234924410.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108235058920.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108235200603.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109091912874.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109092058195.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109092145492.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109092248156.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109093023293.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109093151883.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109100420082.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109102208934.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109103305887.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109103508359.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109103613691.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109104326912.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109110840233.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109111016400.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109105347038.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109105605105.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109105851268.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109112831477.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109113320105.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109113921651.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110180346516.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110161958373.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110162540033.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110162619941.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110175112974.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110175524173.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104220017.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104500726.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104539397.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104801537.png">
+<meta property="og:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111162143396.png">
+<meta property="article:published_time" content="2023-12-29T06:28:24.000Z">
+<meta property="article:modified_time" content="2024-01-17T12:48:59.850Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="期末复习">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107102612537.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/","path":"2023/12/29/Linux网络/计算机网络笔记/计网复习第二弹/","title":"计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链 | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%93%E7%BD%91%E5%AE%89qosp2pcdn%E7%BD%91%E7%BB%9C%E6%B5%8B%E9%87%8F%E5%8C%BA%E5%9D%97%E9%93%BE"><span class="nav-number">1.</span> <span class="nav-text">计算机网络知识总结：网安，QOS,P2P,CDN,网络测量，区块链</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8"><span class="nav-number">1.1.</span> <span class="nav-text">网络安全</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8"><span class="nav-number">1.1.1.</span> <span class="nav-text">什么是网络安全</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E7%9A%84%E4%BA%94%E5%A4%A7%E8%A6%81%E7%B4%A0"><span class="nav-number">1.1.2.</span> <span class="nav-text">网络安全的五大要素</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6%E4%BD%8D%E4%BA%8E%E5%8D%8F%E8%AE%AE%E7%9A%84%E9%82%A3%E4%B8%80%E5%B1%82"><span class="nav-number">1.1.3.</span> <span class="nav-text">网络安全机制位于协议的那一层</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86%E6%8A%80%E6%9C%AF"><span class="nav-number">1.2.</span> <span class="nav-text">加密技术</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8A%A0%E5%AF%86%E7%B1%BB%E5%9E%8B"><span class="nav-number">1.2.1.</span> <span class="nav-text">加密类型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E4%BB%80%E4%B9%88%E6%98%AF%E9%9D%9E%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E5%AF%B9%E6%AF%94%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.2.2.</span> <span class="nav-text">什么是对称加密什么是非对称加密，对比优缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#des%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.3.</span> <span class="nav-text">DES算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E7%A7%B0%E5%8A%A0%E5%AF%86%E7%9A%84%E5%8A%A0%E5%AF%86%E5%92%8C%E7%AD%BE%E5%90%8D%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84"><span class="nav-number">1.2.4.</span> <span class="nav-text">对称加密的加密和签名的基本流程是怎样的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rsa%E7%AE%97%E6%B3%95"><span class="nav-number">1.2.5.</span> <span class="nav-text">RSA算法</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%80%BB%E7%BB%93%E6%80%9D%E8%B7%AF"><span class="nav-number">1.2.5.1.</span> <span class="nav-text">总结思路：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88rsa%E6%98%AF%E6%9C%89%E6%95%88%E7%9A%84"><span class="nav-number">1.2.5.2.</span> <span class="nav-text">为什么RSA是有效的？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E5%90%91%E6%A0%A1%E9%AA%8C%E5%92%8C"><span class="nav-number">1.2.6.</span> <span class="nav-text">单向校验和</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E9%A1%B9%E6%A0%A1%E9%AA%8C%E5%92%8C%E6%98%AF%E6%80%8E%E4%B9%88%E5%81%9A%E7%9A%84%E6%94%B6%E5%88%B0%E4%B8%80%E4%B8%AA%E4%B8%9C%E8%A5%BF%E6%80%8E%E4%B9%88%E9%AA%8C%E8%AF%81%E5%85%B6%E5%AE%8C%E6%95%B4%E6%80%A7%E6%B2%A1%E6%9C%89%E9%81%AD%E5%88%B0%E7%A0%B4%E5%9D%8F"><span class="nav-number">1.2.6.1.</span> <span class="nav-text">单项校验和是怎么做的，收到一个东西怎么验证其完整性没有遭到破坏</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E9%A1%B9%E6%A0%A1%E9%AA%8C%E5%92%8C%E5%87%BA%E7%8E%B0%E4%BA%89%E8%AE%AE%E5%90%8E%E6%80%8E%E4%B9%88%E8%A7%A3%E5%86%B3"><span class="nav-number">1.2.6.2.</span> <span class="nav-text">单项校验和出现争议后怎么解决</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%94%BB%E5%87%BB"><span class="nav-number">1.3.</span> <span class="nav-text">网络攻击</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E4%B8%BB%E5%8A%A8%E6%94%BB%E5%87%BB%E4%BB%80%E4%B9%88%E6%98%AF%E8%A2%AB%E5%8A%A8%E6%94%BB%E5%87%BB%E4%B8%BE%E4%BE%8B%E8%AF%B4%E6%98%8E"><span class="nav-number">1.3.1.</span> <span class="nav-text">什么是主动攻击？什么是被动攻击？举例说明</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#qos"><span class="nav-number">1.4.</span> <span class="nav-text">QOS</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F%E5%9C%A8%E7%BD%91%E7%BB%9C%E5%B1%82%E9%9D%A2%E4%B8%BB%E8%A6%81%E5%85%B3%E6%B3%A8%E9%82%A3%E4%BA%9B%E6%8C%87%E6%A0%87%E6%9C%8D%E5%8A%A1%E8%B4%A8%E9%87%8F%E7%9A%84%E7%9B%AE%E6%A0%87%E6%9C%89%E5%93%AA%E4%BA%9B"><span class="nav-number">1.4.1.</span> <span class="nav-text">什么是服务质量？服务质量在网络层面主要关注那些指标？服务质量的目标有哪些？</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%97%B6%E5%BB%B6"><span class="nav-number">1.4.2.</span> <span class="nav-text">时延</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%A2%E5%8C%85%E6%98%AF%E4%BB%80%E4%B9%88%E5%9C%A8%E6%9C%89%E7%BA%BF%E5%92%8C%E6%97%A0%E7%BA%BF%E7%BD%91%E7%BB%9C%E4%B8%AD%E5%90%84%E6%9C%89%E4%BB%80%E4%B9%88%E5%8E%9F%E5%9B%A0"><span class="nav-number">1.4.3.</span> <span class="nav-text">丢包是什么，在有线和无线网络中各有什么原因</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#integrated-service"><span class="nav-number">1.4.4.</span> <span class="nav-text">Integrated service</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#rsvp-%E6%98%AF%E6%80%8E%E4%B9%88%E5%B7%A5%E4%BD%9C%E7%9A%84"><span class="nav-number">1.4.4.1.</span> <span class="nav-text">RSVP 是怎么工作的？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#rsvp-%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E9%80%90%E8%B7%B3%E7%9A%84%E8%B7%AF%E7%94%B1rsvp%E7%89%B9%E7%82%B9rsvp%E5%B1%9E%E4%BA%8E%E9%82%A3%E4%B8%80%E5%B1%82%E5%8F%AF%E4%BB%A5%E5%8D%95%E6%92%AD%E8%BF%98%E6%98%AF%E5%A4%9A%E6%92%AD%E5%8D%95%E5%90%91%E8%BF%98%E6%98%AF%E5%8F%8C%E5%90%91"><span class="nav-number">1.4.4.2.</span> <span class="nav-text">RSVP
+为什么需要逐跳的路由？RSVP特点？RSVP属于那一层？可以单播还是多播，单向还是双向。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9D%A2%E5%90%91%E6%8E%A5%E6%94%B6%E6%96%B9%E5%92%8C%E9%9D%A2%E5%90%91%E5%8F%91%E9%80%81%E6%96%B9%E7%9A%84%E8%B5%84%E6%BA%90%E9%A2%84%E7%95%99%E5%90%84%E6%9C%89%E4%BB%80%E4%B9%88%E5%A5%BD%E5%A4%84%E4%BD%A0%E8%A7%89%E5%BE%97%E5%93%AA%E4%B8%80%E7%A7%8D%E6%9B%B4%E5%A5%BD"><span class="nav-number">1.4.4.3.</span> <span class="nav-text">面向接收方和面向发送方的资源预留各有什么好处，你觉得哪一种更好？</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#diff-serv"><span class="nav-number">1.4.5.</span> <span class="nav-text">Diff-Serv</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#integrated-service%E5%92%8Cdiff-serv-%E5%90%84%E8%87%AA%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9%E5%92%8C%E9%80%82%E5%BA%94%E7%9A%84%E5%9C%BA%E5%90%88%E5%AF%B9%E6%AF%94"><span class="nav-number">1.4.6.</span> <span class="nav-text">Integrated
+service和Diff-Serv 各自的优缺点和适应的场合对比</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#e-lsp%E5%92%8Cl-lsp"><span class="nav-number">1.4.7.</span> <span class="nav-text">E-LSP和L-LSP</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#qos%E6%9C%BA%E5%88%B6-%E6%8B%A5%E5%A1%9E%E7%AE%A1%E7%90%86%E5%92%8C%E8%B0%83%E5%BA%A6%E7%AD%96%E7%95%A5"><span class="nav-number">1.4.8.</span> <span class="nav-text">QoS机制-拥塞管理和调度策略</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%9F%E5%88%97%E8%B0%83%E5%BA%A6"><span class="nav-number">1.4.8.1.</span> <span class="nav-text">什么是队列调度</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%87%BA%E7%AB%AF%E5%8F%A3%E9%98%9F%E5%88%97%E7%BB%93%E6%9E%84%E4%B8%89%E4%B8%AA%E7%BB%84%E4%BB%B6%E6%98%AF%E4%BB%80%E4%B9%88%E6%9C%89%E4%BB%80%E4%B9%88%E7%94%A8"><span class="nav-number">1.4.8.2.</span> <span class="nav-text">出端口队列结构，三个组件是什么？有什么用？</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%8E%92%E9%98%9F%E7%AD%96%E7%95%A5"><span class="nav-number">1.4.8.3.</span> <span class="nav-text">排队策略</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97pq"><span class="nav-number">1.4.8.3.1.</span> <span class="nav-text">优先队列（PQ）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%AE%9A%E5%88%B6%E9%98%9F%E5%88%97cq"><span class="nav-number">1.4.8.3.2.</span> <span class="nav-text">定制队列（CQ）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%8A%A0%E6%9D%83%E5%85%AC%E5%B9%B3%E9%98%9F%E5%88%97wfq"><span class="nav-number">1.4.8.3.3.</span> <span class="nav-text">加权公平队列（WFQ）</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#wfq%E4%B8%A2%E5%BC%83%E4%BE%8B%E5%AD%90"><span class="nav-number">1.4.8.3.4.</span> <span class="nav-text">WFQ丢弃例子</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%99%E9%87%8C%E6%9C%8910%E4%B8%AA%E5%8C%85"><span class="nav-number">1.4.8.3.4.1.</span> <span class="nav-text">为什么这里有10个包？</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%81%E9%87%8F%E6%95%B4%E5%BD%A2%E6%B5%81%E9%87%8F%E9%99%90%E9%80%9F"><span class="nav-number">1.4.9.</span> <span class="nav-text">流量整形流量限速</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A4%E7%89%8C%E6%A1%B6"><span class="nav-number">1.4.10.</span> <span class="nav-text">令牌桶</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%B5%8B%E9%87%8F"><span class="nav-number">1.5.</span> <span class="nav-text">网络测量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E7%A7%8D%E6%B5%81"><span class="nav-number">1.5.1.</span> <span class="nav-text">四种流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E7%89%B9%E6%80%A7%E5%B1%80%E9%83%A8%E7%89%B9%E6%80%A7"><span class="nav-number">1.5.2.</span> <span class="nav-text">分布特性，局部特性</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E6%B5%8B%E9%87%8F%E5%88%86%E7%B1%BB"><span class="nav-number">1.5.3.</span> <span class="nav-text">网络测量分类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E5%8A%A8%E6%B5%8B%E9%87%8F%E8%A2%AB%E5%8A%A8%E6%B5%8B%E9%87%8F%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.5.4.</span> <span class="nav-text">主动测量被动测量优缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BD%91%E7%BB%9C%E5%B8%A6%E5%AE%BD%E7%9A%84%E6%B5%8B%E9%87%8F"><span class="nav-number">1.5.5.</span> <span class="nav-text">网络带宽的测量</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%A6%E5%AE%BD%E5%A4%A7%E7%9A%84%E7%BD%91%E7%BB%9C%E6%97%B6%E5%BB%B6%E4%B8%80%E5%AE%9A%E5%B0%8F%E5%90%97%E6%97%B6%E5%BB%B6%E5%A4%A7%E7%9A%84%E7%BD%91%E7%BB%9C%E5%B8%A6%E5%AE%BD%E4%B8%80%E5%AE%9A%E4%BD%8E%E5%90%97%E8%AF%B4%E6%98%8E%E5%8E%9F%E5%9B%A0%E4%BE%8B%E5%AD%90"><span class="nav-number">1.5.5.1.</span> <span class="nav-text">带宽大的网络时延一定小吗？时延大的网络带宽一定低吗？说明原因&#x2F;例子</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B8%A6%E5%AE%BD%E5%92%8C%E7%93%B6%E9%A2%88%E5%B8%A6%E5%AE%BD"><span class="nav-number">1.5.5.2.</span> <span class="nav-text">带宽和瓶颈带宽</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%AF%E7%94%A8%E5%B8%A6%E5%AE%BD%E6%B5%8B%E9%87%8F"><span class="nav-number">1.5.5.3.</span> <span class="nav-text">可用带宽测量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%93%B6%E9%A2%88%E5%B8%A6%E5%AE%BD%E6%B5%8B%E9%87%8F"><span class="nav-number">1.5.5.4.</span> <span class="nav-text">瓶颈带宽测量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%B8%A2%E5%8C%85%E7%8E%87"><span class="nav-number">1.5.5.5.</span> <span class="nav-text">丢包率</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%AB%E5%90%8D%E8%A7%A3%E6%9E%90%E5%B8%B8%E7%94%A8%E6%96%B9%E6%B3%95%E4%B8%8D%E5%81%9A%E5%88%AB%E5%90%8D%E8%A7%A3%E6%9E%90%E4%BC%9A%E6%9C%89%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="nav-number">1.5.6.</span> <span class="nav-text">别名解析，常用方法，不做别名解析会有什么问题</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cdn-%E5%86%85%E5%AE%B9%E5%88%86%E5%8F%91%E7%BD%91%E7%BB%9C"><span class="nav-number">1.6.</span> <span class="nav-text">CDN 内容分发网络</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#cdn%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="nav-number">1.6.1.</span> <span class="nav-text">CDN解决什么问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zipf"><span class="nav-number">1.6.2.</span> <span class="nav-text">zipf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#web%E7%BC%93%E5%AD%98%E5%92%8Cweb%E7%BC%93%E5%AD%98%E5%AD%98%E5%9C%A8%E7%9A%84%E9%97%AE%E9%A2%98"><span class="nav-number">1.6.3.</span> <span class="nav-text">web缓存，和web缓存存在的问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#cdn%E5%8E%9F%E7%90%86"><span class="nav-number">1.6.4.</span> <span class="nav-text">CDN原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#cdn%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98cdn%E9%80%89%E6%8B%A9%E9%82%A3%E4%B8%AA%E6%9C%8D%E5%8A%A1%E5%99%A8"><span class="nav-number">1.6.4.1.</span> <span class="nav-text">CDN核心问题·：CDN选择那个服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%93%E5%AD%98%E4%BB%80%E4%B9%88%E5%86%85%E5%AE%B9"><span class="nav-number">1.6.4.2.</span> <span class="nav-text">服务器缓存什么内容</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AD%98%E4%B8%8D%E4%B8%8B%E6%80%8E%E4%B9%88%E5%8A%9E"><span class="nav-number">1.6.4.3.</span> <span class="nav-text">存不下怎么办</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dash"><span class="nav-number">1.6.5.</span> <span class="nav-text">dash</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#qoe%E5%85%B3%E6%B3%A8%E9%82%A3%E4%BA%9B%E5%8F%82%E6%95%B0"><span class="nav-number">1.6.6.</span> <span class="nav-text">QOE关注那些参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#qoe%E5%92%8Cqos%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB"><span class="nav-number">1.6.7.</span> <span class="nav-text">QOE和QOS有什么区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%86%E9%A2%91%E7%9B%B4%E6%92%AD%E7%9A%84%E6%97%B6%E5%BB%B6%E6%9C%89%E4%B8%A4%E4%B8%AA%E6%97%B6%E5%BB%B6"><span class="nav-number">1.6.8.</span> <span class="nav-text">视频直播的时延有两个时延</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#p2p-peer-to-peer"><span class="nav-number">1.7.</span> <span class="nav-text">P2P peer-to-peer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%81%9Ap2p"><span class="nav-number">1.7.1.</span> <span class="nav-text">为什么要做P2P</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#flooding"><span class="nav-number">1.7.2.</span> <span class="nav-text">flooding</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#bt"><span class="nav-number">1.7.3.</span> <span class="nav-text">BT</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#bittorrent%E6%80%8E%E4%B9%88%E5%B7%A5%E4%BD%9C%E7%9A%84"><span class="nav-number">1.7.3.1.</span> <span class="nav-text">bittorrent怎么工作的：</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%8C%96p2p"><span class="nav-number">1.7.4.</span> <span class="nav-text">结构化P2P</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#chord"><span class="nav-number">1.7.4.1.</span> <span class="nav-text">chord</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE"><span class="nav-number">1.8.</span> <span class="nav-text">区块链</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%AF%94%E7%89%B9%E5%B8%81%E5%92%8C%E4%BB%A5%E5%A4%AA%E5%9D%8A%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.8.1.</span> <span class="nav-text">比特币和以太坊的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%88%E6%9D%83%E9%93%BE%E9%9D%9E%E6%8E%88%E6%9D%83%E9%93%BE%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">1.8.2.</span> <span class="nav-text">授权链非授权链优缺点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE%E6%80%8E%E4%B9%88%E5%B7%A5%E4%BD%9C%E7%9A%84"><span class="nav-number">1.8.3.</span> <span class="nav-text">区块链怎么工作的</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E5%8C%BA%E5%9D%97%E9%93%BE%E5%8C%BA%E5%9D%97%E9%93%BE%E7%9A%84%E4%BC%98%E7%82%B9"><span class="nav-number">1.8.4.</span> <span class="nav-text">什么是区块链，区块链的优点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE%E5%92%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">1.8.5.</span> <span class="nav-text">区块链和数据库的区别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE%E7%89%BA%E7%89%B2%E4%BA%86%E4%BB%80%E4%B9%88"><span class="nav-number">1.8.6.</span> <span class="nav-text">区块链牺牲了什么</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE%E7%9A%84%E5%BA%94%E7%94%A8"><span class="nav-number">1.8.7.</span> <span class="nav-text">区块链的应用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%BA%E5%9D%97%E9%93%BE%E8%B7%A8%E9%93%BE%E6%8A%80%E6%9C%AF"><span class="nav-number">1.9.</span> <span class="nav-text">区块链跨链技术</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链 | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          计算机网络知识总结-网安-QOS-P2P-CDN-网络测量-区块链
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2023-12-29 14:28:24" itemprop="dateCreated datePublished" datetime="2023-12-29T14:28:24+08:00">2023-12-29</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-01-17 20:48:59" itemprop="dateModified" datetime="2024-01-17T20:48:59+08:00">2024-01-17</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C/" itemprop="url" rel="index"><span itemprop="name">计算机网络</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>6.7k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>6 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="计算机网络知识总结网安qosp2pcdn网络测量区块链">计算机网络知识总结：网安，QOS,P2P,CDN,网络测量，区块链</h1>
+<h2 id="网络安全">网络安全</h2>
+<h3 id="什么是网络安全">什么是网络安全</h3>
+<p>网络安全的一个通用定义指网络信息系统的==硬件、软件及其系统中的数据受到保护==，不因偶然的或者恶意的===破坏、更改、泄露==，
+系统能连续、可靠、正常地运行，服务不中断</p>
+<h3 id="网络安全的五大要素">网络安全的五大要素</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107102612537.png"></p>
+<h3 id="网络安全机制位于协议的那一层">网络安全机制位于协议的那一层</h3>
+<p>没有一个单独的位置，因为安全性与每一层都有关</p>
+<ul>
+<li>物理层：传输线封装在包含高压氩气的密封管，漏气报警</li>
+<li>数据链路层：点到点线路加解密，不能经过中间路由器</li>
+<li>网络层：防火墙、IP报文头的安全域</li>
+<li>传输层：端到端连接的加解密</li>
+<li>应用层：大多数安全机制都集中在此层</li>
+</ul>
+<h2 id="加密技术">加密技术</h2>
+<h3 id="加密类型">加密类型</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107103512007.png"></p>
+<h3 id="什么是对称加密什么是非对称加密对比优缺点">什么是对称加密什么是非对称加密，对比优缺点</h3>
+<p>单密钥加密又称为对称加密</p>
+<p>经典算法：DES, 3-DES, AES, IDEA, SMS4, RC5, TRIVIUM</p>
+<p>非对称加密就是公开密钥加密采用公钥私钥两个密钥。是两位学者以单向函数与单向暗门函数为基础，为发讯与收讯的两
+方创建密钥。</p>
+<p>经典算法：RSA、ElGamal、Elliptic Curve Cryptography, ECC</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107121024191.png"></p>
+<p><strong>对称加密</strong> ：</p>
+<ul>
+<li><p>优势：加密解密速度快</p></li>
+<li><p>缺点：</p>
+<ul>
+<li>1.密钥管理量大 <img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107104111875.png"></li>
+<li><ol start="2" type="1">
+<li><p>密钥传输信道要求更高安全性：如何保证密钥可靠</p>
+<ul>
+<li><p>密钥传输和密文在同一信道传输</p></li>
+<li><p>同时被窃取，很容易被破解出明文，并不安全</p></li>
+</ul></li>
+</ol></li>
+<li>3.数字签名的问题:通过对称密钥加密很难实现数字签名技术，无法有效的进行完整性的检验</li>
+</ul>
+<p><strong>非对称密钥加密</strong></p>
+<p>主要特点：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107134311030.png"></p></li>
+</ul>
+<h3 id="des算法">DES算法</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107115331288.png"></p>
+<h3 id="对称加密的加密和签名的基本流程是怎样的">对称加密的加密和签名的基本流程是怎样的</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107122440635.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107134146481.png"></p>
+<p>数字签名特性：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107144754168.png"></p>
+<p>不可伪造，不可抵赖</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107145023004.png"></p>
+<h3 id="rsa算法">RSA算法</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107135122582.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107135221047.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107135333998.png"></p>
+<p>例题2：</p>
+<blockquote>
+<p><strong>1.假设需要加密的明文信息为m=85，选择：e=7，p=11，q=13，说明使用RSA算法的加密和解密</strong></p>
+</blockquote>
+<p>首先计算 n=p<em>q=143 和z=10 </em> 12 =120</p>
+<p>e=7</p>
+<p>e*d≡1 mod z</p>
+<p>d=103</p>
+<p>公钥：（e=7，n=143）</p>
+<p>私钥 （d=103，n=143）</p>
+<p>加密：<span class="math inline">\(C=M^{e}mod n=85^{7}mod
+143\)</span>=123</p>
+<p>解密<span class="math inline">\(M=C^{d}mod n\)</span>=85</p>
+<h4 id="总结思路">总结思路：</h4>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/RSA.png" alt="rsa">
+<figcaption aria-hidden="true">rsa</figcaption>
+</figure>
+<h4 id="为什么rsa是有效的">为什么RSA是有效的？</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107143132663.png"></p>
+<h3 id="单向校验和">单向校验和</h3>
+<h4 id="单项校验和是怎么做的收到一个东西怎么验证其完整性没有遭到破坏">单项校验和是怎么做的，收到一个东西怎么验证其完整性没有遭到破坏</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107150154522.png"></p>
+<p>发送者首先计算CK(m)，然后用私人密钥将其加密产生密文D_A(CK(M)),将（m，D_A(CK(M))对偶传送到B,报文本身可以使用明文发送或者用公开加密技术加密，后面跟加密的校验和。</p>
+<p>当报文和校验和到达B后，B对签名部分即（D_A(CK(m）))应用E_A得到CK(m)。此时B有m，ck(m)和D_A(CK(M))。B对m应用CK看此结果是否与收到的ck(m)一致若是则说明报文没有遭到篡改，否则说明报文被篡改。</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/单项校验和.png" alt="单项校验和">
+<figcaption aria-hidden="true">单项校验和</figcaption>
+</figure>
+<h4 id="单项校验和出现争议后怎么解决">单项校验和出现争议后怎么解决</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107152236824.png"></p>
+<h2 id="网络攻击">网络攻击</h2>
+<h3 id="什么是主动攻击什么是被动攻击举例说明">什么是主动攻击？什么是被动攻击？举例说明</h3>
+<p>主动攻击：主动攻击会导致某些==数据流的篡改==和==虚假数据流==的产生。这类攻击可分为==篡
+改==、==伪造==消息数据和终端，==拒绝服务==。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107152738053.png"></p>
+<p>被动攻击中攻击者==不对数据信息做任何修改==，截取/窃听是指在未经用户同
+意的情况下攻击者获得了信息。通常包括==窃听、流量分析、破解弱加密的数据流==等攻击方式</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107153038734.png" alt="image-20240107153038734">
+<figcaption aria-hidden="true">image-20240107153038734</figcaption>
+</figure>
+<h2 id="qos">QOS</h2>
+<h3 id="什么是服务质量服务质量在网络层面主要关注那些指标服务质量的目标有哪些">什么是服务质量？服务质量在网络层面主要关注那些指标？服务质量的目标有哪些？</h3>
+<ul>
+<li><p>QoS（Quality of Service）即服务质量</p></li>
+<li><p>网络层面主要关注：带宽、时延、丢包率等。</p></li>
+</ul>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107153632261.png" alt="image-20240107153632261">
+<figcaption aria-hidden="true">image-20240107153632261</figcaption>
+</figure>
+<h3 id="时延">时延</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107154112817.png" alt="image-20240107154112817">
+<figcaption aria-hidden="true">image-20240107154112817</figcaption>
+</figure>
+<p>从一端看</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107154221547.png" alt="image-20240107154221547">
+<figcaption aria-hidden="true">image-20240107154221547</figcaption>
+</figure>
+<p>其中，传播时延和处理时延都是很难改变的，QOS主要关注的是排队时延</p>
+<h3 id="丢包是什么在有线和无线网络中各有什么原因">丢包是什么，在有线和无线网络中各有什么原因</h3>
+<p>丢包通常发生在输出队列满的时候，也有一些其他类型的 丢包
+（输入队列丢包、错误、故障等）</p>
+<p>在有线网络中==链路拥塞==是丢包的重要原因</p>
+<p>在无线网络中丢包通常是由于==信道质量差==造成的。</p>
+<h3 id="integrated-service">Integrated service</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107155747519.png" alt="image-20240107155747519">
+<figcaption aria-hidden="true">image-20240107155747519</figcaption>
+</figure>
+<h4 id="rsvp-是怎么工作的">RSVP 是怎么工作的？</h4>
+<p>RSVP（资源预留协议
+），RSVP==运行在从源端到目的端的每个设备上==，可以==监视每个流==，以防止其消耗资源过多。这种体系能够明确区分并保证每一个业务流的服务质量，为网络提
+供最细粒度化的服务质量区分。</p>
+<h4 id="rsvp-为什么需要逐跳的路由rsvp特点rsvp属于那一层可以单播还是多播单向还是双向">RSVP
+为什么需要逐跳的路由？RSVP特点？RSVP属于那一层？可以单播还是多播，单向还是双向。</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107160931053.png" alt="image-20240107160931053" style="zoom:80%;"></p>
+<p>==RSVP是面向接收方==</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107161507287.png" alt="image-20240107161507287" style="zoom:80%;"></p>
+<h4 id="面向接收方和面向发送方的资源预留各有什么好处你觉得哪一种更好">面向接收方和面向发送方的资源预留各有什么好处，你觉得哪一种更好？</h4>
+<p>面向接收方：收费模型一般是按照接收方确认收费的，接收方可以自主选择接收质量</p>
+<h3 id="diff-serv">Diff-Serv</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163533680.png" alt="=">
+<figcaption aria-hidden="true">=</figcaption>
+</figure>
+<h3 id="integrated-service和diff-serv-各自的优缺点和适应的场合对比">Integrated
+service和Diff-Serv 各自的优缺点和适应的场合对比</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163326918.png" alt="=">
+<figcaption aria-hidden="true">=</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163350249.png" alt="=">
+<figcaption aria-hidden="true">=</figcaption>
+</figure>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163656215.png" alt="image-20240107163656215" style="zoom:80%;"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107163822550.png"></p>
+<h3 id="e-lsp和l-lsp">E-LSP和L-LSP</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107170111372.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107170022079.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107170225634.png"></p>
+<p>e-lsp的EXP标记的交换路径最多可以支持8个服务等级，L-LSP一个标签交换路径支持一个QOS等级</p>
+<h3 id="qos机制-拥塞管理和调度策略">QoS机制-拥塞管理和调度策略</h3>
+<h4 id="什么是队列调度">什么是队列调度</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107171024284.png"></p>
+<h4 id="出端口队列结构三个组件是什么有什么用">出端口队列结构，三个组件是什么？有什么用？</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107171245965.png"></p>
+<p>排队策略决定数据包能不能被排队，怎样被排队</p>
+<p>服务策略：有很多的数据包怎样选择数据包放到硬件发送队列里面去i。</p>
+<h4 id="排队策略">排队策略</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107172057092.png"></p>
+<h5 id="优先队列pq">优先队列（PQ）</h5>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107172329578.png" alt="image-20240107172329578" style="zoom:50%;"></p>
+<p>优点 ：算法简单，可以保障高优先级的QoS</p>
+<p>缺点 ：算法欠公平， 高优先级队列可能会饿死其他队列</p>
+<h5 id="定制队列cq">定制队列（CQ）</h5>
+<p>CQ (Custom queuing): 定制队列，用户可配置队列占用的带宽比例关系；</p>
+<p>各队列在统计规率上满足用户配置的带宽比例；</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107173036744.png"></p>
+<p>带抢占的CQ:</p>
+<p>CQ共分为17个队列: 0号队列为系统队列，优先调度;
+1-16为用户队列，轮询调度；</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107173412873.png" alt="image-20240107173412873" style="zoom:67%;"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107172742923.png" alt="image-20240107172742923" style="zoom:50%;"></p>
+<h5 id="加权公平队列wfq">加权公平队列（WFQ）</h5>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107211247115.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107211511926.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107211851230.png" alt="image-20240107211851230" style="zoom:80%;"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107213510784.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107214053096.png"></p>
+<p>WFQ入队过程采用HASH算法来自动完成，尽量将不同的流分入不同的队列。（所以说分离不用配置）</p>
+<p>在出队的时候，WFQ按流的优先级(precedence)来分配每个流应占有出口的带宽。优先级的数值越小，所得的带宽越少。优先级的数值越大，所得的带宽越多。这样就保证了相同优先级业务之间的公平，体现了不同优先级业务之间的权值。所以兼顾了所有流的带宽，而且优先保障了高优先级的QOS</p>
+<h5 id="wfq丢弃例子">WFQ丢弃例子</h5>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212224454.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212253846.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212727616.png" alt="image-20240107212727616" style="zoom:60%;"></p>
+<h6 id="为什么这里有10个包">为什么这里有10个包？</h6>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107212859495.png"></p>
+<p>这里有10个包，说明上一个来的包可能是那些？</p>
+<p>说明上一次和这次一样，超过CDT但是不是系统的最后一个包因此入列了。</p>
+<p>因此上一次入队的包可能是下面选中的三个中的一个</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107213356598.png"></p>
+<h3 id="流量整形流量限速">流量整形流量限速</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107221848718.png"></p>
+<h3 id="令牌桶">令牌桶</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107223522312.png" alt="image-20240107223522312">
+<figcaption aria-hidden="true">image-20240107223522312</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107223756821.png" alt="image-20240107223756821">
+<figcaption aria-hidden="true">image-20240107223756821</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240107223817902.png" alt="image-20240107223817902">
+<figcaption aria-hidden="true">image-20240107223817902</figcaption>
+</figure>
+<h2 id="网络测量">网络测量</h2>
+<h3 id="四种流">四种流</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155208673.png" alt="image-20240108155208673">
+<figcaption aria-hidden="true">image-20240108155208673</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155220933.png" alt="image-20240108155220933">
+<figcaption aria-hidden="true">image-20240108155220933</figcaption>
+</figure>
+<h3 id="分布特性局部特性">分布特性，局部特性</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155615910.png" alt="image-20240108155615910">
+<figcaption aria-hidden="true">image-20240108155615910</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108155801545.png" alt="image-20240108155801545">
+<figcaption aria-hidden="true">image-20240108155801545</figcaption>
+</figure>
+<h3 id="网络测量分类">网络测量分类</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108160009131.png" alt="image-20240108160009131">
+<figcaption aria-hidden="true">image-20240108160009131</figcaption>
+</figure>
+<h3 id="主动测量被动测量优缺点">主动测量被动测量优缺点</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108160313664.png" alt="image-20240108160313664">
+<figcaption aria-hidden="true">image-20240108160313664</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108160421526.png" alt="image-20240108160421526">
+<figcaption aria-hidden="true">image-20240108160421526</figcaption>
+</figure>
+<p>测量三要素：测量对象，测量环境，测量方法</p>
+<p>什么样的测量方法是比较好的：</p>
+<p>1.稳健性-》可重复性 相同的网络环境下，多次测结果是一致的</p>
+<p>测量带宽时延丢包率</p>
+<h3 id="网络带宽的测量">网络带宽的测量</h3>
+<h4 id="带宽大的网络时延一定小吗时延大的网络带宽一定低吗说明原因例子">带宽大的网络时延一定小吗？时延大的网络带宽一定低吗？说明原因/例子</h4>
+<p>带宽大的网络时延一定小吗？时延大的网络带宽一定低吗？</p>
+<p>不一定。网络的带宽和时延是两个不同的概念，它们描述了网络性能的不同方面。</p>
+<ol type="1">
+<li><strong>带宽（Bandwidth）：</strong>
+带宽是指网络传输数据的能力，通常以每秒传输的比特数（bps）来衡量。更大的带宽表示网络能够传输更多的数据量。高带宽通常与更高的数据传输速率相关。</li>
+<li><strong>时延（Latency）：</strong>
+时延是指数据从发送端到接收端所经历的总时间。时延可以分为多个组成部分，包括传播时延、传输时延、处理时延等。较小的时延表示数据传输更迅速。</li>
+</ol>
+<p>现实中，带宽和时延之间没有直接的必然关系。一个网络可以有很大的带宽，但由于其他因素（例如路由器、交换机、距离等），仍然可能有相对较高的时延。同样，一个网络的时延可能很小，但如果其带宽不足以支持大量的数据传输，仍然可能导致性能问题。</p>
+<p>综上所述，带宽和时延是两个独立的网络性能指标，它们可以在某些情况下相关，但并不一定总是正相关或负相关。在设计和评估网络时，通常需要同时考虑带宽和时延以确保满足特定的应用需求。</p>
+<p>举个例子</p>
+<p>考虑一个在线视频流服务作为例子：</p>
+<ol type="1">
+<li><strong>高带宽、低时延：</strong>
+<ul>
+<li><strong>情况：</strong>
+你的互联网连接速度非常快，具有高带宽，而且你与视频服务器之间的距离很近。</li>
+<li><strong>影响：</strong>
+视频数据可以以很高的速度传输，因此你能够快速加载视频。时延也很小，因为数据传输速度快且距离近。</li>
+</ul></li>
+<li><strong>高带宽、高时延：</strong>
+<ul>
+<li><strong>情况：</strong>
+你的互联网连接速度非常快，但由于网络拓扑或路由选择，数据在传输过程中经过了多个节点。</li>
+<li><strong>影响：</strong>
+虽然你能够快速加载视频（高带宽），但由于数据在多个节点之间传输，总的时延较高。</li>
+</ul></li>
+<li><strong>低带宽、低时延：</strong>
+<ul>
+<li><strong>情况：</strong>
+你的互联网连接速度较慢，但与视频服务器之间的距离很近。</li>
+<li><strong>影响：</strong>
+视频数据传输速度较慢，但由于距离近，时延较小，可能仍然能够顺畅地观看视频。</li>
+</ul></li>
+<li><strong>低带宽、高时延：</strong>
+<ul>
+<li><strong>情况：</strong>
+你的互联网连接速度较慢，同时由于网络拓扑或路由选择，数据在传输过程中经过了多个节点。</li>
+<li><strong>影响：</strong>
+视频数据传输速度较慢，而且由于数据在多个节点之间传输，总的时延也较高，可能导致视频加载缓慢或卡顿。</li>
+</ul></li>
+</ol>
+<p>这些例子说明了在不同的网络条件下，带宽和时延是可以独立变化的。有时候，需要权衡这两者，根据应用的需求和用户体验来进行网络设计和优化</p>
+<h4 id="带宽和瓶颈带宽">带宽和瓶颈带宽</h4>
+<p>路径带宽和链路带宽</p>
+<p>链路带宽：一条的带宽</p>
+<p>路径带宽：多条链路组成，端到端带宽</p>
+<p>链路带宽测得是路有==多宽==。</p>
+<p>可用带宽：==一条路堵不堵==，可用带宽是考虑了已有负载的情况下。最堵的不一定是最窄的，一定是车最多的</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108161304014.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108212742091.png"></p>
+<h4 id="可用带宽测量">可用带宽测量</h4>
+<p>建模：</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108213925839.png"></p>
+<p>测量方法： <img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108214258060.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108214737343.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220047404.png"></p>
+<h4 id="瓶颈带宽测量">瓶颈带宽测量</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220311428.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220531357.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108220754179.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108221021107.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108221214209.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108221618584.png"></p>
+<h4 id="丢包率">丢包率</h4>
+<p>平均丢包率，突发丢包率</p>
+<p>贝努力，马尔可夫</p>
+<h3 id="别名解析常用方法不做别名解析会有什么问题">别名解析，常用方法，不做别名解析会有什么问题</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108222411293.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108223041277.png"></p>
+<h2 id="cdn-内容分发网络">CDN 内容分发网络</h2>
+<h3 id="cdn解决什么问题">CDN解决什么问题</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108225124562.png"></p>
+<h3 id="zipf">zipf</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108230305132.png"></p>
+<p>说明大家的访问都是集中在一些热门的地方上，基于这个规律的启示 <img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108230454029.png"></p>
+<h3 id="web缓存和web缓存存在的问题">web缓存，和web缓存存在的问题</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108234847210.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108234924410.png"></p>
+<h3 id="cdn原理">CDN原理</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108235058920.png"></p>
+<h4 id="cdn核心问题cdn选择那个服务器">CDN核心问题·：CDN选择那个服务器</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240108235200603.png"></p>
+<p>怎么去算距离近的</p>
+<h4 id="服务器缓存什么内容">服务器缓存什么内容</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109091912874.png"></p>
+<h4 id="存不下怎么办">存不下怎么办</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109092058195.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109092145492.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109092248156.png"></p>
+<p>LRU:</p>
+<p>LRU
+表示以<strong><em>*时间*</em></strong>作为参考，淘汰最长时间未被使用的数据。其核心思想是：如果数据最近被访问过，那么将来被访问的几率也更高。</p>
+<p>LRU 也是最常用的淘汰策略，在 Redis 中不管是 allkeys-lru 和
+volatile-lru，其实底层原理都一样。</p>
+<p>LFU:</p>
+<p>LFU
+表示以<strong><em>*次数*</em></strong>为参考，淘汰一定时期内被访问次数最少的数据，其核心思想是：如果数据过去被访问多次，那么将来被访问的频率也更高。</p>
+<h3 id="dash">dash</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109093023293.png"></p>
+<h3 id="qoe关注那些参数">QOE关注那些参数</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109093151883.png"></p>
+<h3 id="qoe和qos有什么区别">QOE和QOS有什么区别</h3>
+<p>QOS一般指网络层服务质量，考察网络层的基本参数是客观存在的如带宽，时延，丢包率，抖动。</p>
+<p>QOE是quality of experience
+。是主观的体验，和用户的感官更接近。最早的评价是大家打分。后来的指标也是密切和用户体验相关，如高码率，少
+卡顿，少切换。更接近应用层。</p>
+<p>卡顿：卡顿次数和卡顿时间。卡顿次数更重要</p>
+<h3 id="视频直播的时延有两个时延">视频直播的时延有两个时延</h3>
+<p>一个是服务器发出到用户直接接收的时延</p>
+<p>一个是同一个房间用户接收一个东西之间的时延</p>
+<h2 id="p2p-peer-to-peer">P2P peer-to-peer</h2>
+<h3 id="为什么要做p2p">为什么要做P2P</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109100420082.png"></p>
+<p>为了降低费用，把闲置的资源利用起来，解决跨ISP流量大协议标准不好识别的问题</p>
+<h3 id="flooding">flooding</h3>
+<p>和所有的邻居联系，邻居又和邻居的所有邻居联系。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109102208934.png"></p>
+<h3 id="bt">BT</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109103305887.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109103508359.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109103613691.png"></p>
+<p>intrest neighbors 邻居间有相同的需求</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109104326912.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109110840233.png"></p>
+<p>前两个周期找那些结点对自己的服务比较好优先疏通，第三个周期，随机找一些提供优先疏通。</p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109111016400.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109105347038.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109105605105.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109105851268.png"></p>
+<h4 id="bittorrent怎么工作的">bittorrent怎么工作的：</h4>
+<p>alice通过搜索引擎下载torrent文件，torrent里面有tracking
+server（跟踪那些服务器正在进行这个文件的上下载，向跟踪服务器发出信令的要求，trackingserver拿到请求后返回一个peer
+list，alice就可以加入这些peer的洪流，互通有无，进行文件的分发下载。</p>
+<h3 id="结构化p2p">结构化P2P</h3>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109112831477.png"></p>
+<p>==不需要传统p2p的tracker 每个人都充当一部分tracker==</p>
+<h4 id="chord">chord</h4>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109113320105.png"></p>
+<p><img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240109113921651.png"></p>
+<p>Chord选择SHA-1作为哈希函数，SHA-1会产生一个2160的空间，每项为一个16字节（160bit）的大整数。我们可以认为这些整数首尾相连形成一个环，称之为Chord环。整数在Chord环上按大小顺时针排列，Node（机器的IP地址和Port）与Key（资源标识）都被哈希到Chord环上，这样我们就假定了整个P2P网络的状态为一个虚拟的环，因此我们说Chord是结构化的P2P网络。</p>
+<h2 id="区块链">区块链</h2>
+<h3 id="比特币和以太坊的区别">比特币和以太坊的区别</h3>
+<p>比特币区块链系统是封闭的区块链系统，只有一个应用：比特币</p>
+<p>以太坊：开放接口，强调开放性，引入智能合约的概念。</p>
+<p>以太坊和比特币：非授权类，公有</p>
+<h3 id="授权链非授权链优缺点">授权链非授权链优缺点</h3>
+<p>区块链：可以分为非授权类和授权类</p>
+<p>非授权类：共有，谁想加入都可以加入不需要授权</p>
+<p>授权链：必须是联盟的成员才能进入，不存在身份匿名的问题</p>
+<ul>
+<li>联盟链</li>
+<li>私有链</li>
+</ul>
+<p>公有链：规模大，性能问题。对大家隐私身份比较好，不容易监管。</p>
+<p>私有链：规模小，性能比较好。容易监管，用户身份匿名性不强。</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110180346516.png" alt="联盟链">
+<figcaption aria-hidden="true">联盟链</figcaption>
+</figure>
+<h3 id="区块链怎么工作的">区块链怎么工作的</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110161958373.png" alt="区块链记账">
+<figcaption aria-hidden="true">区块链记账</figcaption>
+</figure>
+<p>挖矿：工作量证明</p>
+<p>共识机制：通过一种方式产生一个记账结点，这个记账结点产生本轮的账本区块。</p>
+<p>产生账本区块后，记账结点会把账本区块再向全网进行广播，网络中每个结点都会收到账本区块，会对账本区块再进行一次验证（验证数据结构，和业务相关的东西）如果都验证通了，把账本区块记录在本地的区块链账本末端。当网络中绝大多数结点都完成了上述的验证操作，才能说这个区块上包含的交易被真正的记录在区块链上。</p>
+<p>两个结点发送交易，做数字签名广播，广播完验证，验证完共识，共识完再广播再验证然后记录，大家都记录完了才完事。</p>
+<p>总结：单点出块：任何一轮只能有一个出块结点</p>
+<p>广播传输：无论是产生一笔交易还是一个区块都要向全网播</p>
+<p>交叉验证：区块链系统收到别人广播来的东西，不是无条件就相信了，需要验证，通过才信任。</p>
+<p>共同存储：大家每个人都存着相同的区块。</p>
+<h3 id="什么是区块链区块链的优点">什么是区块链，区块链的优点</h3>
+<ul>
+<li>从宏观上</li>
+</ul>
+<p>区块链是一个分布式的系统</p>
+<p>区块链，多个节点装相同的软件，遵循相同的规则，大家按照相同的规则相互合作，构建多方合作的系统</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110162540033.png" alt="image-20240110162540033">
+<figcaption aria-hidden="true">image-20240110162540033</figcaption>
+</figure>
+<ul>
+<li><p>微观上</p>
+<p>区块链=区块（本子上的纸）+链（本子上的线）</p>
+<p>数字签名：保证区块链上面所有的信息是不可伪造，不可抵赖的。</p>
+<p>链：哈希链。任何一个区块，要计算他的hash值，把他的hash值作为下一个区块内容的一部分，这样每个区块排在那个区块前面一目了然。原来杂乱无序的多个区块，变成了有序的区块链。后面的区块给前面的区块背书。牵一发动全身，保证区块链不可删除，不可篡改。</p></li>
+</ul>
+<p>区块链的优点：不可伪造，不可抵赖，不可删除，不可篡改。</p>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110162619941.png" alt="image-20240110162619941">
+<figcaption aria-hidden="true">image-20240110162619941</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110175112974.png" alt="image-20240110175112974">
+<figcaption aria-hidden="true">image-20240110175112974</figcaption>
+</figure>
+<h3 id="区块链和数据库的区别">区块链和数据库的区别</h3>
+<ol type="1">
+<li>首先虽然区块链起到了分布式存储的作用，分布式数据库一般情况下，每个结点都不需要存全量的数据，只需要存一部分数据。区块链上要求所有结点存的数据是一样的，存全量数据。</li>
+<li>数据库存在一个单一的拥有者。可以说是银行的数据库。但是区块链没有一个单一的所有者，区块链强调共享共治共建。没有任何一个人对区块链有垄断性的控制权。</li>
+<li>数据库：插入删除更新查询。区块链不可删改：只有插入查询</li>
+<li>从信任关系来讲：分布式数据库，结点和结点之间是相互信任的关系，区块链结点和结点之间相互不信任，相互制约。</li>
+<li>容错性：分布式数据库容错性较差，区块链天生可以容忍拜占庭错误，容错性更好。区块链要确保很多结点出错的情况下，整个系统可靠。</li>
+</ol>
+<h3 id="区块链牺牲了什么">区块链牺牲了什么</h3>
+<p>区块链牺牲了计算和存储，计算存储密集型的更适合中心化。信任更适合区块链。</p>
+<ol type="1">
+<li><p>计算能力有限，不能和中心化的相比</p></li>
+<li><p>区块链的存储。因为区块链的存储需要经过网路广播发送，所以就广播这一条就要受到网络带宽的限制。存储能力无法和中心化的相比。现在的方法：结合型。把原始数据放到中心化中存储，把数据的hash值或者摘要放到区块链中。</p></li>
+</ol>
+<h3 id="区块链的应用">区块链的应用</h3>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240110175524173.png" alt="image-20240110175524173">
+<figcaption aria-hidden="true">image-20240110175524173</figcaption>
+</figure>
+<ul>
+<li>存证溯源类：存完以后一般不会频繁的读它，所以对读的能力要求更低</li>
+<li>数据共享类：对读性能要求更高。</li>
+<li>价值转移类：要求原子性，安全性</li>
+</ul>
+<h2 id="区块链跨链技术">区块链跨链技术</h2>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104220017.png" alt="跨链">
+<figcaption aria-hidden="true">跨链</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104500726.png" alt="image-20240111104500726">
+<figcaption aria-hidden="true">image-20240111104500726</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104539397.png" alt="image-20240111104539397">
+<figcaption aria-hidden="true">image-20240111104539397</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111104801537.png" alt="image-20240111104801537">
+<figcaption aria-hidden="true">image-20240111104801537</figcaption>
+</figure>
+<figure>
+<img src="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%BD%91%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%BA%8C%E5%BC%B9/image-20240111162143396.png" alt="image-20240111162143396">
+<figcaption aria-hidden="true">image-20240111162143396</figcaption>
+</figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%9C%9F%E6%9C%AB%E5%A4%8D%E4%B9%A0/" rel="tag"># 期末复习</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2023/12/28/Linux%E7%BD%91%E7%BB%9C/linux%E9%AB%98%E6%80%A7%E8%83%BD%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%BC%96%E7%A8%8B/HTTP%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AE%9E%E9%AA%8C%E6%8A%A5%E5%91%8A/" rel="prev" title="HTTP服务器实验报告">
+                  <i class="fa fa-chevron-left"></i> HTTP服务器实验报告
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2023/12/29/Linux%E7%BD%91%E7%BB%9C/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E7%AC%94%E8%AE%B0/%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E5%A4%8D%E4%B9%A0%E7%AC%AC%E4%B8%89%E5%BC%B9/" rel="next" title="计算机网络复习网络传输-IP-传输层-DNS">
+                  计算机网络复习网络传输-IP-传输层-DNS <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"d767b969f2abd93637e6defb58ef8276"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>

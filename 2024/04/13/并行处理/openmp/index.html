@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width">
+<meta name="theme-color" content="#222"><meta name="generator" content="Hexo 5.4.2">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha256-Z1K5uhUaJXA7Ll0XrZ/0JhX4lAtZFpT6jkKrEDT0drU=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{"hostname":"sherecho.cn","root":"/","images":"/images","scheme":"Pisces","darkmode":false,"version":"8.14.1","exturl":false,"sidebar":{"position":"left","display":"always","padding":18,"offset":12},"copycode":{"enable":true,"style":"default"},"bookmark":{"enable":false,"color":"#222","save":"auto"},"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"stickytabs":false,"motion":{"enable":true,"async":false,"transition":{"menu_item":"fadeInDown","post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}}</script><script src="/js/config.js"></script>
+
+    <meta name="description" content="openmp OpenMP: Syntax in C&#x2F;C++ 包含头文件:#include &lt;omp.h&gt; 编译制导 编译制导指令以#pragma omp 开始，后边跟具体的功能指令，格式如：#pragma omp 指令[子句[,子句] …]。 测试小案例1：openmp的简单使用 123456789#include &lt;stdio.h&gt;#include &amp;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="openmp">
+<meta property="og:url" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/index.html">
+<meta property="og:site_name" content="sherecho的个人博客">
+<meta property="og:description" content="openmp OpenMP: Syntax in C&#x2F;C++ 包含头文件:#include &lt;omp.h&gt; 编译制导 编译制导指令以#pragma omp 开始，后边跟具体的功能指令，格式如：#pragma omp 指令[子句[,子句] …]。 测试小案例1：openmp的简单使用 123456789#include &lt;stdio.h&gt;#include &amp;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619093725037.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619110116719.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240521145024346.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619171358820.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619172109430.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240620132537912.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240620142640565.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621094056777.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621124710815.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621130647583.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621131418625.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621132540792.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621230122377.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621231710794.png">
+<meta property="og:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240521163518828-1718983010879-2.png">
+<meta property="article:published_time" content="2024-04-13T01:28:24.000Z">
+<meta property="article:modified_time" content="2024-06-26T13:44:50.655Z">
+<meta property="article:author" content="sherecho">
+<meta property="article:tag" content="并行处理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619093725037.png">
+
+
+<link rel="canonical" href="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{"sidebar":"","isHome":false,"isPost":true,"lang":"zh-CN","comments":true,"permalink":"https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/","path":"2024/04/13/并行处理/openmp/","title":"openmp"}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">""</script>
+<title>openmp | sherecho的个人博客</title>
+  
+
+
+
+
+
+
+  <script async defer data-website-id="" src=""></script>
+
+  <script defer data-domain="" src=""></script>
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <div class="column">
+      <header class="header" itemscope itemtype="http://schema.org/WPHeader"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏" role="button">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <p class="site-title">sherecho的个人博客</p>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">弱小和无知不是生存的障碍，傲慢才是</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger" aria-label="搜索" role="button">
+        <i class="fa fa-search fa-fw fa-lg"></i>
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu"><li class="menu-item menu-item-home"><a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a></li><li class="menu-item menu-item-tags"><a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a></li><li class="menu-item menu-item-categories"><a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>分类</a></li><li class="menu-item menu-item-archives"><a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a></li><li class="menu-item menu-item-sitemap"><a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>站点地图</a></li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+</nav>
+
+
+
+  <div class="search-pop-overlay">
+    <div class="popup search-popup"><div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input-container">
+    <input autocomplete="off" autocapitalize="off" maxlength="80"
+           placeholder="搜索..." spellcheck="false"
+           type="search" class="search-input">
+  </div>
+  <span class="popup-btn-close" role="button">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="search-result-container no-result">
+  <div class="search-result-icon">
+    <i class="fa fa-spinner fa-pulse fa-5x"></i>
+  </div>
+</div>
+
+    </div>
+  </div>
+
+</header>
+        
+  
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#openmp"><span class="nav-number">1.</span> <span class="nav-text">openmp</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#openmp-syntax-in-cc"><span class="nav-number">1.1.</span> <span class="nav-text">OpenMP: Syntax in
+C&#x2F;C++</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E5%B0%8F%E6%A1%88%E4%BE%8B1openmp%E7%9A%84%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8"><span class="nav-number">1.2.</span> <span class="nav-text">测试小案例1：openmp的简单使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E5%B0%8F%E6%A1%88%E4%BE%8B2%E7%A7%81%E6%9C%89%E5%8F%98%E9%87%8F%E5%92%8C%E5%85%B1%E4%BA%AB%E5%8F%98%E9%87%8F"><span class="nav-number">1.3.</span> <span class="nav-text">测试小案例2：私有变量和共享变量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B0%83%E5%BA%A6%E7%9A%84%E7%AD%96%E7%95%A5"><span class="nav-number">1.4.</span> <span class="nav-text">调度的策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#performance-tuning-the-nowait-clause%E6%80%A7%E8%83%BD%E8%B0%83%E4%BC%98nowait%E5%AD%90%E5%8F%A5"><span class="nav-number">1.5.</span> <span class="nav-text">Performance
+Tuning: the nowait clause（性能调优：nowait子句）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#explicit-barrier-synchronization%E6%98%BE%E5%BC%8F%E5%B1%8F%E9%9A%9C%E5%90%8C%E6%AD%A5"><span class="nav-number">1.6.</span> <span class="nav-text">Explicit barrier
+synchronization（显式屏障同步）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B1%8F%E9%9A%9C%E6%8C%87%E4%BB%A4"><span class="nav-number">1.6.0.1.</span> <span class="nav-text">屏障指令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%9A%90%E5%BC%8F%E5%B1%8F%E9%9A%9C"><span class="nav-number">1.6.0.2.</span> <span class="nav-text">隐式屏障</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#the-single-directive%E5%8D%95%E7%BA%BF%E7%A8%8B%E6%8C%87%E4%BB%A4"><span class="nav-number">1.7.</span> <span class="nav-text">The Single
+Directive（单线程指令）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89"><span class="nav-number">1.7.1.</span> <span class="nav-text">定义</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%81%E8%AE%B8%E7%9A%84%E5%AD%90%E5%8F%A5"><span class="nav-number">1.7.2.</span> <span class="nav-text">允许的子句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">1.7.3.</span> <span class="nav-text">使用场景</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%91%BD%E5%90%8D%E4%B8%B4%E7%95%8C%E5%8C%BAnamed-critical"><span class="nav-number">1.7.4.</span> <span class="nav-text">命名临界区（Named Critical）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%89%E5%BA%8F%E5%AD%90%E5%8F%A5%E5%92%8C%E6%8C%87%E4%BB%A4ordered-clause-and-directive"><span class="nav-number">1.7.5.</span> <span class="nav-text">有序子句和指令（Ordered
+Clause and Directive）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E9%94%81%E5%AE%9E%E7%8E%B0%E4%BA%92%E6%96%A5mutual-exclusion-with-locks"><span class="nav-number">1.7.6.</span> <span class="nav-text">使用锁实现互斥（Mutual
+Exclusion with Locks）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E9%94%81"><span class="nav-number">1.7.6.1.</span> <span class="nav-text">设置锁</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%A7%A3%E9%99%A4%E9%94%81"><span class="nav-number">1.7.6.2.</span> <span class="nav-text">解除锁</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B5%8C%E5%A5%97%E9%94%81nestable-locks"><span class="nav-number">1.7.7.</span> <span class="nav-text">嵌套锁（Nestable Locks）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E6%89%A7%E8%A1%8C%E6%A8%A1%E5%9E%8Btask-execution-model"><span class="nav-number">1.7.8.</span> <span class="nav-text">任务执行模型（Task Execution
+Model）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E7%9A%84%E5%AE%9A%E4%B9%89%E4%B8%8E%E4%BD%9C%E7%94%A8"><span class="nav-number">1.7.8.1.</span> <span class="nav-text">任务的定义与作用</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%BB%E5%8A%A1%E5%90%8C%E6%AD%A5%E4%B8%8E%E5%B1%8F%E9%9A%9Ctask-synchronization-with-barrier-and-taskwait"><span class="nav-number">1.7.9.</span> <span class="nav-text">任务同步与屏障（Task
+Synchronization with Barrier and Taskwait）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#taskyield-%E6%8C%87%E4%BB%A4%E7%AE%80%E4%BB%8B"><span class="nav-number">1.7.9.1.</span> <span class="nav-text">taskyield 指令简介</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%91%E5%AE%9A%E4%BB%BB%E5%8A%A1tied-tasks"><span class="nav-number">1.7.10.</span> <span class="nav-text">绑定任务（Tied Tasks）</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%89%B9%E6%80%A7"><span class="nav-number">1.7.10.1.</span> <span class="nav-text">特性</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9D%9E%E7%BB%91%E5%AE%9A%E4%BB%BB%E5%8A%A1untied-tasks"><span class="nav-number">1.7.11.</span> <span class="nav-text">非绑定任务（Untied Tasks）</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="sherecho"
+      src="/medias/avatars/baojie.jpg">
+  <p class="site-author-name" itemprop="name">sherecho</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+        <a href="/archives/">
+          <span class="site-state-item-count">62</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+          <a href="/categories/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+          <a href="/tags/">
+        <span class="site-state-item-count">21</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author animated">
+      <span class="links-of-author-item">
+        <a href="https://github.com/sherecho" title="Github → https:&#x2F;&#x2F;github.com&#x2F;sherecho" rel="noopener me" target="_blank"><i class="fab fa-github fa-fw"></i>Github</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://blog.csdn.net/weixin_45934869/" title="CSDN → https:&#x2F;&#x2F;blog.csdn.net&#x2F;weixin_45934869&#x2F;" rel="noopener me" target="_blank"><i class="fab fa-user fa-fw"></i>CSDN</a>
+      </span>
+  </div>
+  <div class="cc-license animated" itemprop="license">
+    <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" class="cc-opacity" rel="noopener" target="_blank"><img src="https://cdnjs.cloudflare.com/ajax/libs/creativecommons-vocabulary/2020.11.3/assets/license_badges/small/by_nc_sa.svg" alt="Creative Commons"></a>
+  </div>
+
+        </div>
+      </div>
+    </div>
+
+    
+  </aside>
+
+
+    </div>
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://sherecho.cn/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/medias/avatars/baojie.jpg">
+      <meta itemprop="name" content="sherecho">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="post" itemscope itemtype="http://schema.org/CreativeWork">
+      <meta itemprop="name" content="openmp | sherecho的个人博客">
+      <meta itemprop="description" content="">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          openmp
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2024-04-13 09:28:24" itemprop="dateCreated datePublished" datetime="2024-04-13T09:28:24+08:00">2024-04-13</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar-check"></i>
+      </span>
+      <span class="post-meta-item-text">更新于</span>
+      <time title="修改时间：2024-06-26 21:44:50" itemprop="dateModified" datetime="2024-06-26T21:44:50+08:00">2024-06-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/" itemprop="url" rel="index"><span itemprop="name">并行处理</span></a>
+        </span>
+    </span>
+
+  
+    <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv">
+      <span class="post-meta-item-icon">
+        <i class="far fa-eye"></i>
+      </span>
+      <span class="post-meta-item-text">阅读次数：</span>
+      <span id="busuanzi_value_page_pv"></span>
+    </span>
+    <span class="post-meta-break"></span>
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>9.5k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="openmp">openmp</h1>
+<h2 id="openmp-syntax-in-cc"><strong>OpenMP: Syntax in
+C/C++</strong></h2>
+<p><strong>包含头文件:</strong><code>#include &lt;omp.h&gt;</code></p>
+<p><strong>编译制导</strong></p>
+<p>编译制导指令以#pragma omp
+开始，后边跟具体的功能指令，格式如：<strong>#pragma omp 指令[子句[,子句]
+…]</strong>。</p>
+<h2 id="测试小案例1openmp的简单使用">测试小案例1：openmp的简单使用</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span></span>&#123;</span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp parallel </span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>( <span class="string">&quot;Hello wrold from %d!\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>编译：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">g++ hello.cpp -fopenmp -o hello</span><br></pre></td></tr></table></figure>
+<p>OPENMP中设置线程数量的方法：</p>
+<p>在环境变量中设置<a target="_blank" rel="noopener" href="https://so.csdn.net/so/search?q=environment&amp;spm=1001.2101.3001.7020">environment</a>
+variables。在命令窗口中配置 ：<code>export OMP_NUM_THREADS</code> =
+3</p>
+<p>其他常见的环境变量：</p>
+<p>▪ <strong>Loop scheduling:</strong> <strong>OMP_SCHEDULE,
+Stacksize:</strong> <strong>OMP_STACKSIZE</strong></p>
+<p>▪ <strong>Dynamic adjustment of threads:</strong>
+<strong>OMP_DYNAMIC</strong></p>
+<p>运行以后有这样的效果：</p>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619093725037.png"></p>
+<h2 id="测试小案例2私有变量和共享变量">测试小案例2：私有变量和共享变量</h2>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    <span class="type">int</span> shared_sum = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp parallel for shared(shared_sum)</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">omp_get_num_threads</span>(); i++) &#123;</span><br><span class="line">	shared_sum += i;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;tid %d, shared_sum = %d\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>(), shared_sum);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="type">int</span> private_sum = <span class="number">0</span>;</span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp parallel for private(private_sum)</span></span><br><span class="line">    <span class="keyword">for</span>(<span class="type">int</span> i = <span class="number">0</span>; i &lt; <span class="built_in">omp_get_num_threads</span>(); i++) &#123;</span><br><span class="line">	private_sum += i;</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;tid %d, private_sum = %d\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>(), private_sum);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;outside private_sum = %d\n&quot;</span>, private_sum);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><strong>privatized variables</strong> defined in scope outside the
+<strong>parallel region</strong></p>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619110116719.png"></p>
+<h2 id="调度的策略">调度的策略</h2>
+<p>默认的静态调度策略是将程序整段均分，分块后分给不同的线程。</p>
+<p>动态调度</p>
+<figure>
+<img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240521145024346.png" alt="image-20240521145024346">
+<figcaption aria-hidden="true">image-20240521145024346</figcaption>
+</figure>
+<p>例如：</p>
+<p><code>#pragma omp for schedule(static, 1)</code></p>
+<ol type="1">
+<li><strong><code>#pragma omp for</code></strong>：
+这条指令告诉编译器，后面的 for
+循环应该被并行化。编译器会生成多线程代码来执行循环的各个迭代。</li>
+<li><strong><code>schedule(static, 1)</code></strong>：
+这是一个调度策略，定义了如何将循环迭代分配给不同的线程。
+<ul>
+<li><strong><code>static</code></strong>：
+静态调度策略。表示在程序执行前（即编译时）确定每个线程将处理的迭代次数。每个线程处理的迭代是连续的块。</li>
+<li><strong><code>1</code></strong>：
+表示块大小，即每个线程一次处理一个迭代。这意味着循环的每个迭代（即每次循环）都被分配给不同的线程。</li>
+</ul></li>
+</ol>
+<p>综上所述，<code>#pragma omp for schedule(static, 1)</code>
+的意思是：</p>
+<ol type="1">
+<li>将 for 循环并行化。</li>
+<li>使用静态调度策略。</li>
+<li>每个线程处理一个迭代。</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">define</span> STATIC_CHUNK 5</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> DYNAMIC_CHUNK 5</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> NUM_LOOPS 20</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> SLEEP_EVERY_N 3</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">( )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="type">int</span> nStatic1[NUM_LOOPS],</span><br><span class="line">        nStaticN[NUM_LOOPS];</span><br><span class="line">    <span class="type">int</span> nDynamic1[NUM_LOOPS],</span><br><span class="line">        nDynamicN[NUM_LOOPS];</span><br><span class="line">    <span class="type">int</span> nGuided[NUM_LOOPS];</span><br><span class="line"></span><br><span class="line">    <span class="built_in">omp_set_num_threads</span>(NUM_THREADS);</span><br><span class="line"></span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">    &#123;</span><br><span class="line">       <span class="meta">#<span class="keyword">pragma</span> omp for schedule(static, 1)</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span> ; i &lt; NUM_LOOPS ; ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((i % SLEEP_EVERY_N) == <span class="number">0</span>)</span><br><span class="line">                <span class="built_in">usleep</span>(<span class="number">0</span>);</span><br><span class="line">            nStatic1[i] = <span class="built_in">omp_get_thread_num</span>( );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">pragma</span> omp for schedule(static, STATIC_CHUNK)</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span> ; i &lt; NUM_LOOPS ; ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((i % SLEEP_EVERY_N) == <span class="number">0</span>)</span><br><span class="line">                <span class="built_in">usleep</span>(<span class="number">0</span>);</span><br><span class="line">            nStaticN[i] = <span class="built_in">omp_get_thread_num</span>( );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">pragma</span> omp for schedule(dynamic, 1)</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span> ; i &lt; NUM_LOOPS ; ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((i % SLEEP_EVERY_N) == <span class="number">0</span>)</span><br><span class="line">                <span class="built_in">usleep</span>(<span class="number">0</span>);</span><br><span class="line">            nDynamic1[i] = <span class="built_in">omp_get_thread_num</span>( );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">pragma</span> omp for schedule(dynamic, DYNAMIC_CHUNK)</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span> ; i &lt; NUM_LOOPS ; ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((i % SLEEP_EVERY_N) == <span class="number">0</span>)</span><br><span class="line">                <span class="built_in">usleep</span>(<span class="number">0</span>);</span><br><span class="line">            nDynamicN[i] = <span class="built_in">omp_get_thread_num</span>( );</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="meta">#<span class="keyword">pragma</span> omp for schedule(guided)</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span> ; i &lt; NUM_LOOPS ; ++i)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> ((i % SLEEP_EVERY_N) == <span class="number">0</span>)</span><br><span class="line">                <span class="built_in">usleep</span>(<span class="number">0</span>);</span><br><span class="line">            nGuided[i] = <span class="built_in">omp_get_thread_num</span>( );</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;------------------------------------------------\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;| static | static | dynamic | dynamic | guided |\n&quot;</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;|    1   |    %d   |    1    |    %d    |        |\n&quot;</span>,</span><br><span class="line">             STATIC_CHUNK, DYNAMIC_CHUNK);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;------------------------------------------------\n&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="type">int</span> i=<span class="number">0</span>; i&lt;NUM_LOOPS; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;|    %d   |    %d   |    %d    |    %d    |&quot;</span></span><br><span class="line">                 <span class="string">&quot;    %d   |\n&quot;</span>,</span><br><span class="line">                 nStatic1[i], nStaticN[i],</span><br><span class="line">                 nDynamic1[i], nDynamicN[i], nGuided[i]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;------------------------------------------------\n&quot;</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<figure>
+<img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619171358820.png" alt="image-20240619171358820">
+<figcaption aria-hidden="true">image-20240619171358820</figcaption>
+</figure>
+<p>可以看得出，静态调度的时候都是按顺序把块分配给相应的进程的</p>
+<p><code>#pragma omp for schedule(guided)</code> 的含义是：</p>
+<ol type="1">
+<li><p>将 <code>for</code> 循环并行化。</p></li>
+<li><p>使用指引调度策略。一开始的块很大，后面的块依次减小分给不同的线程。</p>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240619172109430.png"></p>
+<p><strong>Deferred Scheduling（延迟调度）</strong></p>
+<ul>
+<li>自动调度（Auto Scheduling）</li>
+</ul>
+<p>​ <strong>定义</strong>：程序员允许实现使用任何可能的映射方案。</p>
+<ul>
+<li>由运行时决定
+<ul>
+<li><code>runtime</code>：调度可以是上述调度类型之一（例如<code>static</code>或<code>dynamic</code>），具体由环境变量<code>OMP_SCHEDULE</code>设置，或者通过调用<code>omp_set_schedule()</code>覆盖环境设置。</li>
+<li>可以通过调用<code>omp_get_schedule()</code>查找当前的活动调度。</li>
+</ul></li>
+</ul>
+<p>例子：</p>
+<p><strong>环境设置</strong>：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> OMP_SCHEDULE=<span class="string">&quot;guided,4&quot;</span></span><br><span class="line">./a.out</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><strong>API调用</strong>：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp do schedule(runtime)</span></span><br><span class="line"><span class="function">call <span class="title">omp_set_schedule</span><span class="params">(omp_sched_dynamic,<span class="number">4</span>)</span></span></span><br><span class="line"><span class="function"></span></span><br></pre></td></tr></table></figure></li>
+</ol>
+<p><strong>Collapsing Loop Nests（嵌套循环合并）</strong></p>
+<p>将多个嵌套的循环合并成一个单一的迭代空间进行并行处理。</p>
+<p>限制条件</p>
+<ul>
+<li><strong>迭代空间在进入循环时可计算</strong>：必须是矩形的迭代空间。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp for collapse(2)</span></span><br><span class="line"><span class="keyword">for</span> (k=<span class="number">0</span>; k&lt;kmax; ++k) </span><br><span class="line">  <span class="keyword">for</span> (j=<span class="number">0</span>; j&lt;jmax; ++j)</span><br><span class="line">  &#123;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><strong>collapse(n)</strong>：参数n指定要合并的循环层次数量。</p>
+<p><code>kmax=3, jmax=3</code>时，合并后的逻辑迭代空间如下：</p>
+<figure>
+<img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240620132537912.png" alt="image-20240620132537912">
+<figcaption aria-hidden="true">image-20240620132537912</figcaption>
+</figure>
+<p>优化效果</p>
+<ul>
+<li><p><strong>可能改善内存局部性</strong>。</p></li>
+<li><p><strong>可能减少核心之间的数据流量</strong>。</p></li>
+<li><p><strong>嵌套循环合并适用于需要优化内存访问模式并减少数据传输开销的场景。</strong></p></li>
+</ul>
+<p>嵌套循环合并是优化并行执行的有效方法，尤其在需要处理复杂的嵌套循环结构时，通过将其转换为单一的迭代空间，可以改善内存局部性并提高执行效率。</p>
+<h2 id="performance-tuning-the-nowait-clause性能调优nowait子句"><strong>Performance
+Tuning: the nowait clause（性能调优：nowait子句）</strong></h2>
+<p><code>nowait</code>子句用于消除隐式同步，从而提高性能。通常情况下，OpenMP的循环和其他并行结构在结束时会有隐式的同步点，<code>nowait</code>子句可以避免这种同步。</p>
+<p><strong>使用场景</strong></p>
+<ul>
+<li>在并行区域内的多个循环中，如果不需要在每个循环结束时进行同步，可以使用<code>nowait</code>子句来提高性能。</li>
+<li>特别适用于负载不平衡的情况，如果某些线程完成的时间明显早于其他线程，可以通过消除不必要的等待来优化性能。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="meta">#<span class="keyword">pragma</span> omp for nowait</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; N; ++i)</span><br><span class="line">  &#123;</span><br><span class="line">    A[i] = B[i] + C[i];</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">#<span class="keyword">pragma</span> omp for nowait</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="type">int</span> i = <span class="number">0</span>; i &lt; N; ++i)</span><br><span class="line">  &#123;</span><br><span class="line">    D[i] = E[i] * F[i];</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="explicit-barrier-synchronization显式屏障同步">Explicit barrier
+synchronization（显式屏障同步）</h2>
+<h4 id="屏障指令">屏障指令</h4>
+<ul>
+<li>屏障构造是一个独立的指令，用于同步所有线程的执行流。</li>
+<li>当每个线程到达屏障时，它们会阻塞，直到所有线程都到达屏障。</li>
+</ul>
+<h4 id="隐式屏障">隐式屏障</h4>
+<ul>
+<li>在某些指令中存在隐式屏障：
+<ul>
+<li>并行区域的开始和结束处。</li>
+<li><code>do</code>、<code>single</code>、<code>sections</code>、<code>workshare</code>块的结束处（除非指定了<code>nowait</code>子句）。</li>
+<li>执行团队中的所有线程都会在这些指令处同步。</li>
+<li>这些隐式屏障使这些指令“易用且安全”。</li>
+</ul></li>
+</ul>
+<p><strong>并行段</strong>是一个非迭代的工作共享构造，用于将一组结构化的代码块分配给线程团队中的不同线程执行。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="meta">#<span class="keyword">pragma</span> omp sections</span></span><br><span class="line">  &#123;</span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp section</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">// 代码块1</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp section</span></span><br><span class="line">    &#123;</span><br><span class="line">      <span class="comment">// 代码块2</span></span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h2 id="the-single-directive单线程指令">The Single
+Directive（单线程指令）</h2>
+<h3 id="定义">定义</h3>
+<ul>
+<li><code>single</code>指令指定代码块只由一个线程执行，所有其他线程等待该代码块执行完成。</li>
+<li>常用于需要更新共享实体的操作。</li>
+</ul>
+<h3 id="允许的子句">允许的子句</h3>
+<ul>
+<li><code>private</code>：指定变量在每个线程中是私有的。</li>
+<li><code>firstprivate</code>：指定变量在每个线程中是私有的，并且从主线程复制初始值。</li>
+<li><code>copyprivate</code>：在<code>single</code>指令结束时，将执行线程的变量值复制到所有其他线程。</li>
+<li><code>nowait</code>：消除隐式同步，使其他线程无需等待<code>single</code>块的执行完成</li>
+</ul>
+<h3 id="使用场景">使用场景</h3>
+<ul>
+<li><code>single</code>指令用于需要在并行区域中由一个线程执行的代码块，例如更新共享数据、文件I/O操作等。</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">&#123;</span><br><span class="line">  <span class="type">double</span> s = …;</span><br><span class="line">  <span class="meta">#<span class="keyword">pragma</span> omp single copyprivate(s)</span></span><br><span class="line">  &#123;</span><br><span class="line">    s = …;</span><br><span class="line">  &#125;</span><br><span class="line">  … = … + s;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240620142640565.png"></p>
+<p>在OpenMP中，<code>flush</code>
+是一种同步机制，用于确保在并行执行中对共享变量的更新在各个线程之间可见。它的语法如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp flush(list)</span></span><br></pre></td></tr></table></figure>
+<p>其中，<code>list</code>
+是一个可选的参数，用于指定需要刷新的共享变量列表。如果没有提供
+<code>list</code>，则刷新所有共享变量。</p>
+<p><code>flush</code> 指令通常与 <code>#pragma omp barrier</code>
+或者其他同步指令一起使用，以确保线程在访问共享数据时的正确同步。</p>
+<p>在使用 <code>flush</code>
+时要小心，过度使用可能会导致性能下降，因为它会导致线程间的通信和同步。</p>
+<h3 id="命名临界区named-critical">命名临界区（Named Critical）</h3>
+<p>在多线程编程中，当多个线程同时访问和修改共享资源时，可能会引发竞态条件和数据不一致性问题。</p>
+<p>使用临界区（critical
+regions）可以确保一次只有一个线程执行临界区内的代码，从而避免竞态条件。</p>
+<ul>
+<li><p>使用命名临界区（Named
+Critical），即通过给临界区命名，只对同名的临界区进行互斥操作。</p></li>
+<li><p>这样做的好处是可以提高程序性能，因为只有同名的临界区会互斥，而不同名字的临界区不会互斥，从而减少了不必要的性能损失。</p></li>
+</ul>
+<h3 id="有序子句和指令ordered-clause-and-directive">有序子句和指令（Ordered
+Clause and Directive）</h3>
+<p>在并行循环中，有时需要按照顺序执行某些操作。这种情况下，可以使用有序子句和指令。</p>
+<p>有序指令类似于单一指令，但它是针对循环体内的某些操作，使这些操作按照顺序执行。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp for ordered</span></span><br><span class="line"><span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;N; ++i) &#123;</span><br><span class="line">  O1</span><br><span class="line">  <span class="meta">#<span class="keyword">pragma</span> omp ordered</span></span><br><span class="line">  &#123; O2 &#125;</span><br><span class="line">  O3</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><code>O1</code> 是在所有线程中并行执行的操作。</p>
+<p><code>O2</code>
+是在有序区域中按顺序执行的操作，即所有线程在此处按顺序执行，而不是并行。</p>
+<p><code>O3</code> 是在有序区域之外继续并行执行的操作。</p>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621094056777.png"></p>
+<h3 id="使用锁实现互斥mutual-exclusion-with-locks">使用锁实现互斥（Mutual
+Exclusion with Locks）</h3>
+<p>共享锁变量可以用来实现特定的同步机制。</p>
+<p>在 C/C++ 中，锁变量的类型为 <code>omp_lock_t</code>。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">omp_lock_t</span> lock;</span><br><span class="line">    <span class="built_in">omp_init_lock</span>(&amp;lock);</span><br><span class="line"></span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 尝试获取锁</span></span><br><span class="line">        <span class="keyword">while</span> (!<span class="built_in">omp_test_lock</span>(&amp;lock)) &#123;</span><br><span class="line">            <span class="comment">// 在无法获取锁时执行其他工作</span></span><br><span class="line">            <span class="built_in">printf</span>(<span class="string">&quot;Thread %d doing other work\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 成功获取锁后，执行关键代码</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Thread %d acquired the lock\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line">        <span class="built_in">omp_unset_lock</span>(&amp;lock);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">omp_destroy_lock</span>(&amp;lock);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><strong>C/C++</strong>:
+<code>omp_init_lock(omp_lock_t *var)</code></p>
+<ul>
+<li>作用：初始化一个锁，初始状态为未锁定。</li>
+<li>注意：在调用此例程之前，锁变量不能与任何锁关联。</li>
+</ul>
+<h4 id="设置锁">设置锁</h4>
+<ul>
+<li><p>C/C++</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">omp_set_lock</span><span class="params">(<span class="type">omp_lock_t</span> *var)</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>作用：如果锁可用，设置锁并继续执行；如果锁不可用，阻塞等待。</li>
+</ul></li>
+</ul>
+<h4 id="解除锁">解除锁</h4>
+<ul>
+<li><p>C/C++</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">void</span> <span class="title">omp_unset_lock</span><span class="params">(<span class="type">omp_lock_t</span> *var)</span></span></span><br></pre></td></tr></table></figure>
+<ul>
+<li>作用：解除对锁的所有权，允许其他线程获取锁。</li>
+</ul></li>
+</ul>
+<h3 id="嵌套锁nestable-locks">嵌套锁（Nestable Locks）</h3>
+<p>嵌套锁允许一个任务多次获取同一个锁，并在完成后需要相同次数的释放操作。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="type">omp_nest_lock_t</span> lock;</span><br><span class="line">    <span class="built_in">omp_init_nest_lock</span>(&amp;lock);  <span class="comment">// 初始化嵌套锁</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">// 获取嵌套锁</span></span><br><span class="line">        <span class="built_in">omp_set_nest_lock</span>(&amp;lock);</span><br><span class="line">        <span class="built_in">omp_set_nest_lock</span>(&amp;lock);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 执行关键代码</span></span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;Thread %d acquired the nest lock twice\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 释放嵌套锁</span></span><br><span class="line">        <span class="built_in">omp_unset_nest_lock</span>(&amp;lock);</span><br><span class="line">        <span class="built_in">omp_unset_nest_lock</span>(&amp;lock);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">omp_destroy_nest_lock</span>(&amp;lock);  <span class="comment">// 销毁嵌套锁</span></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<h3 id="任务执行模型task-execution-model">任务执行模型（Task Execution
+Model）</h3>
+<p>任务执行模型支持非结构化并行性，例如无限循环和递归函数。多个线程可以创建和执行任务。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp parallel </span></span><br><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp single </span></span><br><span class="line"><span class="keyword">while</span> (elem != <span class="literal">NULL</span>) &#123;</span><br><span class="line">    <span class="meta">#<span class="keyword">pragma</span> omp task</span></span><br><span class="line">    <span class="built_in">compute</span>(elem);</span><br><span class="line">    elem = elem-&gt;next;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621124710815.png"></p>
+<h4 id="任务的定义与作用">任务的定义与作用</h4>
+<p>任务是 OpenMP
+工作共享的一个更灵活的扩展，允许程序员将代码块和数据项打包为任务，然后将这些任务分配给线程进行执行。任务的主要特点包括：</p>
+<p><strong>任务的生成</strong>：当一个线程遇到任务构造时，从关联的结构化代码块生成一个任务。</p>
+<p><strong>数据环境的创建</strong>：根据数据共享属性和默认规则创建任务的数据环境。</p>
+<p><strong>任务的执行</strong>：生成任务的线程可以立即执行任务，或者将其推迟到稍后执行。在后者情况下，团队中的任何线程都可以被分配执行该任务。</p>
+<figure>
+<img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621130647583.png" alt="image-20240621130647583">
+<figcaption aria-hidden="true">image-20240621130647583</figcaption>
+</figure>
+<p><strong>处理链表的函数 <code>process_list</code></strong>：</p>
+<ul>
+<li><p>创建并行区域：<code>#pragma omp parallel</code></p></li>
+<li><p>单线程执行块：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp single</span></span><br></pre></td></tr></table></figure></li>
+<li><p>初始化指针 <code>p</code> 指向链表头。</p></li>
+<li><p>使用 <code>while</code> 循环遍历链表。</p></li>
+<li><p>对于每个节点，创建一个任务：</p></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp task firstprivate(p)</span></span><br></pre></td></tr></table></figure>
+<ul>
+<li><p>调用 <code>do_work(p-&gt;data)</code>
+处理当前节点的数据。</p></li>
+<li><p>移动指针 <code>p</code> 到下一个节点。</p></li>
+</ul>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621131418625.png"></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;omp.h&gt;</span></span></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span></span>&#123;</span><br><span class="line">  <span class="meta">#<span class="keyword">pragma</span> omp parallel</span></span><br><span class="line">  &#123;</span><br><span class="line">      <span class="meta">#<span class="keyword">pragma</span> omp single</span></span><br><span class="line">      &#123;   </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;t%d execute work1.\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line">        <span class="built_in">usleep</span>(<span class="number">100</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="meta">#<span class="keyword">pragma</span> omp single</span></span><br><span class="line">      &#123; </span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">&quot;t%d execute work2.\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line">        <span class="built_in">usleep</span>(<span class="number">100</span>);</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="meta">#<span class="keyword">pragma</span> omp single nowait</span></span><br><span class="line">          <span class="built_in">printf</span>(<span class="string">&quot;t%d comes to end;.\n&quot;</span>, <span class="built_in">omp_get_thread_num</span>());</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621132540792.png"></p>
+<p><code>nowait</code> 子句确实可以消除在某些 OpenMP
+结构中的隐式同步，但在 <code>single</code>
+结构中的作用可能并不像在其他结构（如 <code>for</code> 或
+<code>sections</code>）中那样明显。</p>
+<p>对于 <code>single</code> 结构，<code>nowait</code>
+子句的效果应该是允许其他线程在不等待执行 <code>single</code>
+代码块的线程完成其工作后，继续执行其他代码。</p>
+<p>尽管 <code>nowait</code>
+子句用于消除隐式同步，但在实际执行中，线程调度和前面的隐式同步点仍可能影响代码的执行顺序。这解释了为什么你观察到
+<code>t2 comes to end;</code> 总是在最后执行。要验证 <code>nowait</code>
+的效果，可以尝试在代码中加入更多的并行工作或调整代码结构，观察其对执行顺序的影响。</p>
+<h3 id="任务同步与屏障task-synchronization-with-barrier-and-taskwait">任务同步与屏障（Task
+Synchronization with Barrier and Taskwait）</h3>
+<p><strong>屏障同步（Barrier Synchronization）</strong></p>
+<p>在 OpenMP
+中，屏障同步用于确保所有线程都达到某个同步点，然后才继续执行后续的代码。这在并行编程中非常重要，以保证所有线程在同步点之前的工作都已经完成。</p>
+<p><code>#pragma omp barrier</code></p>
+<p>当线程遇到 <code>barrier</code>
+指令时，它会在此处等待，直到所有线程都到达屏障，然后所有线程才会继续执行。</p>
+<p><strong>任务等待（Taskwait）</strong></p>
+<p>任务等待指令用于等待当前任务的子任务完成。与屏障不同，任务等待只同步当前任务的直接子任务，不影响其他线程的执行。</p>
+<p><code>#pragma omp taskwait</code></p>
+<p>任务组允许创建一个包含多个任务的组，并提供一种方式来等待该组中的所有任务完成。任务组的语法如下：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">pragma</span> omp taskgroup</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// 任务组中的任务</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621230122377.png"></p>
+<h4 id="taskyield-指令简介"><code>taskyield</code> 指令简介</h4>
+<p><code>taskyield</code> 指令是 OpenMP
+提供的一种机制，允许当前任务主动让出处理器，使得运行时系统可以调度和执行其他任务。这对于实现更好的负载均衡和资源利用非常有用，特别是在存在大量任务时。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">#pragma omp taskyield</span><br></pre></td></tr></table></figure>
+<p><img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240621231710794.png"></p>
+<h3 id="绑定任务tied-tasks">绑定任务（Tied Tasks）</h3>
+<p>绑定任务是指任务与执行它的线程绑定在一起。一旦任务开始执行，它必须由同一个线程完成，不能由其他线程接手。</p>
+<h4 id="特性">特性</h4>
+<ol type="1">
+<li><strong>任务线程绑定</strong>：任务创建后，始终由同一个线程执行，确保任务执行的顺序和连续性。</li>
+<li><strong>性能优势</strong>：由于不需要在多个线程间切换，减少了上下文切换的开销。</li>
+</ol>
+<h3 id="非绑定任务untied-tasks">非绑定任务（Untied Tasks）</h3>
+<p>非绑定任务允许任务在执行过程中切换线程。这意味着一个线程可以开始执行任务，而另一个线程可以完成任务。</p>
+<p>数据环境（Data Environment）</p>
+<p><strong>数据环境子句</strong>：</p>
+<ul>
+<li><strong>shared</strong>：显式声明变量为共享。</li>
+<li><strong>private</strong>：显式声明变量为私有。</li>
+<li><strong>firstprivate</strong>：声明变量为私有，并使用其初始值进行初始化。</li>
+<li><strong>lastprivate</strong>：声明变量为私有，并在并行区域结束时将其值赋给原变量。</li>
+<li><strong>reduction</strong>：对变量进行归约操作。</li>
+</ul>
+<figure>
+<img src="/2024/04/13/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/openmp/image-20240521163518828-1718983010879-2.png" alt="image-20240521163518828">
+<figcaption aria-hidden="true">image-20240521163518828</figcaption>
+</figure>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%B9%B6%E8%A1%8C%E5%A4%84%E7%90%86/" rel="tag"># 并行处理</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2024/03/27/MIT6S081/6.S081-Lab4%20traps/" rel="prev" title="6.S081-Lab4 traps实验笔记">
+                  <i class="fa fa-chevron-left"></i> 6.S081-Lab4 traps实验笔记
+                </a>
+            </div>
+            <div class="post-nav-item">
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+    <div class="comments gitalk-container"></div>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">sherecho</span>
+</div>
+<div class="wordcount">
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-chart-line"></i>
+    </span>
+    <span title="站点总字数">438k</span>
+  </span>
+  <span class="post-meta-item">
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">6:39</span>
+  </span>
+</div>
+<div class="busuanzi-count">
+    <span class="post-meta-item" id="busuanzi_container_site_uv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+<br /> #运行时间
+<!-- 网站运行时间的设置 -->
+<span id="timeDate">载入天数...</span>
+<span id="times">载入时分秒...</span>
+<script>
+    var now = new Date();
+    function createtime() {
+        var grt= new Date("01/01/2022 15:54:40");//此处修改你的建站时间或者网站上线时间
+        now.setTime(now.getTime()+250);
+        days = (now - grt ) / 1000 / 60 / 60 / 24; dnum = Math.floor(days);
+        hours = (now - grt ) / 1000 / 60 / 60 - (24 * dnum); hnum = Math.floor(hours);
+        if(String(hnum).length ==1 ){hnum = "0" + hnum;} minutes = (now - grt ) / 1000 /60 - (24 * 60 * dnum) - (60 * hnum);
+        mnum = Math.floor(minutes); if(String(mnum).length ==1 ){mnum = "0" + mnum;}
+        seconds = (now - grt ) / 1000 - (24 * 60 * 60 * dnum) - (60 * 60 * hnum) - (60 * mnum);
+        snum = Math.round(seconds); if(String(snum).length ==1 ){snum = "0" + snum;}
+        document.getElementById("timeDate").innerHTML = "本站已安全运行 "+dnum+" 天 ";
+        document.getElementById("times").innerHTML = hnum + " 小时 " + mnum + " 分 " + snum + " 秒";
+    }
+setInterval("createtime()",250);
+</script>
+    </div>
+  </footer>
+
+  
+  <div class="back-to-top" role="button" aria-label="返回顶部">
+    <i class="fa fa-arrow-up fa-lg"></i>
+    <span>0%</span>
+  </div>
+
+  <a href="https://github.com/sherecho" class="github-corner" title="Follow me on GitHub" aria-label="Follow me on GitHub" rel="noopener" target="_blank"><svg width="80" height="80" viewBox="0 0 250 250" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+  
+  <script size="300" alpha="0.6" zIndex="-1" src="https://cdnjs.cloudflare.com/ajax/libs/ribbon.js/1.0.2/ribbon.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/comments.js"></script><script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/hexo-generator-searchdb/1.4.1/search.js" integrity="sha256-1kfA5uHPf65M5cphT2dvymhkuyHPQp5A53EGZOnOLmc=" crossorigin="anonymous"></script>
+<script src="/js/third-party/search/local-search.js"></script>
+
+
+
+
+
+  
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+
+
+
+  
+
+  <script class="next-config" data-name="enableMath" type="application/json">true</script><script class="next-config" data-name="mathjax" type="application/json">{"enable":true,"tags":"none","js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.js","integrity":"sha256-MASABpB4tYktI2Oitl4t+78w/lyA+D7b/s9GEP0JOGI="}}</script>
+<script src="/js/third-party/math/mathjax.js"></script>
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.css" integrity="sha256-AJnUHL7dBv6PGaeyPQJcgQPDjt/Hn/PvYZde1iqfp8U=" crossorigin="anonymous">
+
+<script class="next-config" data-name="gitalk" type="application/json">{"enable":true,"github_id":"sherecho","repo":"gittalks","client_id":"9912d1c0be5407c8e1bd","client_secret":"6d0991787716b87d7d041c5d2a38b8cc3ddc5944","admin_user":null,"distraction_free_mode":true,"proxy":"https://cors-anywhere.azm.workers.dev/https://github.com/login/oauth/access_token","language":null,"js":{"url":"https://cdnjs.cloudflare.com/ajax/libs/gitalk/1.8.0/gitalk.min.js","integrity":"sha256-MVK9MGD/XJaGyIghSVrONSnoXoGh3IFxLw0zfvzpxR4="},"path_md5":"5378f05eef5e0fb1af7cdda0ccb7f613"}</script>
+<script src="/js/third-party/comments/gitalk.js"></script>
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"log":false,"pluginJsPath":"lib/","pluginModelPath":"assets/","pluginRootPath":"live2dw/","tagMode":false});</script></body>
+</html>
